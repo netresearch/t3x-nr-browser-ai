@@ -13,6 +13,9 @@
         "test:e2e": "playwright test -c Tests/E2E/playwright.config.ts",
         "ci": "npm run build && npm run build:css && npm run test:js"
     },
+    "engines": {
+        "node": ">=20"
+    },
     "devDependencies": {
         "@axe-core/playwright": "^4.10.2",
         "@playwright/test": "^1.55.0",

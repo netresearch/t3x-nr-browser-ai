@@ -12,6 +12,12 @@ if (!is_file($composerFile)) {
 
 $composer = json_decode((string) file_get_contents($composerFile), true, 512, JSON_THROW_ON_ERROR);
 $expectedCoreConstraint = "^12.4 || ^13.4 || ^14.3";
+$expectedTypo3Packages = [
+    "typo3/cms-core",
+    "typo3/cms-extbase",
+    "typo3/cms-fluid",
+    "typo3/cms-frontend",
+];
 
 if (($composer["name"] ?? null) !== "netresearch/nr-browser-ai") {
     throw new RuntimeException("Unexpected Composer package name");
@@ -19,8 +25,16 @@ if (($composer["name"] ?? null) !== "netresearch/nr-browser-ai") {
 if (($composer["extra"]["typo3/cms"]["extension-key"] ?? null) !== "nr_browser_ai") {
     throw new RuntimeException("Unexpected TYPO3 extension key");
 }
-if (($composer["require"]["typo3/cms-core"] ?? null) !== $expectedCoreConstraint) {
-    throw new RuntimeException("Unexpected TYPO3 core constraint");
+if (($composer["require"]["php"] ?? null) !== "^8.2") {
+    throw new RuntimeException("Unexpected Composer PHP constraint");
+}
+if (($composer["config"]["platform"]["php"] ?? null) !== "8.2.0") {
+    throw new RuntimeException("Unexpected Composer PHP platform");
+}
+foreach ($expectedTypo3Packages as $packageName) {
+    if (($composer["require"][$packageName] ?? null) !== $expectedCoreConstraint) {
+        throw new RuntimeException(sprintf("Unexpected constraint for %s", $packageName));
+    }
 }
 if (!str_contains($composer["description"] ?? "", "Netresearch")) {
     throw new RuntimeException("Composer description must mention Netresearch");
@@ -44,6 +58,7 @@ $expectedScripts = [
     "test:js:coverage" => "vitest run --coverage",
     "test:e2e" => "playwright test -c Tests/E2E/playwright.config.ts",
     "ci" => "npm run build && npm run build:css && npm run test:js",
+    "typecheck" => "tsc --noEmit",
 ];
 $expectedDevDependencies = [
     "@axe-core/playwright" => "^4.10.2",
@@ -65,6 +80,9 @@ foreach ($expectedDevDependencies as $name => $constraint) {
     if (($package["devDependencies"][$name] ?? null) !== $constraint) {
         throw new RuntimeException(sprintf("Unexpected npm dev dependency %s", $name));
     }
+}
+if (($package["engines"]["node"] ?? null) !== ">=20") {
+    throw new RuntimeException("Unexpected Node.js engine constraint");
 }
 ' "${repository_root}/package.json"
 
