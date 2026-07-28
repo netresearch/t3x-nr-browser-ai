@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<T3DataStructure>
+    <sheets>
+        <sDEF>
+            <ROOT>
+                <TCEforms>
+                    <sheetTitle>Assistant</sheetTitle>
+                </TCEforms>
+                <type>array</type>
+                <el>
+                    <settings.title>
+                        <label>Title</label>
+                        <config>
+                            <type>input</type>
+                        </config>
+                    </settings.title>
+                    <settings.introduction>
+                        <label>Introduction</label>
+                        <config>
+                            <type>text</type>
+                            <rows>3</rows>
+                        </config>
+                    </settings.introduction>
+                    <settings.supplementalInstruction>
+                        <label>Supplemental instruction</label>
+                        <config>
+                            <type>text</type>
+                            <rows>5</rows>
+                        </config>
+                    </settings.supplementalInstruction>
+                    <settings.contextSelector>
+                        <label>Context selector</label>
+                        <config>
+                            <type>input</type>
+                            <default>main</default>
+                        </config>
+                    </settings.contextSelector>
+                    <settings.fallbackMode>
+                        <label>Fallback mode</label>
+                        <config>
+                            <type>select</type>
+                            <renderType>selectSingle</renderType>
+                            <items>
+                                <numIndex index="0">
+                                    <label>None</label>
+                                    <value>none</value>
+                                </numIndex>
+                                <numIndex index="1">
+                                    <label>Content element</label>
+                                    <value>contentElement</value>
+                                </numIndex>
+                            </items>
+                            <default>none</default>
+                        </config>
+                    </settings.fallbackMode>
+                    <settings.fallbackContent>
+                        <label>Fallback content element</label>
+                        <config>
+                            <type>group</type>
+                            <allowed>tt_content</allowed>
+                            <size>1</size>
+                            <maxitems>1</maxitems>
+                        </config>
+                    </settings.fallbackContent>
+                </el>
+            </ROOT>
+        </sDEF>
+    </sheets>
+</T3DataStructure>

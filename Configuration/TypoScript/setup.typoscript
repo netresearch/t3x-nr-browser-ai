@@ -1,0 +1,13 @@
+plugin.tx_nrbrowserai_assistant {
+    view {
+        templateRootPaths {
+            10 = EXT:nr_browser_ai/Resources/Private/Templates/
+        }
+    }
+
+    settings {
+        contextSelector = {$plugin.tx_nrbrowserai_assistant.settings.contextSelector}
+        contextUsageLimit = {$plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit}
+        systemPrompt = {$plugin.tx_nrbrowserai_assistant.settings.systemPrompt}
+    }
+}
