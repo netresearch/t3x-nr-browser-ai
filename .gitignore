@@ -1,0 +1,10 @@
+/.Build/
+/var/
+/node_modules/
+/coverage/
+/playwright-report/
+/test-results/
+/blob-report/
+/.env
+/.env.*
+!/.env.example

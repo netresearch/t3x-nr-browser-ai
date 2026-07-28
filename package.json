@@ -1,0 +1,27 @@
+{
+    "name": "@netresearch/nr-browser-ai",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Frontend toolchain for the nr_browser_ai TYPO3 extension",
+    "type": "module",
+    "scripts": {
+        "build": "npm run build:javascript && npm run build:css",
+        "build:javascript": "esbuild Resources/Private/TypeScript/Assistant.ts --bundle --format=esm --target=es2023 --outfile=Resources/Public/JavaScript/Assistant.js",
+        "build:css": "cp Resources/Private/Css/Assistant.css Resources/Public/Css/Assistant.css",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run --passWithNoTests",
+        "test:coverage": "vitest run --coverage --passWithNoTests",
+        "test:e2e": "playwright test",
+        "ci": "npm run typecheck && npm run test:coverage"
+    },
+    "devDependencies": {
+        "@axe-core/playwright": "^4.12.1",
+        "@playwright/test": "^1.62.0",
+        "@types/dom-chromium-ai": "^0.0.17",
+        "@vitest/coverage-v8": "^4.1.10",
+        "esbuild": "^0.28.1",
+        "jsdom": "^30.0.0",
+        "typescript": "^7.0.2",
+        "vitest": "^4.1.10"
+    }
+}
