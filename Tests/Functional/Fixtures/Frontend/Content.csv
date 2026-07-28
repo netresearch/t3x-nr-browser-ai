@@ -1,0 +1,20 @@
+"pages"
+,"uid","pid","title","slug","deleted","hidden"
+,1,0,"Browser AI test",/,0,0
+"tt_content"
+,"uid","pid","CType","header","sorting","deleted","hidden","sys_language_uid","pi_flexform"
+,1,1,"nrbrowserai_assistant","Assistant",256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms>
+    <data>
+        <sheet index=""sDEF"">
+            <language index=""lDEF"">
+                <field index=""settings.systemPrompt"">
+                    <value index=""vDEF"">&quot;Configured&quot; &amp; trusted</value>
+                </field>
+                <field index=""settings.supplementalInstruction"">
+                    <value index=""vDEF"">&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</value>
+                </field>
+            </language>
+        </sheet>
+    </data>
+</T3FlexForms>"

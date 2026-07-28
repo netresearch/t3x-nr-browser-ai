@@ -24,9 +24,11 @@ use ReflectionProperty;
 
 use function str_repeat;
 
+use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
+use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 final class AssistantControllerTest extends FunctionalTestCase
@@ -41,8 +43,31 @@ final class AssistantControllerTest extends FunctionalTestCase
         'netresearch/nr-browser-ai',
     ];
 
+    protected array $pathsToLinkInTestInstance = [
+        'typo3conf/ext/nr_browser_ai/Tests/Functional/Fixtures/Sites' => 'typo3conf/sites',
+    ];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/Frontend/Content.csv');
+        $this->setUpFrontendRootPage(
+            1,
+            [
+                'constants' => [
+                    'EXT:nr_browser_ai/Configuration/TypoScript/constants.typoscript',
+                ],
+                'setup' => [
+                    'EXT:nr_browser_ai/Configuration/TypoScript/setup.typoscript',
+                    'EXT:nr_browser_ai/Tests/Functional/Fixtures/Frontend/setup.typoscript',
+                ],
+            ],
+        );
+    }
+
     #[Test]
-    public function pluginIsConfiguredAndRendersProgressiveRootContract(): void
+    public function pluginIsConfiguredAsContentElement(): void
     {
         $typo3Configuration = $GLOBALS['TYPO3_CONF_VARS'] ?? null;
         self::assertIsArray($typo3Configuration);
@@ -92,23 +117,28 @@ final class AssistantControllerTest extends FunctionalTestCase
             'FILE:EXT:nr_browser_ai/Configuration/FlexForms/Assistant.xml',
             $flexFormConfiguration['ds'],
         );
+    }
 
-        $controller = new AssistantController();
-        $controller->injectResponseFactory(GeneralUtility::makeInstance(ResponseFactoryInterface::class));
-        $controller->injectStreamFactory(GeneralUtility::makeInstance(StreamFactoryInterface::class));
+    #[Test]
+    public function frontendRequestDispatchesPluginAndRendersEscapedProgressiveRootContract(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/'))->withPageId(1),
+        );
+        $body = (string) $response->getBody();
 
-        $this->setControllerProperty($controller, 'view', $this->createAssistantView());
-        $this->setControllerProperty($controller, 'settings', [
-            'contextSelector'         => '   ',
-            'contextUsageLimit'       => '0.8',
-            'systemPrompt'            => 'Use only the supplied source.',
-            'supplementalInstruction' => '',
-        ]);
-
-        $body = (string) $controller->showAction()->getBody();
-
+        self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-root', $body);
         self::assertStringContainsString('data-context-selector="main"', $body);
+        self::assertStringContainsString('data-context-usage-limit="0.8"', $body);
+        self::assertStringContainsString(
+            'data-system-prompt="&quot;Configured&quot; &amp; trusted"',
+            $body,
+        );
+        self::assertStringContainsString(
+            'data-supplemental-instruction="&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;"',
+            $body,
+        );
         self::assertStringContainsString('data-nr-browser-ai-fallback', $body);
         self::assertMatchesRegularExpression(
             '/<[^>]+data-nr-browser-ai-assistant[^>]+hidden(?:="hidden")?[^>]*>/',
@@ -144,6 +174,35 @@ final class AssistantControllerTest extends FunctionalTestCase
             'data-context-selector="main[data-label=&quot;x&amp;y&quot;]"',
             $escapedSelectorBody,
         );
+    }
+
+    #[Test]
+    public function flexFormDataStructureUsesSupportedSheetStructure(): void
+    {
+        $identifier    = '{"type":"tca","tableName":"tt_content","fieldName":"pi_flexform","dataStructureKey":"nrbrowserai_assistant"}';
+        $flexFormTools = $this->get(FlexFormTools::class);
+        $parseMethod   = new ReflectionMethod($flexFormTools, 'parseDataStructureByIdentifier');
+
+        if ($parseMethod->getNumberOfParameters() >= 2) {
+            $tca = $GLOBALS['TCA'] ?? null;
+            self::assertIsArray($tca);
+            $ttContentTca = $tca['tt_content'] ?? null;
+            self::assertIsArray($ttContentTca);
+            $dataStructure = $parseMethod->invoke($flexFormTools, $identifier, $ttContentTca);
+        } else {
+            $dataStructure = $parseMethod->invoke($flexFormTools, $identifier);
+        }
+
+        self::assertIsArray($dataStructure);
+        $sheets = $dataStructure['sheets'] ?? null;
+        self::assertIsArray($sheets);
+        $defaultSheet = $sheets['sDEF'] ?? null;
+        self::assertIsArray($defaultSheet);
+        $root = $defaultSheet['ROOT'] ?? null;
+        self::assertIsArray($root);
+        self::assertSame('Assistant', $root['sheetTitle'] ?? null);
+        self::assertArrayNotHasKey('TCEforms', $root);
+        self::assertArrayHasKey('settings.contextSelector', $root['el']);
     }
 
     /**

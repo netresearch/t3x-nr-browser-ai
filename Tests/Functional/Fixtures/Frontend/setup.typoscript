@@ -1,0 +1,19 @@
+tt_content.nrbrowserai_assistant = COA
+tt_content.nrbrowserai_assistant {
+    20 = EXTBASEPLUGIN
+    20 {
+        extensionName = NrBrowserAi
+        pluginName = Assistant
+    }
+}
+
+page = PAGE
+page {
+    10 = CONTENT
+    10 {
+        table = tt_content
+        select {
+            orderBy = sorting
+        }
+    }
+}

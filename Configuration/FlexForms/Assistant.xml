@@ -3,9 +3,7 @@
     <sheets>
         <sDEF>
             <ROOT>
-                <TCEforms>
-                    <sheetTitle>Assistant</sheetTitle>
-                </TCEforms>
+                <sheetTitle>Assistant</sheetTitle>
                 <type>array</type>
                 <el>
                     <settings.title>
