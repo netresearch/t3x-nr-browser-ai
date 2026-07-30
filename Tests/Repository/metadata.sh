@@ -4,6 +4,11 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
+if [[ -e "${repository_root}/composer.lock" || -L "${repository_root}/composer.lock" ]]; then
+    echo "composer.lock must not exist at the reusable extension root" >&2
+    exit 1
+fi
+
 php -r '
 $composerFile = $argv[1];
 if (!is_file($composerFile)) {
@@ -34,8 +39,8 @@ if (array_key_exists("platform", $composer["config"] ?? [])) {
 if (($composer["require-dev"]["phpunit/phpunit"] ?? null) !== "^10.5 || ^11.5 || ^12.5 || ^13.2") {
     throw new RuntimeException("Unexpected PHPUnit constraint");
 }
-if (isset($composer["require-dev"]["netresearch/typo3-ci-workflows"])) {
-    throw new RuntimeException("The CI tooling meta-package is incompatible with TYPO3 12.4");
+if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1.2") {
+    throw new RuntimeException("Unexpected Netresearch CI tooling constraint");
 }
 foreach ($expectedTypo3Packages as $packageName) {
     if (($composer["require"][$packageName] ?? null) !== $expectedCoreConstraint) {
@@ -67,14 +72,14 @@ $expectedScripts = [
     "typecheck" => "tsc --noEmit",
 ];
 $expectedDevDependencies = [
-    "@axe-core/playwright" => "^4.12.1",
-    "@playwright/test" => "^1.62.0",
-    "@types/dom-chromium-ai" => "^0.0.17",
-    "@vitest/coverage-v8" => "^4.1.10",
-    "esbuild" => "^0.28.1",
-    "jsdom" => "^30.0.1",
-    "typescript" => "^7.0.2",
-    "vitest" => "^4.1.10",
+    "@axe-core/playwright",
+    "@playwright/test",
+    "@types/dom-chromium-ai",
+    "@vitest/coverage-v8",
+    "esbuild",
+    "jsdom",
+    "typescript",
+    "vitest",
 ];
 
 foreach ($expectedScripts as $name => $command) {
@@ -82,15 +87,56 @@ foreach ($expectedScripts as $name => $command) {
         throw new RuntimeException(sprintf("Unexpected npm script %s", $name));
     }
 }
-foreach ($expectedDevDependencies as $name => $constraint) {
-    if (($package["devDependencies"][$name] ?? null) !== $constraint) {
-        throw new RuntimeException(sprintf("Unexpected npm dev dependency %s", $name));
+foreach ($expectedDevDependencies as $name) {
+    $constraint = $package["devDependencies"][$name] ?? null;
+    if (!is_string($constraint) || $constraint === "") {
+        throw new RuntimeException(sprintf("Missing npm dev dependency %s", $name));
     }
 }
-if (($package["engines"]["node"] ?? null) !== "^22.22.2 || ^24.15.0 || >=26.0.0") {
-    throw new RuntimeException("Unexpected Node.js engine constraint");
+
+$actualDevDependencies = array_keys($package["devDependencies"] ?? []);
+sort($actualDevDependencies);
+sort($expectedDevDependencies);
+if ($actualDevDependencies !== $expectedDevDependencies) {
+    throw new RuntimeException("Unexpected npm dev dependency set");
 }
-' "${repository_root}/package.json"
+
+$vitestConstraint = $package["devDependencies"]["vitest"];
+$coverageConstraint = $package["devDependencies"]["@vitest/coverage-v8"];
+if ($vitestConstraint !== $coverageConstraint || preg_match("/^\^4\./", $vitestConstraint) !== 1) {
+    throw new RuntimeException("Vitest and its coverage provider must use the same major 4 constraint");
+}
+
+if (preg_match("/^\^([0-9]+)\./", $package["devDependencies"]["typescript"], $typescriptMatch) !== 1
+    || (int) $typescriptMatch[1] < 7
+) {
+    throw new RuntimeException("TypeScript 7 or newer is required");
+}
+
+$nodeConstraint = $package["engines"]["node"] ?? null;
+if (!is_string($nodeConstraint)
+    || preg_match("/^(?:\^|>=)[0-9]+\.[0-9]+\.[0-9]+(?: \|\| (?:\^|>=)[0-9]+\.[0-9]+\.[0-9]+)*$/", $nodeConstraint) !== 1
+) {
+    throw new RuntimeException("Invalid Node.js engine constraint");
+}
+
+$packageLockFile = $argv[2];
+if (!is_file($packageLockFile)) {
+    throw new RuntimeException("package-lock.json is missing");
+}
+$packageLock = json_decode((string) file_get_contents($packageLockFile), true, 512, JSON_THROW_ON_ERROR);
+if (($packageLock["packages"][""]["devDependencies"] ?? null) !== $package["devDependencies"]) {
+    throw new RuntimeException("package-lock.json root dependencies are stale");
+}
+if (($packageLock["packages"]["node_modules/jsdom"]["engines"]["node"] ?? null) !== $nodeConstraint) {
+    throw new RuntimeException("Node.js engine constraint must match the installed jsdom requirement");
+}
+if (($packageLock["packages"]["node_modules/vitest"]["version"] ?? null)
+    !== ($packageLock["packages"]["node_modules/@vitest/coverage-v8"]["version"] ?? null)
+) {
+    throw new RuntimeException("Locked Vitest and coverage-provider versions must match");
+}
+' "${repository_root}/package.json" "${repository_root}/package-lock.json"
 
 php -r '
 $emConfFile = $argv[1];

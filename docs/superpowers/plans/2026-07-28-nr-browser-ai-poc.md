@@ -6,7 +6,7 @@
 
 **Architecture:** TYPO3 renders a progressively enhanced Fluid component and optional fallback content. Focused TypeScript modules extract the current DOM, wrap the browser `LanguageModel` API, manage one in-memory chat session and render output through safe DOM construction; no application AI endpoint or dialogue persistence exists.
 
-**Tech Stack:** PHP 8.2–8.5, TYPO3 Extbase/Fluid 12.4–14.3, TypoScript, TypeScript 5, esbuild, Vitest with jsdom, Playwright with axe-core, PHPUnit, PHPStan, PHP-CS-Fixer, Netresearch reusable GitHub workflows.
+**Tech Stack:** PHP 8.2–8.5, TYPO3 Extbase/Fluid 12.4–14.3, TypoScript, TypeScript 7/current, esbuild, Vitest with jsdom, Playwright with axe-core, PHPUnit, PHPStan, PHP-CS-Fixer, Netresearch reusable GitHub workflows.
 
 ---
 
@@ -137,6 +137,7 @@ Create `composer.json` with:
   "require-dev": {
     "ergebnis/phpstan-rules": "^2.6",
     "friendsofphp/php-cs-fixer": "^3.68",
+    "netresearch/typo3-ci-workflows": "^1.2",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^10.5 || ^11.5 || ^12.5 || ^13.2",
     "typo3/testing-framework": "^8.2 || ^9.0"
@@ -212,9 +213,24 @@ reporters `text`, `json`, `html`, and `lcov`.
 
 - [ ] **Step 5: Install dependencies and run the metadata assertion**
 
-Run: `composer update --no-interaction && npm install && bash Tests/Repository/metadata.sh`  
-Expected: PASS. Composer may generate an ephemeral, ignored `composer.lock`;
-`package-lock.json` is generated and committed for the Node.js toolchain.
+Run a fresh root resolution, validate it, then remove its ephemeral lock before
+the repository assertion:
+
+```bash
+cleanup_root_lock() { test ! -e composer.lock || unlink composer.lock; }
+trap cleanup_root_lock EXIT
+composer update --no-interaction
+composer audit --locked
+composer validate --strict
+cleanup_root_lock
+npm install
+bash Tests/Repository/metadata.sh
+```
+
+Expected: PASS. The cleanup is mandatory: a root `composer.lock` is ignored but
+the repository assertion rejects even an untracked copy. Prefer disposable
+project directories for compatibility-matrix resolutions. `package-lock.json`
+is generated and committed for the Node.js toolchain.
 
 - [ ] **Step 6: Commit**
 
@@ -828,10 +844,12 @@ git commit -S -s -m "feat: add accessible branded assistant interface"
 ### Task 10: Complete compatibility, quality and browser test matrices
 
 **Files:**
+- Modify: `composer.json`
 - Create: `Build/UnitTests.xml`
 - Create: `Build/FunctionalTests.xml`
 - Create: `Build/phpstan.neon`
 - Create: `Build/.php-cs-fixer.dist.php`
+- Create: `Build/rector.php`
 - Create: `Tests/E2E/playwright.config.ts`
 - Create: `.github/workflows/ci.yml`
 - Create: `.github/workflows/checks.yml`
@@ -853,7 +871,25 @@ jobs:
       run-functional-tests: true
       functional-test-db: sqlite
       upload-coverage: true
+      remove-dev-deps: '[{"dep":"netresearch/typo3-ci-workflows","only-for":"^12.4"}]'
 ```
+
+`remove-dev-deps` is the reusable workflow's matrix-aware JSON input. The
+TYPO3 12.4 cell removes the current CI meta-package because its TYPO3-aware
+PHPStan dependency supports only TYPO3 13/14. That cell is compatibility-only:
+it runs CGL, unit and functional tests, but does not claim the full
+TYPO3-aware PHPStan/Rector gates. Task 10 must add the listed PHPStan, CGL and
+Rector configs/scripts so the reusable workflow's default gates do not
+auto-skip them for the normal TYPO3 13.4/14.3 cells.
+
+Public TYPO3 12.4 releases are EOL and currently blocked by Composer
+advisories. A disposable 12.4 compatibility resolution may set
+`audit.block-insecure=false` only for proving extension API compatibility.
+Run and report `composer audit --locked` separately for that resolved graph;
+an advisory-bearing result is expected and must never be described as secure.
+Production use requires a maintained ELTS or otherwise security-patched
+distribution/repository chosen and licensed by the project owner. Do not add
+credentials or vendor-specific private repository details to this extension.
 
 Add a Node job for `npm ci`, `npm run build`, `npm run test:js:coverage`, artifact
 comparison of committed builds, and Codecov upload of `coverage/lcov.info`.
@@ -871,10 +907,16 @@ extension key `nr_browser_ai`.
 Run:
 
 ```bash
+cleanup_root_lock() { test ! -e composer.lock || unlink composer.lock; }
+trap cleanup_root_lock EXIT
+composer update --no-interaction
+composer audit --locked
 composer ci:test:php:cgl
 composer ci:test:php:phpstan
 composer ci:test:php:unit
 typo3DatabaseDriver=pdo_sqlite composer ci:test:php:functional
+cleanup_root_lock
+bash Tests/Repository/metadata.sh
 npm ci
 npm run ci
 npm run test:js:coverage
@@ -882,6 +924,7 @@ git diff --exit-code Resources/Public
 ```
 
 Expected: all commands exit 0 and committed public assets match their sources.
+The EXIT trap removes the root lock even when a preceding Composer check fails.
 
 - [ ] **Step 4: Commit**
 
