@@ -2,109 +2,162 @@
 
 set -euo pipefail
 
-VERSION=${1:?version label is required}
-TYPO3_VERSION=${2:?TYPO3 version constraint is required}
-INSTALL_DIR=${3:?install directory is required}
-EXTENSION_PATH=${4:?extension path is required}
-PACKAGE_NAME=${5:?package name is required}
-SITE_URL=${6:?site URL is required}
+if test "$#" -ne 1; then
+    printf 'Usage: _install-typo3 v12|v13|v14\n' >&2
+    exit 2
+fi
+
+VERSION=$1
+case "$VERSION" in
+    v12) TYPO3_VERSION='^12.4' ;;
+    v13) TYPO3_VERSION='^13.4' ;;
+    v14) TYPO3_VERSION='^14.3' ;;
+    *)
+        printf 'Unsupported version label: %s\n' "$VERSION" >&2
+        exit 2
+        ;;
+esac
+
+# All mutable targets are derived from the validated allowlist above.
+INSTALL_DIR="/var/www/html/$VERSION"
+DB_NAME=$VERSION
+EXTENSION_PATH="/var/www/nr_browser_ai"
+PACKAGE_NAME="netresearch/nr-browser-ai"
+SITE_URL="https://${VERSION}.nr-browser-ai.ddev.site"
 MARKER="$INSTALL_DIR/.nr-browser-ai-installed"
+TEMPLATE_UID=900001
+CONTENT_UID=900001
 
-case "$VERSION" in
-    v12|v13|v14) ;;
-    *) printf 'Unsupported version label: %s\n' "$VERSION" >&2; exit 2 ;;
+case "$INSTALL_DIR:$DB_NAME" in
+    /var/www/html/v12:v12|/var/www/html/v13:v13|/var/www/html/v14:v14) ;;
+    *)
+        printf 'Refusing non-allowlisted target: %s / %s\n' "$INSTALL_DIR" "$DB_NAME" >&2
+        exit 2
+        ;;
 esac
 
-if test -f "$MARKER" && test -x "$INSTALL_DIR/vendor/bin/typo3"; then
-    printf '%s is already installed; refreshing extension setup and caches.\n' "$VERSION"
-    cd "$INSTALL_DIR"
-    if vendor/bin/typo3 list extension 2>/dev/null | grep -q 'extension:setup'; then
-        vendor/bin/typo3 extension:setup
+database_is_healthy() {
+    local table_count
+    local admin_count
+
+    table_count=$(
+        MYSQL_PWD=root mariadb -h db -u root --batch --skip-column-names \
+            -e "SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema='${DB_NAME}'
+                  AND table_name IN ('be_users','pages','sys_template','tt_content');" \
+            2>/dev/null
+    ) || return 1
+    test "$table_count" = 4 || return 1
+
+    admin_count=$(
+        MYSQL_PWD=root mariadb -h db -u root "$DB_NAME" --batch --skip-column-names \
+            -e "SELECT COUNT(*) FROM be_users
+                WHERE username='${TYPO3_SETUP_ADMIN_USERNAME}'
+                  AND admin=1 AND disable=0 AND deleted=0;" \
+            2>/dev/null
+    ) || return 1
+    test "$admin_count" = 1
+}
+
+reset_database() {
+    printf 'Resetting allowlisted disposable database %s.\n' "$DB_NAME"
+    MYSQL_PWD=root mariadb -h db -u root <<SQL
+DROP DATABASE IF EXISTS \`${DB_NAME}\`;
+CREATE DATABASE \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SQL
+}
+
+bootstrap_dependencies() {
+    printf '\nInstalling TYPO3 %s in %s\n' "$TYPO3_VERSION" "$INSTALL_DIR"
+    sudo chown -R "$(id -u):$(id -g)" "$INSTALL_DIR"
+    find "$INSTALL_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+    mkdir -p "$INSTALL_DIR"
+
+    if test "$VERSION" = v12; then
+        printf '\n'
+        printf '**********************************************************************\n'
+        printf 'SECURITY WARNING: TYPO3 12.4 public packages are EOL and are installed\n'
+        printf 'only for disposable compatibility testing. Do not use this graph in\n'
+        printf 'production without a maintained, security-patched distribution.\n'
+        printf '**********************************************************************\n\n'
+        composer create-project "typo3/cms-base-distribution:${TYPO3_VERSION}" \
+            "$INSTALL_DIR" --no-install --no-interaction
+        composer config --working-dir="$INSTALL_DIR" audit.block-insecure false
+        composer config --working-dir="$INSTALL_DIR" platform.php 8.2.0
+    else
+        printf '{}\n' > "$INSTALL_DIR/composer.json"
+        composer config --working-dir="$INSTALL_DIR" extra.typo3/cms.web-dir public
+        composer config --working-dir="$INSTALL_DIR" --no-plugins \
+            allow-plugins.typo3/cms-composer-installers true
+        composer config --working-dir="$INSTALL_DIR" --no-plugins \
+            allow-plugins.typo3/class-alias-loader true
     fi
-    vendor/bin/typo3 cache:flush
-    exit 0
-fi
 
-printf '\nInstalling TYPO3 %s in %s\n' "$TYPO3_VERSION" "$INSTALL_DIR"
-sudo chown -R "$(id -u):$(id -g)" "$INSTALL_DIR"
-find "$INSTALL_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-mkdir -p "$INSTALL_DIR"
+    composer config --working-dir="$INSTALL_DIR" repositories.nr_browser_ai path "$EXTENSION_PATH"
+    composer config --working-dir="$INSTALL_DIR" minimum-stability dev
+    composer config --working-dir="$INSTALL_DIR" prefer-stable true
 
-mysql -h db -u root -proot -e "CREATE DATABASE IF NOT EXISTS \`${VERSION}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    case "$VERSION" in
+        v12)
+            composer require --working-dir="$INSTALL_DIR" \
+                "$PACKAGE_NAME:@dev" \
+                "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
+                --with-all-dependencies --no-progress --no-interaction
+            ;;
+        v13)
+            composer require --working-dir="$INSTALL_DIR" \
+                "typo3/cms-base-distribution:${TYPO3_VERSION}" \
+                "$PACKAGE_NAME:@dev" \
+                "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
+                --with-all-dependencies --no-progress --no-interaction
+            ;;
+        v14)
+            composer require --working-dir="$INSTALL_DIR" \
+                "typo3/minimal:${TYPO3_VERSION}" \
+                "typo3/cms-install:${TYPO3_VERSION}" \
+                "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
+                "$PACKAGE_NAME:@dev" \
+                --with-all-dependencies --no-progress --no-interaction
+            ;;
+    esac
+}
 
-if test "$VERSION" = v12; then
-    printf '\n'
-    printf '**********************************************************************\n'
-    printf 'SECURITY WARNING: TYPO3 12.4 public packages are EOL and are installed\n'
-    printf 'only for disposable compatibility testing. Do not use this graph in\n'
-    printf 'production without a maintained, security-patched distribution.\n'
-    printf '**********************************************************************\n\n'
-    composer create-project "typo3/cms-base-distribution:${TYPO3_VERSION}" \
-        "$INSTALL_DIR" --no-install --no-interaction
-    composer config --working-dir="$INSTALL_DIR" audit.block-insecure false
-    composer config --working-dir="$INSTALL_DIR" platform.php 8.2.0
-else
-    printf '{}\n' > "$INSTALL_DIR/composer.json"
-    composer config --working-dir="$INSTALL_DIR" extra.typo3/cms.web-dir public
-    composer config --working-dir="$INSTALL_DIR" --no-plugins \
-        allow-plugins.typo3/cms-composer-installers true
-    composer config --working-dir="$INSTALL_DIR" --no-plugins \
-        allow-plugins.typo3/class-alias-loader true
-fi
-
-composer config --working-dir="$INSTALL_DIR" repositories.nr_browser_ai path "$EXTENSION_PATH"
-composer config --working-dir="$INSTALL_DIR" minimum-stability dev
-composer config --working-dir="$INSTALL_DIR" prefer-stable true
-
-case "$VERSION" in
-    v12)
-        composer require --working-dir="$INSTALL_DIR" \
-            "$PACKAGE_NAME:@dev" \
-            "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
-            --with-all-dependencies --no-progress --no-interaction
-        ;;
-    v13)
-        composer require --working-dir="$INSTALL_DIR" \
-            "typo3/cms-base-distribution:${TYPO3_VERSION}" \
-            "$PACKAGE_NAME:@dev" \
-            "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
-            --with-all-dependencies --no-progress --no-interaction
-        ;;
-    v14)
-        composer require --working-dir="$INSTALL_DIR" \
-            "typo3/minimal:${TYPO3_VERSION}" \
-            "typo3/cms-install:${TYPO3_VERSION}" \
-            "typo3/cms-fluid-styled-content:${TYPO3_VERSION}" \
-            "$PACKAGE_NAME:@dev" \
-            --with-all-dependencies --no-progress --no-interaction
-        ;;
-esac
-
-cd "$INSTALL_DIR"
-
-if test "$VERSION" = v12; then
+run_typo3_setup() {
+    cd "$INSTALL_DIR"
     vendor/bin/typo3 setup \
         --driver=mysqli \
         --host=db \
         --port=3306 \
-        --dbname="$VERSION" \
+        --dbname="$DB_NAME" \
         --username=root \
         --password=root \
         --admin-username="$TYPO3_SETUP_ADMIN_USERNAME" \
         --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD" \
         --admin-email="$TYPO3_SETUP_ADMIN_EMAIL" \
         --project-name="nr-browser-ai ${VERSION}" \
+        --create-site="$SITE_URL" \
         --server-type=apache \
         --no-interaction \
         --force
+}
+
+dependencies_ready=false
+if test -f "$MARKER" \
+    && test -f "$INSTALL_DIR/composer.json" \
+    && test -x "$INSTALL_DIR/vendor/bin/typo3" \
+    && composer show --working-dir="$INSTALL_DIR" "$PACKAGE_NAME" --no-ansi >/dev/null 2>&1; then
+    dependencies_ready=true
+    printf '%s dependencies are already installed; reconciling runtime state.\n' "$VERSION"
 else
-    vendor/bin/typo3 setup --no-interaction \
-        --dbname="$VERSION" \
-        --password=root \
-        --create-site="$SITE_URL" \
-        --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD"
+    bootstrap_dependencies
 fi
 
+if test "$dependencies_ready" = false || ! database_is_healthy; then
+    reset_database
+    run_typo3_setup
+fi
+
+cd "$INSTALL_DIR"
 mkdir -p config/system config/sites/main
 cat > config/system/additional.php <<'PHP'
 <?php
@@ -138,32 +191,51 @@ if vendor/bin/typo3 list extension 2>/dev/null | grep -q 'extension:setup'; then
     vendor/bin/typo3 extension:setup
 fi
 
-mysql -h db -u root -proot "$VERSION" <<'SQL'
+reserved_collision_count=$(
+    MYSQL_PWD=root mariadb -h db -u root "$DB_NAME" --batch --skip-column-names \
+        -e "SELECT
+              (SELECT COUNT(*) FROM sys_template
+               WHERE uid=${TEMPLATE_UID}
+                 AND title <> 'DDEV nr-browser-ai template [managed]')
+              +
+              (SELECT COUNT(*) FROM tt_content
+               WHERE uid=${CONTENT_UID}
+                 AND header <> 'DDEV Browser AI assistant fixture [managed]');"
+)
+if test "$reserved_collision_count" -ne 0; then
+    printf 'Refusing to overwrite non-DDEV records at reserved IDs in %s.\n' "$DB_NAME" >&2
+    exit 1
+fi
+
+MYSQL_PWD=root mariadb -h db -u root "$DB_NAME" <<SQL
 INSERT INTO pages (uid, pid, title, slug, doktype, is_siteroot, hidden, deleted, tstamp, crdate)
-SELECT 1, 0, 'Browser AI demo', '/', 1, 1, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
-WHERE NOT EXISTS (SELECT 1 FROM pages WHERE uid = 1);
+VALUES (1, 0, 'Browser AI demo', '/', 1, 1, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())
+ON DUPLICATE KEY UPDATE
+    title=VALUES(title),
+    slug=VALUES(slug),
+    doktype=VALUES(doktype),
+    is_siteroot=VALUES(is_siteroot),
+    hidden=0,
+    deleted=0,
+    tstamp=UNIX_TIMESTAMP();
 
-UPDATE pages
-SET title = 'Browser AI demo', slug = '/', doktype = 1, is_siteroot = 1, hidden = 0, deleted = 0
-WHERE uid = 1;
+-- Migrate the exact template signature created by the previous DDEV installer.
+DELETE FROM sys_template
+WHERE uid <> ${TEMPLATE_UID}
+  AND pid = 1
+  AND title = 'nr-browser-ai demo'
+  AND config LIKE '%extensionName = NrBrowserAi%';
 
-DELETE FROM sys_template WHERE pid = 1 AND title = 'nr-browser-ai demo';
-INSERT INTO sys_template (pid, title, root, clear, include_static_file, config, constants, tstamp, crdate)
-VALUES (
+INSERT INTO sys_template (
+    uid, pid, title, root, clear, include_static_file, config, constants, tstamp, crdate
+) VALUES (
+    ${TEMPLATE_UID},
     1,
-    'nr-browser-ai demo',
+    'DDEV nr-browser-ai template [managed]',
     1,
     3,
     'EXT:fluid_styled_content/Configuration/TypoScript/,EXT:nr_browser_ai/Configuration/TypoScript',
-    'tt_content.nrbrowserai_assistant = COA
-tt_content.nrbrowserai_assistant {
-  20 = EXTBASEPLUGIN
-  20 {
-    extensionName = NrBrowserAi
-    pluginName = Assistant
-  }
-}
-page = PAGE
+    'page = PAGE
 page {
   10 = CONTENT
   10 {
@@ -176,15 +248,32 @@ page {
     '',
     UNIX_TIMESTAMP(),
     UNIX_TIMESTAMP()
-);
+)
+ON DUPLICATE KEY UPDATE
+    pid=VALUES(pid),
+    title=VALUES(title),
+    root=VALUES(root),
+    clear=VALUES(clear),
+    include_static_file=VALUES(include_static_file),
+    config=VALUES(config),
+    constants=VALUES(constants),
+    tstamp=UNIX_TIMESTAMP();
 
-DELETE FROM tt_content WHERE pid = 1 AND header = 'Browser AI assistant demo';
+-- Migrate the exact content signature created by the previous DDEV installer.
+DELETE FROM tt_content
+WHERE uid <> ${CONTENT_UID}
+  AND pid = 1
+  AND CType = 'nrbrowserai_assistant'
+  AND header = 'Browser AI assistant demo'
+  AND pi_flexform LIKE '%Answer only from the current page.%';
+
 INSERT INTO tt_content (
-    pid, CType, header, sorting, hidden, deleted, sys_language_uid, pi_flexform, tstamp, crdate
+    uid, pid, CType, header, sorting, hidden, deleted, sys_language_uid, pi_flexform, tstamp, crdate
 ) VALUES (
+    ${CONTENT_UID},
     1,
     'nrbrowserai_assistant',
-    'Browser AI assistant demo',
+    'DDEV Browser AI assistant fixture [managed]',
     100,
     0,
     0,
@@ -192,14 +281,25 @@ INSERT INTO tt_content (
     '<?xml version="1.0" encoding="utf-8" standalone="yes"?><T3FlexForms><data><sheet index="sDEF"><language index="lDEF"><field index="settings.systemPrompt"><value index="vDEF">Answer only from the current page.</value></field></language></sheet></data></T3FlexForms>',
     UNIX_TIMESTAMP(),
     UNIX_TIMESTAMP()
-);
+)
+ON DUPLICATE KEY UPDATE
+    pid=VALUES(pid),
+    CType=VALUES(CType),
+    header=VALUES(header),
+    sorting=VALUES(sorting),
+    hidden=0,
+    deleted=0,
+    sys_language_uid=VALUES(sys_language_uid),
+    pi_flexform=VALUES(pi_flexform),
+    tstamp=UNIX_TIMESTAMP();
 SQL
 
 vendor/bin/typo3 cache:flush
 
 response=$(curl --fail --silent --show-error "$SITE_URL/")
-grep -q 'data-nr-browser-ai-root' <<<"$response" \
-    || { printf 'Frontend did not render data-nr-browser-ai-root at %s/\n' "$SITE_URL" >&2; exit 1; }
+marker_count=$(grep -o 'data-nr-browser-ai-root' <<<"$response" | wc -l)
+test "$marker_count" -eq 1 \
+    || { printf 'Expected one plugin marker at %s/, got %s.\n' "$SITE_URL" "$marker_count" >&2; exit 1; }
 
 touch "$MARKER"
-printf 'Installed %s: %s/ (backend: %s/typo3/)\n' "$VERSION" "$SITE_URL" "$SITE_URL"
+printf 'Reconciled %s: %s/ (backend: %s/typo3/)\n' "$VERSION" "$SITE_URL" "$SITE_URL"

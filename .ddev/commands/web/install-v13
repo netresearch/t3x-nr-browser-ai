@@ -6,15 +6,7 @@
 
 set -euo pipefail
 
-VERSION=v13
-TYPO3_VERSION='^13.4'
-INSTALL_DIR="/var/www/html/$VERSION"
-EXTENSION_PATH="/var/www/nr_browser_ai"
-PACKAGE_NAME="netresearch/nr-browser-ai"
-SITE_URL="https://${VERSION}.nr-browser-ai.ddev.site"
-
 # Runtime contract: TYPO3_SETUP_ADMIN_USERNAME, TYPO3_SETUP_ADMIN_PASSWORD,
 # composer config repositories.nr_browser_ai path "$EXTENSION_PATH",
 # vendor/bin/typo3 cache:flush, data-nr-browser-ai-root.
-exec /mnt/ddev_config/commands/web/_install-typo3 \
-    "$VERSION" "$TYPO3_VERSION" "$INSTALL_DIR" "$EXTENSION_PATH" "$PACKAGE_NAME" "$SITE_URL"
+exec /mnt/ddev_config/commands/web/_install-typo3 v13

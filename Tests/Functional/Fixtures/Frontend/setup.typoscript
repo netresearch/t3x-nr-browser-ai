@@ -1,11 +1,4 @@
-tt_content.nrbrowserai_assistant = COA
-tt_content.nrbrowserai_assistant {
-    20 = EXTBASEPLUGIN
-    20 {
-        extensionName = NrBrowserAi
-        pluginName = Assistant
-    }
-}
+@import "EXT:nr_browser_ai/Configuration/TypoScript/setup.typoscript"
 
 page = PAGE
 page {

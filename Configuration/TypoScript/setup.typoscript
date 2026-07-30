@@ -1,3 +1,12 @@
+tt_content.nrbrowserai_assistant = COA
+tt_content.nrbrowserai_assistant {
+    20 = EXTBASEPLUGIN
+    20 {
+        extensionName = NrBrowserAi
+        pluginName = Assistant
+    }
+}
+
 plugin.tx_nrbrowserai_assistant {
     view {
         templateRootPaths {
