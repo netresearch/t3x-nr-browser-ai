@@ -9,6 +9,9 @@
 
 declare(strict_types=1);
 
+use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') or exit;
@@ -16,10 +19,10 @@ defined('TYPO3') or exit;
 $pluginSignature = ExtensionUtility::registerPlugin(
     'NrBrowserAi',
     'Assistant',
-    'Browser AI assistant',
+    'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:plugin.assistant.title',
     'content-plugin',
     'plugins',
-    'On-device assistant using the current page as its source',
+    'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:plugin.assistant.description',
 );
 
 $GLOBALS['TCA']['tt_content']['types'][$pluginSignature]['showitem'] = '
@@ -29,5 +32,11 @@ $GLOBALS['TCA']['tt_content']['types'][$pluginSignature]['showitem'] = '
         --palette--;;visibility,
         --palette--;;access
 ';
-$GLOBALS['TCA']['tt_content']['types'][$pluginSignature]['columnsOverrides']['pi_flexform']['config']['ds']
-    = 'FILE:EXT:nr_browser_ai/Configuration/FlexForms/Assistant.xml';
+$flexFormDataStructure = 'FILE:EXT:nr_browser_ai/Configuration/FlexForms/Assistant.xml';
+
+if (GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion() >= 14) {
+    $GLOBALS['TCA']['tt_content']['types'][$pluginSignature]['columnsOverrides']['pi_flexform']['config']['ds']
+        = $flexFormDataStructure;
+} else {
+    ExtensionManagementUtility::addPiFlexFormValue('*', $flexFormDataStructure, $pluginSignature);
+}

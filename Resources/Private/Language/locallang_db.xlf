@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2026-07-30T00:00:00Z">
+        <body>
+            <trans-unit id="plugin.assistant.title" resname="plugin.assistant.title">
+                <source>Browser AI assistant</source>
+            </trans-unit>
+            <trans-unit id="plugin.assistant.description" resname="plugin.assistant.description">
+                <source>On-device assistant using the current page as its source</source>
+            </trans-unit>
+            <trans-unit id="flexform.sheet.assistant" resname="flexform.sheet.assistant">
+                <source>Assistant</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.title" resname="flexform.field.title">
+                <source>Title</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.introduction" resname="flexform.field.introduction">
+                <source>Introduction</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.supplementalInstruction" resname="flexform.field.supplementalInstruction">
+                <source>Supplemental instruction</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.contextSelector" resname="flexform.field.contextSelector">
+                <source>Context selector</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.fallbackMode" resname="flexform.field.fallbackMode">
+                <source>Fallback mode</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.fallbackContent" resname="flexform.field.fallbackContent">
+                <source>Fallback content element</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.fallbackMode.none" resname="flexform.item.fallbackMode.none">
+                <source>None</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.fallbackMode.contentElement" resname="flexform.item.fallbackMode.contentElement">
+                <source>Content element</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

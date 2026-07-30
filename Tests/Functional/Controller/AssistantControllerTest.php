@@ -11,26 +11,29 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Functional\Controller;
 
-use function call_user_func;
-use function class_exists;
-use function file_get_contents;
-use function is_callable;
-
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Netresearch\NrBrowserAi\Controller\AssistantController;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use ReflectionMethod;
 use ReflectionProperty;
-
-use function str_repeat;
-
 use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
+
+use function call_user_func;
+use function class_exists;
+use function file_get_contents;
+use function is_array;
+use function is_callable;
+use function str_repeat;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {
@@ -111,6 +114,28 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertSame(
             'FILE:EXT:nr_browser_ai/Configuration/FlexForms/Assistant.xml',
             $this->flexFormDataStructureReference($contentElementTca),
+        );
+
+        $contentTypeItems = $contentElementTca['columns']['CType']['config']['items'] ?? null;
+        self::assertIsArray($contentTypeItems);
+        $assistantItem = null;
+        foreach ($contentTypeItems as $item) {
+            if (is_array($item)) {
+                $item = SelectItem::fromTcaItemArray($item);
+            }
+            if ($item instanceof SelectItem && $item->getValue() === 'nrbrowserai_assistant') {
+                $assistantItem = $item;
+                break;
+            }
+        }
+        self::assertInstanceOf(SelectItem::class, $assistantItem);
+        self::assertSame(
+            'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:plugin.assistant.title',
+            $assistantItem->getLabel(),
+        );
+        self::assertSame(
+            'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:plugin.assistant.description',
+            $assistantItem->getDescription(),
         );
     }
 
@@ -194,9 +219,72 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertIsArray($defaultSheet);
         $root = $defaultSheet['ROOT'] ?? null;
         self::assertIsArray($root);
-        self::assertSame('Assistant', $root['sheetTitle'] ?? null);
+        self::assertSame(
+            'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.sheet.assistant',
+            $root['sheetTitle'] ?? null,
+        );
         self::assertArrayNotHasKey('TCEforms', $root);
-        self::assertArrayHasKey('settings.contextSelector', $root['el']);
+        $fields = $root['el'] ?? null;
+        self::assertIsArray($fields);
+        foreach ([
+            'settings.title'                   => 'flexform.field.title',
+            'settings.introduction'            => 'flexform.field.introduction',
+            'settings.supplementalInstruction' => 'flexform.field.supplementalInstruction',
+            'settings.contextSelector'         => 'flexform.field.contextSelector',
+            'settings.fallbackMode'            => 'flexform.field.fallbackMode',
+            'settings.fallbackContent'         => 'flexform.field.fallbackContent',
+        ] as $fieldName => $labelKey) {
+            self::assertSame(
+                'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:' . $labelKey,
+                $fields[$fieldName]['label'] ?? null,
+            );
+        }
+        self::assertSame(
+            'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.fallbackMode.none',
+            $fields['settings.fallbackMode']['config']['items'][0]['label'] ?? null,
+        );
+        self::assertSame(
+            'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.fallbackMode.contentElement',
+            $fields['settings.fallbackMode']['config']['items'][1]['label'] ?? null,
+        );
+    }
+
+    #[Test]
+    public function backendLanguageFileIsValidAndProvidesEveryRegisteredLabel(): void
+    {
+        $languageFile = GeneralUtility::getFileAbsFileName(
+            'EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf',
+        );
+        self::assertFileExists($languageFile);
+
+        $document = new DOMDocument();
+        self::assertTrue($document->load($languageFile));
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('xlf', 'urn:oasis:names:tc:xliff:document:1.2');
+        $translationUnits = $xpath->query('//xlf:trans-unit');
+        self::assertNotFalse($translationUnits);
+        $translationKeys = [];
+        foreach ($translationUnits as $translationUnit) {
+            if ($translationUnit instanceof DOMElement) {
+                $translationKeys[] = $translationUnit->getAttribute('id');
+            }
+        }
+
+        foreach ([
+            'plugin.assistant.title',
+            'plugin.assistant.description',
+            'flexform.sheet.assistant',
+            'flexform.field.title',
+            'flexform.field.introduction',
+            'flexform.field.supplementalInstruction',
+            'flexform.field.contextSelector',
+            'flexform.field.fallbackMode',
+            'flexform.field.fallbackContent',
+            'flexform.item.fallbackMode.none',
+            'flexform.item.fallbackMode.contentElement',
+        ] as $expectedKey) {
+            self::assertContains($expectedKey, $translationKeys);
+        }
     }
 
     /**

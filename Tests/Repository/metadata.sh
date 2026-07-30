@@ -176,7 +176,10 @@ fi
 grep -q '^tt_content\.nrbrowserai_assistant = COA$' \
     "${repository_root}/Configuration/TypoScript/setup.typoscript"
 grep -q 'EXTBASEPLUGIN' "${repository_root}/Configuration/TypoScript/setup.typoscript"
-grep -q '@import "EXT:nr_browser_ai/Configuration/TypoScript/setup.typoscript"' \
-    "${repository_root}/Tests/Functional/Fixtures/Frontend/setup.typoscript"
+if grep -q 'nrbrowserai_assistant\\|Configuration/TypoScript/setup.typoscript' \
+    "${repository_root}/Tests/Functional/Fixtures/Frontend/setup.typoscript"; then
+    echo "Frontend fixture must use the production content-element mapping from the functional test setup" >&2
+    exit 1
+fi
 
 echo "Repository metadata is valid."

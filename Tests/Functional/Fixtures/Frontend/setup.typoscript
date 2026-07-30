@@ -1,5 +1,3 @@
-@import "EXT:nr_browser_ai/Configuration/TypoScript/setup.typoscript"
-
 page = PAGE
 page {
     10 = CONTENT

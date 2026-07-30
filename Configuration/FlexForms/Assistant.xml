@@ -3,48 +3,48 @@
     <sheets>
         <sDEF>
             <ROOT>
-                <sheetTitle>Assistant</sheetTitle>
+                <sheetTitle>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.sheet.assistant</sheetTitle>
                 <type>array</type>
                 <el>
                     <settings.title>
-                        <label>Title</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.title</label>
                         <config>
                             <type>input</type>
                         </config>
                     </settings.title>
                     <settings.introduction>
-                        <label>Introduction</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.introduction</label>
                         <config>
                             <type>text</type>
                             <rows>3</rows>
                         </config>
                     </settings.introduction>
                     <settings.supplementalInstruction>
-                        <label>Supplemental instruction</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.supplementalInstruction</label>
                         <config>
                             <type>text</type>
                             <rows>5</rows>
                         </config>
                     </settings.supplementalInstruction>
                     <settings.contextSelector>
-                        <label>Context selector</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.contextSelector</label>
                         <config>
                             <type>input</type>
                             <default>main</default>
                         </config>
                     </settings.contextSelector>
                     <settings.fallbackMode>
-                        <label>Fallback mode</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.fallbackMode</label>
                         <config>
                             <type>select</type>
                             <renderType>selectSingle</renderType>
                             <items>
                                 <numIndex index="0">
-                                    <label>None</label>
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.fallbackMode.none</label>
                                     <value>none</value>
                                 </numIndex>
                                 <numIndex index="1">
-                                    <label>Content element</label>
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.fallbackMode.contentElement</label>
                                     <value>contentElement</value>
                                 </numIndex>
                             </items>
@@ -52,7 +52,7 @@
                         </config>
                     </settings.fallbackMode>
                     <settings.fallbackContent>
-                        <label>Fallback content element</label>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.fallbackContent</label>
                         <config>
                             <type>group</type>
                             <allowed>tt_content</allowed>
