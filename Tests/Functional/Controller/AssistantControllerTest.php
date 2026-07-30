@@ -13,6 +13,7 @@ namespace Netresearch\NrBrowserAi\Tests\Functional\Controller;
 
 use function call_user_func;
 use function class_exists;
+use function file_get_contents;
 use function is_callable;
 
 use Netresearch\NrBrowserAi\Controller\AssistantController;
@@ -24,7 +25,7 @@ use ReflectionProperty;
 
 use function str_repeat;
 
-use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -107,15 +108,9 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertArrayHasKey('nrbrowserai_assistant', $contentElementTypes);
         $assistantContentElementType = $contentElementTypes['nrbrowserai_assistant'];
         self::assertIsArray($assistantContentElementType);
-        $columnsOverrides = $assistantContentElementType['columnsOverrides'] ?? null;
-        self::assertIsArray($columnsOverrides);
-        $flexFormOverride = $columnsOverrides['pi_flexform'] ?? null;
-        self::assertIsArray($flexFormOverride);
-        $flexFormConfiguration = $flexFormOverride['config'] ?? null;
-        self::assertIsArray($flexFormConfiguration);
         self::assertSame(
             'FILE:EXT:nr_browser_ai/Configuration/FlexForms/Assistant.xml',
-            $flexFormConfiguration['ds'],
+            $this->flexFormDataStructureReference($contentElementTca),
         );
     }
 
@@ -177,21 +172,20 @@ final class AssistantControllerTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function flexFormDataStructureUsesSupportedSheetStructure(): void
+    public function configuredFlexFormDataStructureResolvesToSupportedSheetStructure(): void
     {
-        $identifier    = '{"type":"tca","tableName":"tt_content","fieldName":"pi_flexform","dataStructureKey":"nrbrowserai_assistant"}';
-        $flexFormTools = $this->get(FlexFormTools::class);
-        $parseMethod   = new ReflectionMethod($flexFormTools, 'parseDataStructureByIdentifier');
+        $tca = $GLOBALS['TCA'] ?? null;
+        self::assertIsArray($tca);
+        $contentElementTca = $tca['tt_content'] ?? null;
+        self::assertIsArray($contentElementTca);
 
-        if ($parseMethod->getNumberOfParameters() >= 2) {
-            $tca = $GLOBALS['TCA'] ?? null;
-            self::assertIsArray($tca);
-            $ttContentTca = $tca['tt_content'] ?? null;
-            self::assertIsArray($ttContentTca);
-            $dataStructure = $parseMethod->invoke($flexFormTools, $identifier, $ttContentTca);
-        } else {
-            $dataStructure = $parseMethod->invoke($flexFormTools, $identifier);
-        }
+        $reference = $this->flexFormDataStructureReference($contentElementTca);
+        self::assertStringStartsWith('FILE:', $reference);
+        $file = GeneralUtility::getFileAbsFileName(substr($reference, 5));
+        self::assertFileExists($file);
+        $xml = file_get_contents($file);
+        self::assertIsString($xml);
+        $dataStructure = GeneralUtility::xml2array($xml);
 
         self::assertIsArray($dataStructure);
         $sheets = $dataStructure['sheets'] ?? null;
@@ -203,6 +197,24 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertSame('Assistant', $root['sheetTitle'] ?? null);
         self::assertArrayNotHasKey('TCEforms', $root);
         self::assertArrayHasKey('settings.contextSelector', $root['el']);
+    }
+
+    /**
+     * @param array<string, mixed> $contentElementTca
+     */
+    private function flexFormDataStructureReference(array $contentElementTca): string
+    {
+        if ((new Typo3Version())->getMajorVersion() >= 14) {
+            $reference = $contentElementTca['types']['nrbrowserai_assistant']
+                ['columnsOverrides']['pi_flexform']['config']['ds'] ?? null;
+        } else {
+            $reference = $contentElementTca['columns']['pi_flexform']['config']['ds']
+                ['*,nrbrowserai_assistant'] ?? null;
+        }
+
+        self::assertIsString($reference);
+
+        return $reference;
     }
 
     /**
