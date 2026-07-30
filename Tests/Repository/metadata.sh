@@ -28,8 +28,14 @@ if (($composer["extra"]["typo3/cms"]["extension-key"] ?? null) !== "nr_browser_a
 if (($composer["require"]["php"] ?? null) !== "^8.2") {
     throw new RuntimeException("Unexpected Composer PHP constraint");
 }
-if (($composer["config"]["platform"]["php"] ?? null) !== "8.2.0") {
-    throw new RuntimeException("Unexpected Composer PHP platform");
+if (array_key_exists("platform", $composer["config"] ?? [])) {
+    throw new RuntimeException("Reusable extensions must not pin a Composer platform");
+}
+if (($composer["require-dev"]["phpunit/phpunit"] ?? null) !== "^10.5 || ^11.5 || ^12.5 || ^13.2") {
+    throw new RuntimeException("Unexpected PHPUnit constraint");
+}
+if (isset($composer["require-dev"]["netresearch/typo3-ci-workflows"])) {
+    throw new RuntimeException("The CI tooling meta-package is incompatible with TYPO3 12.4");
 }
 foreach ($expectedTypo3Packages as $packageName) {
     if (($composer["require"][$packageName] ?? null) !== $expectedCoreConstraint) {
@@ -61,14 +67,14 @@ $expectedScripts = [
     "typecheck" => "tsc --noEmit",
 ];
 $expectedDevDependencies = [
-    "@axe-core/playwright" => "^4.10.2",
-    "@playwright/test" => "^1.55.0",
-    "@types/dom-chromium-ai" => "^0.0.15",
-    "@vitest/coverage-v8" => "^3.2.4",
-    "esbuild" => "^0.25.8",
-    "jsdom" => "^26.1.0",
-    "typescript" => "^5.9.2",
-    "vitest" => "^3.2.4",
+    "@axe-core/playwright" => "^4.12.1",
+    "@playwright/test" => "^1.62.0",
+    "@types/dom-chromium-ai" => "^0.0.17",
+    "@vitest/coverage-v8" => "^4.1.10",
+    "esbuild" => "^0.28.1",
+    "jsdom" => "^30.0.1",
+    "typescript" => "^7.0.2",
+    "vitest" => "^4.1.10",
 ];
 
 foreach ($expectedScripts as $name => $command) {
@@ -81,7 +87,7 @@ foreach ($expectedDevDependencies as $name => $constraint) {
         throw new RuntimeException(sprintf("Unexpected npm dev dependency %s", $name));
     }
 }
-if (($package["engines"]["node"] ?? null) !== ">=20") {
+if (($package["engines"]["node"] ?? null) !== "^22.22.2 || ^24.15.0 || >=26.0.0") {
     throw new RuntimeException("Unexpected Node.js engine constraint");
 }
 ' "${repository_root}/package.json"
@@ -110,5 +116,15 @@ if (!str_contains($configuration["description"] ?? "", "Netresearch")) {
     throw new RuntimeException("Extension description must mention Netresearch");
 }
 ' "${repository_root}/ext_emconf.php"
+
+if ! git -C "${repository_root}" check-ignore --quiet composer.lock; then
+    echo "composer.lock must be ignored for this reusable extension" >&2
+    exit 1
+fi
+
+if git -C "${repository_root}" ls-files --error-unmatch composer.lock >/dev/null 2>&1; then
+    echo "composer.lock must not be tracked for this reusable extension" >&2
+    exit 1
+fi
 
 echo "Repository metadata is valid."

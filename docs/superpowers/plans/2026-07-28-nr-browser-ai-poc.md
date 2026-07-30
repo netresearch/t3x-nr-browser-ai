@@ -135,11 +135,10 @@ Create `composer.json` with:
     "typo3/cms-frontend": "^12.4 || ^13.4 || ^14.3"
   },
   "require-dev": {
-    "netresearch/typo3-ci-workflows": "^1.2",
     "ergebnis/phpstan-rules": "^2.6",
     "friendsofphp/php-cs-fixer": "^3.68",
     "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^10.5 || ^11.5",
+    "phpunit/phpunit": "^10.5 || ^11.5 || ^12.5 || ^13.2",
     "typo3/testing-framework": "^8.2 || ^9.0"
   },
   "autoload": {
@@ -182,6 +181,9 @@ Create `package.json`:
 {
   "name": "@netresearch/nr-browser-ai",
   "private": true,
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
   "scripts": {
     "build": "esbuild Resources/Private/TypeScript/Assistant.ts --bundle --format=esm --target=chrome148 --outfile=Resources/Public/JavaScript/Assistant.js",
     "build:css": "cp Resources/Private/Styles/Assistant.css Resources/Public/Css/Assistant.css",
@@ -191,14 +193,14 @@ Create `package.json`:
     "ci": "npm run build && npm run build:css && npm run test:js"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.2",
-    "@playwright/test": "^1.55.0",
-    "@types/dom-chromium-ai": "^0.0.15",
-    "@vitest/coverage-v8": "^3.2.4",
-    "esbuild": "^0.25.8",
-    "jsdom": "^26.1.0",
-    "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.0",
+    "@types/dom-chromium-ai": "^0.0.17",
+    "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
 ```
@@ -211,12 +213,13 @@ reporters `text`, `json`, `html`, and `lcov`.
 - [ ] **Step 5: Install dependencies and run the metadata assertion**
 
 Run: `composer update --no-interaction && npm install && bash Tests/Repository/metadata.sh`  
-Expected: PASS and lock files generated.
+Expected: PASS. Composer may generate an ephemeral, ignored `composer.lock`;
+`package-lock.json` is generated and committed for the Node.js toolchain.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add composer.json composer.lock ext_emconf.php package.json package-lock.json \
+git add composer.json ext_emconf.php package.json package-lock.json \
   tsconfig.json vitest.config.ts .gitignore LICENSE Tests/Repository/metadata.sh
 git commit -S -s -m "chore: scaffold nr browser ai extension"
 ```
@@ -850,7 +853,6 @@ jobs:
       run-functional-tests: true
       functional-test-db: sqlite
       upload-coverage: true
-      remove-dev-deps: '[{"dep":"netresearch/typo3-ci-workflows","only-for":"^13.4|^14.3"}]'
 ```
 
 Add a Node job for `npm ci`, `npm run build`, `npm run test:js:coverage`, artifact

@@ -14,16 +14,16 @@
         "ci": "npm run build && npm run build:css && npm run test:js"
     },
     "engines": {
-        "node": ">=20"
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
     },
     "devDependencies": {
-        "@axe-core/playwright": "^4.10.2",
-        "@playwright/test": "^1.55.0",
-        "@types/dom-chromium-ai": "^0.0.15",
-        "@vitest/coverage-v8": "^3.2.4",
-        "esbuild": "^0.25.8",
-        "jsdom": "^26.1.0",
-        "typescript": "^5.9.2",
-        "vitest": "^3.2.4"
+        "@axe-core/playwright": "^4.12.1",
+        "@playwright/test": "^1.62.0",
+        "@types/dom-chromium-ai": "^0.0.17",
+        "@vitest/coverage-v8": "^4.1.10",
+        "esbuild": "^0.28.1",
+        "jsdom": "^30.0.1",
+        "typescript": "^7.0.2",
+        "vitest": "^4.1.10"
     }
 }

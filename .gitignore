@@ -1,4 +1,5 @@
 /.Build/
+/composer.lock
 /var/
 /node_modules/
 /coverage/
