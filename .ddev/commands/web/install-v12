@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+## Description: Install TYPO3 12.4 for nr-browser-ai compatibility testing
+## Usage: install-v12
+## Example: ddev install-v12
+
+set -euo pipefail
+
+VERSION=v12
+TYPO3_VERSION='^12.4'
+INSTALL_DIR="/var/www/html/$VERSION"
+EXTENSION_PATH="/var/www/nr_browser_ai"
+PACKAGE_NAME="netresearch/nr-browser-ai"
+SITE_URL="https://${VERSION}.nr-browser-ai.ddev.site"
+
+# Compatibility contract: audit.block-insecure false, --server-type=apache,
+# --admin-user-password="$TYPO3_SETUP_ADMIN_PASSWORD", data-nr-browser-ai-root.
+exec /mnt/ddev_config/commands/web/_install-typo3 \
+    "$VERSION" "$TYPO3_VERSION" "$INSTALL_DIR" "$EXTENSION_PATH" "$PACKAGE_NAME" "$SITE_URL"

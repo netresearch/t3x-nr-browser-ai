@@ -22,6 +22,27 @@ receive an editor-configured fallback content element or no plugin output.
 - PHP 8.2 through 8.5
 - Chrome Prompt API with a locally managed Gemini Nano model
 
+## DDEV development environment
+
+Prerequisites are Docker Engine 20.10 or newer, Docker Compose 2 or newer,
+and DDEV 1.25 or newer. Start the environment and install all disposable
+TYPO3 projects with:
+
+```bash
+ddev start
+ddev install-all
+```
+
+The overview is available at <https://nr-browser-ai.ddev.site/>. The TYPO3
+frontends are available at `https://v12.nr-browser-ai.ddev.site/`,
+`https://v13.nr-browser-ai.ddev.site/`, and
+`https://v14.nr-browser-ai.ddev.site/`; append `typo3/` for each backend.
+The backend credentials are `admin` / `Joh316!!`.
+
+Run `ddev install-v12`, `ddev install-v13`, or `ddev install-v14` to refresh
+one environment. The generated TYPO3 projects and databases live in persistent
+Docker volumes and are not committed.
+
 ## Support and security
 
 TYPO3 12.4 is retained for extension API compatibility only. The public

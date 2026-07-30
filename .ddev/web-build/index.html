@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>nr-browser-ai DDEV environments</title>
+    <style>
+        :root {
+            --nr-primary: #2F99A4;
+            --nr-primary-dark: #15585E;
+            --nr-accent: #FF4D00;
+            --nr-text: #585961;
+            --nr-border: #CCCDCC;
+            --nr-bg: #F5F5F5;
+            --nr-heading-font: 'Raleway', 'Helvetica Neue', Arial, sans-serif;
+            --nr-body-font: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--nr-bg);
+            color: var(--nr-text);
+            font-family: var(--nr-body-font);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        header, main, footer { padding: 1.5rem max(1.25rem, calc((100% - 72rem) / 2)); }
+        header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #FFFFFF;
+            border-bottom: 4px solid var(--nr-primary);
+        }
+        header a { flex: 0 0 3.5rem; line-height: 0; }
+        header svg { display: block; width: 3.5rem; height: 3.5rem; }
+        h1, h2, h3, .button { font-family: var(--nr-heading-font); }
+        h1 { margin: 0; font-size: clamp(1.75rem, 5vw, 2.75rem); line-height: 1.2; }
+        header p { margin: .25rem 0 0; max-width: 70ch; }
+        main { padding-top: 3rem; padding-bottom: 3rem; }
+        .notice {
+            margin-bottom: 2rem;
+            padding: 1rem 1.25rem;
+            background: #FFFFFF;
+            border-left: 4px solid var(--nr-accent);
+        }
+        .notice h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+        .notice p { margin: .25rem 0; }
+        code { color: #25272D; font-size: .95em; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            background: #FFFFFF;
+            border: 1px solid var(--nr-border);
+            border-top: 4px solid var(--nr-primary);
+            border-radius: .4rem;
+        }
+        .card h2 { margin: 0 0 .5rem; font-size: 1.5rem; }
+        .card p { flex-grow: 1; margin: 0 0 1.25rem; }
+        .links { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .button {
+            display: inline-block;
+            padding: .7rem 1rem;
+            background: var(--nr-primary-dark);
+            border: 2px solid var(--nr-primary-dark);
+            border-radius: .3rem;
+            color: #FFFFFF;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .button.secondary { background: #FFFFFF; color: var(--nr-primary-dark); }
+        a:focus-visible {
+            outline: 3px solid var(--nr-accent);
+            outline-offset: 3px;
+        }
+        .button:hover { text-decoration: underline; }
+        footer { background: var(--nr-text); color: #FFFFFF; text-align: center; }
+        footer a { color: #FFFFFF; font-weight: 700; }
+        @media (min-width: 48rem) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 64rem) {
+            .grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH">
+        <svg viewBox="-75 -75 440 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Netresearch symbol logo">
+            <title>Netresearch DTT GmbH</title>
+            <g>
+                <path fill="#2F99A4" d="M209.6,0V31.62h32.77a26.38,26.38,0,0,1,26.44,26.43V242a26.38,26.38,0,0,1-26.44,26.44H209.6V300h47.93a42.77,42.77,0,0,0,42.86-42.86V42.89A42.76,42.76,0,0,0,257.53,0ZM43.25,0A42.76,42.76,0,0,0,.39,42.89V257.18A42.76,42.76,0,0,0,43.25,300H91.18V268.46H58.4A26.38,26.38,0,0,1,32,242v-184A26.37,26.37,0,0,1,58.4,31.62H91.18V0Z" transform="translate(-0.39 -0.04)"/>
+                <path fill="#585961" d="M221.44,120.41c0-34.48-13.94-57.82-48.93-57.82-26.62,0-48.54,7.74-64.17,26.56l-.7-22.06-28.31.06V232.94h31.59V124.69c7.14-18.38,32.14-34.8,53-34.5,27.38.4,25.2,26.24,26,45.81v96.94h31.58" transform="translate(-0.39 -0.04)"/>
+            </g>
+        </svg>
+    </a>
+    <div>
+        <h1>nr-browser-ai</h1>
+        <p>Disposable TYPO3 environments for current-page Browser AI plugin development.</p>
+    </div>
+</header>
+<main>
+    <section class="notice" aria-labelledby="credentials">
+        <h2 id="credentials">Backend credentials</h2>
+        <p>Username: <code>admin</code> · Password: <code>Joh316!!</code></p>
+        <p>TYPO3 12.4 is provided for compatibility testing only and requires a maintained, security-patched distribution for production use.</p>
+    </section>
+    <section class="grid" aria-label="TYPO3 development environments">
+        <article class="card">
+            <h2>TYPO3 12.4</h2>
+            <p>Compatibility-only environment for the public end-of-life package line.</p>
+            <div class="links">
+                <a class="button" href="https://v12.nr-browser-ai.ddev.site/">Open frontend</a>
+                <a class="button secondary" href="https://v12.nr-browser-ai.ddev.site/typo3/">Open backend</a>
+            </div>
+        </article>
+        <article class="card">
+            <h2>TYPO3 13.4</h2>
+            <p>Current LTS environment with the local extension source mounted through Composer.</p>
+            <div class="links">
+                <a class="button" href="https://v13.nr-browser-ai.ddev.site/">Open frontend</a>
+                <a class="button secondary" href="https://v13.nr-browser-ai.ddev.site/typo3/">Open backend</a>
+            </div>
+        </article>
+        <article class="card">
+            <h2>TYPO3 14.3</h2>
+            <p>Current major environment built from TYPO3 minimal and the install package.</p>
+            <div class="links">
+                <a class="button" href="https://v14.nr-browser-ai.ddev.site/">Open frontend</a>
+                <a class="button secondary" href="https://v14.nr-browser-ai.ddev.site/typo3/">Open backend</a>
+            </div>
+        </article>
+    </section>
+</main>
+<footer>
+    Development environment by <a href="https://www.netresearch.de/">Netresearch DTT GmbH</a>
+</footer>
+</body>
+</html>

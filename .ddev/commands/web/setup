@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+## Description: Set up all nr-browser-ai TYPO3 environments
+## Usage: setup
+## Example: ddev setup
+
+set -euo pipefail
+
+/mnt/ddev_config/commands/web/install-all
