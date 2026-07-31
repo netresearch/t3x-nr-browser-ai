@@ -460,7 +460,12 @@ it('maps a missing LanguageModel global to unavailable', async () => {
 
 it('forwards normalized download progress', async () => {
   const progress: number[] = [];
-  const session = await adapter.create({onDownloadProgress: value => progress.push(value)});
+  const session = await adapter.create({
+    systemPrompt: 'Answer from the source.',
+    inputLanguages: ['en'],
+    outputLanguages: ['en'],
+    onDownloadProgress: value => progress.push(value),
+  });
   expect(progress).toEqual([0.25, 1]);
   expect(session).toBe(fakeSession);
 });
@@ -484,11 +489,18 @@ export interface ModelOptions {
   outputLanguages: string[];
 }
 
+export interface ModelMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export type ModelPrompt = string | ModelMessage[];
+
 export interface ModelSession {
   readonly contextUsage: number;
   readonly contextWindow: number;
-  measureContextUsage(input: LanguageModelPrompt): Promise<number>;
-  append(input: LanguageModelPrompt): Promise<void>;
+  measureContextUsage(input: ModelPrompt): Promise<number>;
+  append(input: ModelPrompt): Promise<void>;
   promptStreaming(input: string, options?: {signal?: AbortSignal}): ReadableStream<string>;
   destroy(): void;
 }
@@ -501,14 +513,18 @@ export interface LanguageModelAdapter {
 }
 ```
 
-The browser adapter feature-detects `globalThis.LanguageModel`, passes identical
-language options to `availability()` and `create()`, converts
-`downloadprogress.loaded` to `0..1`, and never starts `create()` during a passive
-availability check.
+For the Chrome 148 Prompt API shape represented by `@types/dom-chromium-ai`
+0.0.17, the browser adapter maps the application's language options to identical
+`expectedInputs` and `expectedOutputs` text capabilities for `availability()`
+and `create()`. Only `create()` receives the administrator prompt as the first
+`initialPrompts` system message and a `monitor` callback. The adapter
+feature-detects `globalThis.LanguageModel`, maps unknown availability results to
+`unavailable`, forwards only finite `downloadprogress.loaded` values clamped to
+`0..1`, and never starts `create()` during a passive availability check.
 
 - [ ] **Step 4: Run tests and typecheck**
 
-Run: `npm run test:js -- Tests/JavaScript/ai/BrowserLanguageModelAdapter.test.ts && npx tsc`  
+Run: `npm run test:js -- Tests/JavaScript/ai/BrowserLanguageModelAdapter.test.ts && npm run typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
