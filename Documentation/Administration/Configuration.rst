@@ -96,8 +96,12 @@ TypoScript settings
    :type: float
    :default: 0.8
 
-   Maximum share of the browser model context window used by page context and
-   dialogue. Values must be greater than zero and at most one.
+   Target used to budget the initial page source. The source is reduced when
+   necessary to fit beneath this share of the context window after the system
+   instructions. Before each new question, no prompt starts when Chrome's
+   current ``contextUsage`` has reached the configured share of
+   ``contextWindow``. A generated response can take usage beyond the target.
+   Values must be greater than zero and at most one.
 
 Override both values in the site's TypoScript constants:
 

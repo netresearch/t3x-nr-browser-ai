@@ -6,6 +6,35 @@
 Netresearch Browser AI
 ==========================
 
+.. image:: /Images/netresearch-underline.svg
+   :alt:
+   :width: 200px
+   :class: no-border
+
+:Extension key:
+   nr_browser_ai
+
+:Package name:
+   netresearch/nr-browser-ai
+
+:Version:
+   |release|
+
+:Language:
+   en
+
+:Author:
+   Netresearch DTT GmbH
+
+:License:
+   This document is published under the
+   `CC BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`__ license.
+
+:Rendered:
+   |today|
+
+----
+
 Netresearch Browser AI adds a frontend question-and-answer dialogue grounded in
 content of the currently open page. Chrome 148 or newer runs Gemini Nano on
 the visitor's device through the built-in Prompt API.
@@ -85,3 +114,23 @@ Report vulnerabilities privately as described in the repository's
 
 Developed and maintained by
 `Netresearch DTT GmbH <https://www.netresearch.de/>`__.
+
+----
+
+.. card-grid::
+   :columns: 1
+   :gap: 4
+   :card-height: 100
+
+   .. card:: [n] A Netresearch extension
+
+      .. image:: /Images/netresearch-underline.svg
+         :alt:
+         :width: 120px
+         :class: no-border
+
+      Professional TYPO3 development, AI integration and enterprise
+      consulting since 2002.
+
+      .. card-footer:: `netresearch.de <https://www.netresearch.de>`__
+         :button-style: btn btn-secondary stretched-link

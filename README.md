@@ -12,6 +12,9 @@
 
 <p align="center">
   <a href="https://github.com/netresearch/t3x-nr-browser-ai/actions/workflows/ci.yml"><img src="https://github.com/netresearch/t3x-nr-browser-ai/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/netresearch/t3x-nr-browser-ai"><img src="https://codecov.io/gh/netresearch/t3x-nr-browser-ai/graph/badge.svg" alt="Codecov"></a>
+  <a href="https://phpstan.org/"><img src="https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg" alt="PHPStan level 10"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.2%2B-blue.svg" alt="PHP 8.2+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--2.0--or--later-blue.svg" alt="GPL-2.0-or-later"></a>
   <a href="https://typo3.org/"><img src="https://img.shields.io/badge/TYPO3-12.4%20%7C%2013.4%20%7C%2014.3-orange.svg" alt="TYPO3 12.4, 13.4 and 14.3"></a>
 </p>
@@ -60,8 +63,10 @@ introduction, editor instruction, context selector and fallback.
   currently open page. Scripts, forms and the assistant itself are excluded.
 - Unsupported clients and permanent setup errors show the selected same-page
   fallback content element or no output, according to the plugin setting.
-- A conversation uses at most 80% of the browser model context by default and
-  can be cleared with **Reset**.
+- During setup, the initial page source is reduced when necessary to fit the
+  default 80% context-usage target. Before each new question, no prompt starts
+  when Chrome reports that current usage has reached that threshold; the user
+  must select **Reset**. A generated response can take usage beyond the target.
 
 Detailed settings are in the
 [administrator reference](Documentation/Administration/Configuration.rst).
@@ -103,6 +108,8 @@ disposable TYPO3 12.4, 13.4 and 14.3 installations.
 
 ## License
 
-Licensed under GPL-2.0-or-later. See [LICENSE](LICENSE).
+The extension source is licensed under GPL-2.0-or-later. See
+[LICENSE](LICENSE). The manual in `Documentation/` is licensed under
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Developed and maintained by [Netresearch DTT GmbH](https://www.netresearch.de/)

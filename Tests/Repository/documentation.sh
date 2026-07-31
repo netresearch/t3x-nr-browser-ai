@@ -15,6 +15,16 @@ assert_contains() {
     fi
 }
 
+assert_not_contains() {
+    local needle="$1"
+    local file="${2:-${readme}}"
+
+    if grep -Fq -- "${needle}" "${file}"; then
+        printf 'Misleading documentation text %q found in %s\n' "${needle}" "${file}" >&2
+        exit 1
+    fi
+}
+
 first_line="$(sed -n '1p' "${readme}")"
 last_line="$(awk 'NF {line=$0} END {print line}' "${readme}")"
 
@@ -35,9 +45,20 @@ assert_contains '22 GB'
 assert_contains 'fallback content element or no output'
 assert_contains 'No question, page content or answer is sent to an application service'
 assert_contains 'GPL-2.0-or-later'
+assert_contains 'Creative Commons Attribution 4.0'
 assert_contains '[Netresearch DTT GmbH](https://www.netresearch.de/)'
+assert_contains 'codecov.io/gh/netresearch/t3x-nr-browser-ai'
+assert_contains 'PHPStan-level%2010'
+assert_contains 'PHP-8.2%2B'
+assert_contains 'default 80% context-usage target'
+assert_not_contains 'uses at most 80% of the browser model context'
 
 assert_contains 'chrome://on-device-internals' "${root_dir}/Documentation/User/BrowserSetup.rst"
 assert_contains 'Content-Security-Policy' "${root_dir}/Documentation/Security/Privacy.rst"
+assert_contains 'CC BY 4.0' "${root_dir}/Documentation/Index.rst"
+assert_contains '[n] A Netresearch extension' "${root_dir}/Documentation/Index.rst"
+assert_contains '/Images/netresearch-underline.svg' "${root_dir}/Documentation/Index.rst"
+assert_contains '<rect width="200" height="4" rx="2" fill="#2F99A4"/>' \
+    "${root_dir}/Documentation/Images/netresearch-underline.svg"
 
 printf 'Documentation assertions passed.\n'
