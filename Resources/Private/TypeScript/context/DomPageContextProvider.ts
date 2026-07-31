@@ -20,6 +20,17 @@ const EXCLUDED_CONTENT = [
 const HEADING_ELEMENTS = /^H[1-6]$/u;
 const LOW_INFORMATION_THRESHOLD = 40;
 
+/**
+ * Phrasing-content elements that continue the surrounding text run. Every other
+ * element is treated as a block boundary, so text carried directly by wrappers
+ * such as div, blockquote, dd, figcaption or summary is still extracted.
+ */
+const INLINE_ELEMENTS = new Set([
+    'A', 'ABBR', 'B', 'BDI', 'BDO', 'BR', 'CITE', 'CODE', 'DATA', 'DEL', 'DFN',
+    'EM', 'I', 'INS', 'KBD', 'MARK', 'Q', 'RP', 'RT', 'RUBY', 'S', 'SAMP',
+    'SMALL', 'SPAN', 'STRONG', 'SUB', 'SUP', 'TIME', 'U', 'VAR', 'WBR',
+]);
+
 export class PageContextError extends Error {
     public constructor(
         public readonly code: 'context-root-missing' | 'context-selector-invalid',
@@ -161,6 +172,10 @@ function extractSections(root: Element): PageSection[] {
     };
 
     const visitNode = (node: Node): void => {
+        if (node.nodeType === node.TEXT_NODE) {
+            inlineParts.push(node.textContent ?? '');
+            return;
+        }
         if (!(node instanceof Element)) {
             return;
         }
@@ -173,6 +188,7 @@ function extractSections(root: Element): PageSection[] {
         }
 
         if (node.matches('p,li,table')) {
+            flushInline();
             node.childNodes.forEach(visitSemanticNode);
             flushInline();
             return;
@@ -184,7 +200,14 @@ function extractSections(root: Element): PageSection[] {
             return;
         }
 
+        if (INLINE_ELEMENTS.has(node.tagName)) {
+            node.childNodes.forEach(visitNode);
+            return;
+        }
+
+        flushInline();
         node.childNodes.forEach(visitNode);
+        flushInline();
     };
 
     visitNode(root);

@@ -60,6 +60,39 @@ var EXCLUDED_CONTENT = [
 ].join(",");
 var HEADING_ELEMENTS = /^H[1-6]$/u;
 var LOW_INFORMATION_THRESHOLD = 40;
+var INLINE_ELEMENTS = /* @__PURE__ */ new Set([
+  "A",
+  "ABBR",
+  "B",
+  "BDI",
+  "BDO",
+  "BR",
+  "CITE",
+  "CODE",
+  "DATA",
+  "DEL",
+  "DFN",
+  "EM",
+  "I",
+  "INS",
+  "KBD",
+  "MARK",
+  "Q",
+  "RP",
+  "RT",
+  "RUBY",
+  "S",
+  "SAMP",
+  "SMALL",
+  "SPAN",
+  "STRONG",
+  "SUB",
+  "SUP",
+  "TIME",
+  "U",
+  "VAR",
+  "WBR"
+]);
 var PageContextError = class extends Error {
   constructor(code, message) {
     super(message);
@@ -177,6 +210,10 @@ function extractSections(root) {
     node.childNodes.forEach(visitSemanticNode);
   };
   const visitNode = (node) => {
+    if (node.nodeType === node.TEXT_NODE) {
+      inlineParts.push(node.textContent ?? "");
+      return;
+    }
     if (!(node instanceof Element)) {
       return;
     }
@@ -187,6 +224,7 @@ function extractSections(root) {
       return;
     }
     if (node.matches("p,li,table")) {
+      flushInline();
       node.childNodes.forEach(visitSemanticNode);
       flushInline();
       return;
@@ -196,7 +234,13 @@ function extractSections(root) {
       flushInline();
       return;
     }
+    if (INLINE_ELEMENTS.has(node.tagName)) {
+      node.childNodes.forEach(visitNode);
+      return;
+    }
+    flushInline();
     node.childNodes.forEach(visitNode);
+    flushInline();
   };
   visitNode(root);
   flushInline();
