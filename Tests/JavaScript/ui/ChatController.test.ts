@@ -104,10 +104,13 @@ describe('ChatController capability and setup states', () => {
     it.each(['downloadable', 'downloading'] as const)('requires a setup activation for %s availability and reports progress', async availability => {
         const root = markup();
         const fakes = fixture(availability);
-        fakes.create.mockImplementation(async options => {
+        const progress = root.querySelector('[data-nr-browser-ai-progress]') as HTMLProgressElement;
+        let finishDownload!: () => void;
+        fakes.create.mockImplementation(options => new Promise(resolve => {
+            expect(progress.value).toBe(0);
             options.onDownloadProgress(0.4);
-            return fakes.browserSession;
-        });
+            finishDownload = () => resolve(fakes.browserSession);
+        }));
         const subject = controller(root, fakes);
         await subject.start();
 
@@ -117,8 +120,10 @@ describe('ChatController capability and setup states', () => {
         (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
         expect(fakes.create).toHaveBeenCalledTimes(1);
         expect(root.dataset.state).toBe('downloading');
+        expect(progress.value).toBe(0.4);
+        finishDownload();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
-        expect((root.querySelector('[data-nr-browser-ai-progress]') as HTMLProgressElement).value).toBe(0.4);
+        expect(progress.value).toBe(1);
     });
 
     it('becomes ready for available capability without passively creating a model', async () => {
@@ -166,6 +171,20 @@ describe('ChatController capability and setup states', () => {
         await controller(root, fakes).start();
 
         expect(root.dataset.state).toBe('unavailable');
+    });
+
+    it('gives a permanent page-context failure precedence over a simultaneous capability rejection', async () => {
+        const root = markup();
+        const fakes = fixture('available');
+        fakes.availabilitySpy.mockRejectedValue(new Error('Capability check failed'));
+        fakes.provider.getContext = vi.fn(async () => {
+            throw new PageContextError('context-root-missing', 'Missing');
+        });
+
+        await controller(root, fakes).start();
+
+        expect(root.dataset.state).toBe('unavailable');
+        expect((root.querySelector('[data-nr-browser-ai-fallback]') as HTMLElement).hidden).toBe(false);
     });
 });
 

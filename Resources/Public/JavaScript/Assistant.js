@@ -666,6 +666,10 @@ var ChatController = class {
     if (!this.isCurrent(operation)) {
       return;
     }
+    if (contextResult.status === "rejected" && contextResult.reason instanceof PageContextError) {
+      this.setState("unavailable");
+      return;
+    }
     if (availabilityResult.status === "fulfilled" && availabilityResult.value === "unavailable") {
       this.setState("unavailable");
       return;
@@ -747,7 +751,9 @@ var ChatController = class {
     const dialogue = new LanguageModelSession(this.adapter, this.contextProvider, {
       ...this.options,
       onDownloadProgress: (value) => {
-        this.elements.progress.value = value;
+        if (this.state === "downloading") {
+          this.elements.progress.value = value;
+        }
       }
     });
     this.session = dialogue;
@@ -758,7 +764,6 @@ var ChatController = class {
       return;
     }
     const operation = ++this.operation;
-    this.elements.progress.value = 0;
     this.setState(activeState);
     try {
       const initialization = this.createAndInitialize();
@@ -852,6 +857,11 @@ var ChatController = class {
     this.state = state;
     this.root.dataset.state = state;
     this.elements.status.textContent = statusMessages[state];
+    if (state === "downloading") {
+      this.elements.progress.value = 0;
+    } else if (state === "ready") {
+      this.elements.progress.value = 1;
+    }
     const unavailable = state === "unavailable";
     this.elements.fallback.hidden = !unavailable;
     this.elements.assistant.hidden = unavailable;
