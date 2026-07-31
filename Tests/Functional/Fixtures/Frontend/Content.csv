@@ -4,6 +4,11 @@
 ,2,1,"Browser AI none fallback",/none,0,0
 ,3,1,"Browser AI self-reference",/self-reference,0,0
 ,4,1,"Browser AI invalid fallback",/invalid-fallback,0,0
+,5,1,"Browser AI indirect cycle",/indirect-cycle,0,0
+,6,1,"Browser AI cross-page fallback",/cross-page,0,0
+,7,1,"Browser AI referenced content",/referenced-content,0,0
+,8,1,"Browser AI hidden fallback",/hidden-fallback,0,0
+,9,1,"Browser AI deleted fallback",/deleted-fallback,0,0
 "tt_content"
 ,"uid","pid","CType","header","bodytext","colPos","sorting","deleted","hidden","sys_language_uid","pi_flexform"
 ,1,1,"nrbrowserai_assistant","Assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
@@ -27,7 +32,7 @@
         </sheet>
     </data>
 </T3FlexForms>"
-,2,1,"text","Fallback","",1,512,0,0,0,""
+,2,1,"text","Fallback","<p data-fallback-output>Rendered fallback content</p>",1,512,0,0,0,""
 ,3,2,"nrbrowserai_assistant","No fallback","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <T3FlexForms>
     <data>
@@ -43,6 +48,19 @@
         </sheet>
     </data>
 </T3FlexForms>"
+,6,5,"nrbrowserai_assistant","Cycle A","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms><data><sheet index=""sDEF""><language index=""lDEF""><field index=""settings.fallbackMode""><value index=""vDEF"">contentElement</value></field><field index=""settings.fallbackContent""><value index=""vDEF"">tt_content_7</value></field></language></sheet></data></T3FlexForms>"
+,7,5,"nrbrowserai_assistant","Cycle B","",1,512,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms><data><sheet index=""sDEF""><language index=""lDEF""><field index=""settings.fallbackMode""><value index=""vDEF"">contentElement</value></field><field index=""settings.fallbackContent""><value index=""vDEF"">tt_content_6</value></field></language></sheet></data></T3FlexForms>"
+,8,6,"nrbrowserai_assistant","Cross-page assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms><data><sheet index=""sDEF""><language index=""lDEF""><field index=""settings.fallbackMode""><value index=""vDEF"">contentElement</value></field><field index=""settings.fallbackContent""><value index=""vDEF"">tt_content_9</value></field></language></sheet></data></T3FlexForms>"
+,9,7,"text","Cross-page target","<p data-cross-page-fallback>Cross-page fallback</p>",1,256,0,0,0,""
+,10,8,"nrbrowserai_assistant","Hidden fallback assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms><data><sheet index=""sDEF""><language index=""lDEF""><field index=""settings.fallbackMode""><value index=""vDEF"">contentElement</value></field><field index=""settings.fallbackContent""><value index=""vDEF"">tt_content_11</value></field></language></sheet></data></T3FlexForms>"
+,11,7,"text","Hidden target","<p data-hidden-fallback>Must stay hidden</p>",1,512,0,1,0,""
+,12,9,"nrbrowserai_assistant","Deleted fallback assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms><data><sheet index=""sDEF""><language index=""lDEF""><field index=""settings.fallbackMode""><value index=""vDEF"">contentElement</value></field><field index=""settings.fallbackContent""><value index=""vDEF"">tt_content_13</value></field></language></sheet></data></T3FlexForms>"
+,13,7,"text","Deleted target","<p data-deleted-fallback>Must stay deleted</p>",1,768,1,0,0,""
 ,4,3,"nrbrowserai_assistant","Self reference","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <T3FlexForms>
     <data>

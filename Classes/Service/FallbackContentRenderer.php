@@ -11,10 +11,16 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Service;
 
+use function array_pop;
+use function in_array;
+
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class FallbackContentRenderer
 {
+    /** @var list<int> */
+    private array $renderStack = [];
+
     public function render(
         string $mode,
         int $selectedContentUid,
@@ -31,14 +37,29 @@ final class FallbackContentRenderer
             return '';
         }
 
-        return $contentObjectRenderer->cObjGetSingle(
-            'CONTENT',
-            [
-                'table' => 'tt_content',
-                'select.' => [
-                    'uidInList' => (string) $selectedContentUid,
+        if (in_array($selectedContentUid, $this->renderStack, true)) {
+            return '';
+        }
+
+        $addedCurrentContent = !in_array($currentContentUid, $this->renderStack, true);
+        if ($addedCurrentContent) {
+            $this->renderStack[] = $currentContentUid;
+        }
+        $this->renderStack[] = $selectedContentUid;
+
+        try {
+            return $contentObjectRenderer->cObjGetSingle(
+                'RECORDS',
+                [
+                    'tables' => 'tt_content',
+                    'source' => (string) $selectedContentUid,
                 ],
-            ],
-        );
+            );
+        } finally {
+            array_pop($this->renderStack);
+            if ($addedCurrentContent) {
+                array_pop($this->renderStack);
+            }
+        }
     }
 }

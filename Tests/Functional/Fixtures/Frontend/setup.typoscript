@@ -12,5 +12,5 @@ page {
 
 tt_content.text = TEXT
 tt_content.text {
-    value = <p data-fallback-output>Rendered fallback content</p>
+    field = bodytext
 }

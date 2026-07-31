@@ -221,6 +221,53 @@ final class AssistantControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function indirectFallbackCycleIsBoundedThroughFrontendDispatch(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/indirect-cycle'))->withPageId(5),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(2, substr_count($body, 'data-nr-browser-ai-root'));
+        self::assertLessThan(15_000, strlen($body));
+    }
+
+    #[Test]
+    public function visibleCrossPageContentElementIsRenderedAsFallback(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/cross-page'))->withPageId(6),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*'
+            . '<p data-cross-page-fallback>Cross-page fallback<\\/p>\\s*<\\/div>/',
+            $body,
+        );
+    }
+
+    #[Test]
+    public function hiddenAndDeletedCrossPageContentElementsRemainUnavailable(): void
+    {
+        foreach ([8 => 'hidden', 9 => 'deleted'] as $pageId => $marker) {
+            $response = $this->executeFrontendSubRequest(
+                (new InternalRequest('https://website.local/' . $marker . '-fallback'))->withPageId($pageId),
+            );
+            $body = (string) $response->getBody();
+
+            self::assertSame(200, $response->getStatusCode());
+            self::assertMatchesRegularExpression(
+                '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
+                $body,
+            );
+            self::assertStringNotContainsString('data-' . $marker . '-fallback', $body);
+        }
+    }
+
+    #[Test]
     public function missingCurrentContentRecordFailsClosed(): void
     {
         $body = $this->renderAssistant([
