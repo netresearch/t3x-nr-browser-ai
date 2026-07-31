@@ -45,6 +45,9 @@ if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1
 if (($composer["require-dev"]["typo3/testing-framework"] ?? null) !== "^8.2 || ^9.0") {
     throw new RuntimeException("Unexpected TYPO3 testing framework constraint");
 }
+if (($composer["extra"]["captainhook"]["config"] ?? null) !== "Build/captainhook.json") {
+    throw new RuntimeException("Unexpected CaptainHook configuration path");
+}
 foreach ($expectedTypo3Packages as $packageName) {
     if (($composer["require"][$packageName] ?? null) !== $expectedCoreConstraint) {
         throw new RuntimeException(sprintf("Unexpected constraint for %s", $packageName));
@@ -57,6 +60,18 @@ if (($composer["authors"][0]["email"] ?? null) !== "typo3@netresearch.de") {
     throw new RuntimeException("Unexpected Composer author email");
 }
 ' "${repository_root}/composer.json"
+
+php -r '
+$configuration = json_decode((string) file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR);
+foreach (["pre-commit", "commit-msg", "pre-push"] as $hook) {
+    if (($configuration[$hook]["enabled"] ?? null) !== true
+        || !is_array($configuration[$hook]["actions"] ?? null)
+        || $configuration[$hook]["actions"] === []
+    ) {
+        throw new RuntimeException(sprintf("CaptainHook %s actions are missing", $hook));
+    }
+}
+' "${repository_root}/Build/captainhook.json"
 
 php -r '
 $packageFile = $argv[1];

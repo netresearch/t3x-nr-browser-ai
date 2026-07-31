@@ -1,0 +1,41 @@
+{
+    "name": "netresearch/nr-browser-ai-test-runtime",
+    "description": "Isolated local test runtime for nr_browser_ai",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "__PROJECT_ROOT__",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "netresearch/nr-browser-ai": "*@dev"
+    },
+    "require-dev": {
+        "typo3/testing-framework": "^8.2 || ^9.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Netresearch\\NrBrowserAi\\Tests\\": "../../../Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "a9f/fractor-extension-installer": true,
+            "captainhook/hook-installer": false,
+            "infection/extension-installer": true,
+            "phpstan/extension-installer": true,
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "bin-dir": "bin",
+        "sort-packages": true,
+        "vendor-dir": "vendor"
+    }
+}

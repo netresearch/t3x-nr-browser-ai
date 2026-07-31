@@ -9,6 +9,7 @@ set -euo pipefail
 
 SUITE=""
 PHP_VERSION="8.4"
+TYPO3_VERSION="14.3"
 DBMS="sqlite"
 DBMS_VERSION=""
 DRY_RUN=1
@@ -25,6 +26,7 @@ Suites:
 
 Options:
   -p <8.2|8.3|8.4|8.5>  PHP version (default: 8.4)
+  -t <12.4|13.4|14.3>    TYPO3 version (default: 14.3)
   -d <sqlite|mariadb|mysql|postgres>
                            Functional-test database (default: sqlite)
   -i <version>             Database image version
@@ -42,6 +44,10 @@ while (($#)); do
             ;;
         -p)
             PHP_VERSION="${2:-}"
+            shift 2
+            ;;
+        -t)
+            TYPO3_VERSION="${2:-}"
             shift 2
             ;;
         -d)
@@ -88,6 +94,16 @@ case "${PHP_VERSION}" in
     *) echo "Unsupported PHP version: ${PHP_VERSION}" >&2; exit 1 ;;
 esac
 
+case "${TYPO3_VERSION}" in
+    12.4|13.4|14.3) ;;
+    *) echo "Unsupported TYPO3 version: ${TYPO3_VERSION}" >&2; exit 1 ;;
+esac
+
+if [[ "${TYPO3_VERSION}" == "12.4" && "${PHP_VERSION}" == "8.5" ]]; then
+    echo "TYPO3 12.4 is not supported with PHP 8.5." >&2
+    exit 1
+fi
+
 case "${DBMS}" in
     sqlite) ;;
     mariadb) DBMS_VERSION="${DBMS_VERSION:-10.11}" ;;
@@ -99,6 +115,12 @@ esac
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PHP_IMAGE="ghcr.io/typo3/core-testing-php${PHP_VERSION//./}:latest"
 PLAYWRIGHT_IMAGE="mcr.microsoft.com/playwright:v1.62.1-noble"
+RUNTIME_KEY="php${PHP_VERSION//./}-typo3${TYPO3_VERSION//./}"
+RUNTIME_DIR="${ROOT_DIR}/.Build/runtime/${RUNTIME_KEY}"
+RUNTIME_COMPOSER="${RUNTIME_DIR}/composer.json"
+RUNTIME_VENDOR="${RUNTIME_DIR}/vendor"
+RUNTIME_BIN="${RUNTIME_DIR}/bin"
+RUNTIME_READY=0
 NETWORK="nr-browser-ai-$RANDOM-$$"
 DB_CONTAINER=""
 
@@ -135,18 +157,73 @@ if [[ ! -t 0 || ! -t 1 ]]; then
     CONTAINER_ARGS+=(--interactive=false)
 fi
 
-run_php() {
+run_container() {
     "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" \
         -e COMPOSER_ROOT_VERSION=0.1.x-dev \
         -e XDEBUG_MODE=off \
         "${PHP_IMAGE}" "$@"
 }
 
+ensure_runtime() {
+    if [[ "${RUNTIME_READY}" -eq 1 ]]; then
+        return
+    fi
+
+    local expected_fingerprint current_fingerprint=""
+    expected_fingerprint="$({ sha256sum "${ROOT_DIR}/composer.json" "${ROOT_DIR}/Build/Runtime/composer.json"; printf '%s\n' "${PHP_VERSION}" "${TYPO3_VERSION}"; } | sha256sum | cut -d' ' -f1)"
+    if [[ -f "${RUNTIME_DIR}/fingerprint" ]]; then
+        current_fingerprint="$(<"${RUNTIME_DIR}/fingerprint")"
+    fi
+
+    if [[ "${expected_fingerprint}" != "${current_fingerprint}" || ! -f "${RUNTIME_VENDOR}/autoload.php" ]]; then
+        rm -rf "${RUNTIME_DIR}"
+        mkdir -p "${RUNTIME_DIR}" "${ROOT_DIR}/.Build/runtime/composer-cache"
+        cp "${ROOT_DIR}/Build/Runtime/composer.json" "${RUNTIME_COMPOSER}"
+        sed -i "s#__PROJECT_ROOT__#${ROOT_DIR}#" "${RUNTIME_COMPOSER}"
+
+        local composer_environment=(env "COMPOSER_CACHE_DIR=${ROOT_DIR}/.Build/runtime/composer-cache")
+        local composer_command=(composer --working-dir "${RUNTIME_DIR}")
+        if [[ "${TYPO3_VERSION}" == "12.4" ]]; then
+            run_container "${composer_environment[@]}" "${composer_command[@]}" config --no-plugins audit.block-insecure false
+        fi
+        run_container "${composer_environment[@]}" "${composer_command[@]}" require --no-update \
+            "typo3/cms-core:^${TYPO3_VERSION}" \
+            "typo3/cms-extbase:^${TYPO3_VERSION}" \
+            "typo3/cms-fluid:^${TYPO3_VERSION}" \
+            "typo3/cms-frontend:^${TYPO3_VERSION}"
+        if [[ "${TYPO3_VERSION}" != "12.4" ]]; then
+            run_container "${composer_environment[@]}" "${composer_command[@]}" require --dev --no-update \
+                'netresearch/typo3-ci-workflows:^1.3'
+        fi
+        run_container "${composer_environment[@]}" "${composer_command[@]}" update \
+            --with-all-dependencies --no-interaction --no-progress
+        if [[ "${TYPO3_VERSION}" == "12.4" ]]; then
+            if ! run_container "${composer_environment[@]}" "${composer_command[@]}" audit --locked; then
+                echo "TYPO3 12.4 is EOL; known advisories are reported but do not block compatibility tests." >&2
+            fi
+        else
+            run_container "${composer_environment[@]}" "${composer_command[@]}" audit --locked
+        fi
+        printf '%s\n' "${expected_fingerprint}" > "${RUNTIME_DIR}/fingerprint"
+    fi
+
+    RUNTIME_READY=1
+}
+
+run_php() {
+    ensure_runtime
+    run_container env \
+        "NR_BROWSER_AI_AUTOLOAD=${RUNTIME_VENDOR}/autoload.php" \
+        "NR_BROWSER_AI_VENDOR=${RUNTIME_VENDOR}" \
+        "$@"
+}
+
 run_unit() {
-    run_php php .Build/bin/phpunit --configuration Build/UnitTests.xml "${EXTRA_ARGS[@]}"
+    run_php php "${RUNTIME_BIN}/phpunit" --configuration Build/UnitTests.xml "${EXTRA_ARGS[@]}"
 }
 
 run_functional() {
+    ensure_runtime
     mkdir -p "${ROOT_DIR}/.Build/Web/typo3temp/var/tests/functional-sqlite-dbs"
     local database_args=()
     local runtime_args=("${CONTAINER_ARGS[@]}")
@@ -190,17 +267,19 @@ run_functional() {
     "${CONTAINER_BIN}" run "${runtime_args[@]}" \
         -e COMPOSER_ROOT_VERSION=0.1.x-dev \
         -e XDEBUG_MODE=off \
+        -e "NR_BROWSER_AI_AUTOLOAD=${RUNTIME_VENDOR}/autoload.php" \
+        -e "NR_BROWSER_AI_VENDOR=${RUNTIME_VENDOR}" \
         "${database_args[@]}" \
-        "${PHP_IMAGE}" php .Build/bin/phpunit \
+        "${PHP_IMAGE}" php "${RUNTIME_BIN}/phpunit" \
         --configuration Build/FunctionalTests.xml "${EXTRA_ARGS[@]}"
 }
 
 run_cgl() {
-    local fixer_args=(fix --config Build/.php-cs-fixer.dist.php --diff --verbose --cache-file .Build/.php-cs-fixer.cache)
+    local fixer_args=(fix --config Build/.php-cs-fixer.dist.php --diff --verbose --cache-file "${RUNTIME_DIR}/.php-cs-fixer.cache")
     if [[ "${DRY_RUN}" -eq 1 ]]; then
         fixer_args+=(--dry-run)
     fi
-    run_php .Build/bin/php-cs-fixer "${fixer_args[@]}" "${EXTRA_ARGS[@]}"
+    run_php "${RUNTIME_BIN}/php-cs-fixer" "${fixer_args[@]}" "${EXTRA_ARGS[@]}"
 }
 
 run_rector() {
@@ -208,7 +287,7 @@ run_rector() {
     if [[ "${DRY_RUN}" -eq 1 ]]; then
         rector_args+=(--dry-run)
     fi
-    run_php .Build/bin/rector "${rector_args[@]}" "${EXTRA_ARGS[@]}"
+    run_php "${RUNTIME_BIN}/rector" "${rector_args[@]}" "${EXTRA_ARGS[@]}"
 }
 
 if [[ "${UPDATE_IMAGES}" -eq 1 ]]; then
@@ -227,7 +306,14 @@ case "${SUITE}" in
         run_php sh -c 'find Classes Configuration Tests -type f -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
         ;;
     phpstan)
-        run_php .Build/bin/phpstan analyze --configuration Build/phpstan.neon --memory-limit=-1 "${EXTRA_ARGS[@]}"
+        if [[ "${TYPO3_VERSION}" == "12.4" ]]; then
+            echo "PHPStan tooling is unavailable for the TYPO3 12.4 compatibility target." >&2
+            exit 1
+        fi
+        ensure_runtime
+        sed "s#%currentWorkingDirectory%/.Build/vendor#${RUNTIME_VENDOR}#" \
+            Build/phpstan.neon > "${RUNTIME_DIR}/phpstan.neon"
+        run_php "${RUNTIME_BIN}/phpstan" analyze --configuration "${RUNTIME_DIR}/phpstan.neon" --memory-limit=-1 "${EXTRA_ARGS[@]}"
         ;;
     cgl) run_cgl ;;
     cgl:fix)
@@ -253,19 +339,21 @@ case "${SUITE}" in
             "${PLAYWRIGHT_IMAGE}" bash -lc 'npm ci && npm run test:e2e'
         ;;
     ci)
-        "$0" -p "${PHP_VERSION}" -s lint
-        "$0" -p "${PHP_VERSION}" -s cgl
-        "$0" -p "${PHP_VERSION}" -s phpstan
-        "$0" -p "${PHP_VERSION}" -s rector
-        "$0" -p "${PHP_VERSION}" -s unit
-        "$0" -p "${PHP_VERSION}" -s functional
+        "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s lint
+        if [[ "${TYPO3_VERSION}" != "12.4" ]]; then
+            "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s cgl
+            "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s phpstan
+            "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s rector
+        fi
+        "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s unit
+        "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s functional
         npm ci
         npm run typecheck
         npm run test:js:coverage
         "$0" -s assets
         ;;
     clean)
-        rm -rf .Build/.phpunit.cache .Build/var coverage playwright-report test-results
+        rm -rf .Build/.phpunit.cache .Build/runtime .Build/var coverage playwright-report test-results
         ;;
     *)
         echo "Unknown suite: ${SUITE}" >&2

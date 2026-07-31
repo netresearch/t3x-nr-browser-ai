@@ -65,6 +65,9 @@
         "ci:test:php:unit": "phpunit --configuration Build/UnitTests.xml"
     },
     "extra": {
+        "captainhook": {
+            "config": "Build/captainhook.json"
+        },
         "typo3/cms": {
             "extension-key": "nr_browser_ai",
             "web-dir": ".Build/Web"

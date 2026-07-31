@@ -12,7 +12,8 @@ declare(strict_types=1);
 use Rector\Config\RectorConfig;
 use Ssch\TYPO3Rector\Set\Typo3LevelSetList;
 
-$configure = require __DIR__ . '/../.Build/vendor/netresearch/typo3-ci-workflows/config/rector/rector.php';
+$vendorDirectory = getenv('NR_BROWSER_AI_VENDOR') ?: __DIR__ . '/../.Build/vendor';
+$configure       = require $vendorDirectory . '/netresearch/typo3-ci-workflows/config/rector/rector.php';
 
 return static function (RectorConfig $rectorConfig) use ($configure): void {
     $configure($rectorConfig, __DIR__ . '/..');

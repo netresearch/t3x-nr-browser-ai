@@ -508,7 +508,8 @@ final class AssistantControllerTest extends FunctionalTestCase
             $contentObject       = GeneralUtility::makeInstance(ContentObjectRenderer::class);
             $contentObject->data = ['uid' => $contentUid];
             $request             = $this->createMock(RequestInterface::class);
-            $request->method('getAttribute')
+            $request->expects(self::once())
+                ->method('getAttribute')
                 ->with('currentContentObject')
                 ->willReturn($contentObject);
             $this->setControllerProperty($controller, 'request', $request);

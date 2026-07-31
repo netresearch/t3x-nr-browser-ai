@@ -9,7 +9,8 @@
 
 declare(strict_types=1);
 
-$createConfig = require __DIR__ . '/../.Build/vendor/netresearch/typo3-ci-workflows/config/php-cs-fixer/config.php';
+$vendorDirectory = getenv('NR_BROWSER_AI_VENDOR') ?: __DIR__ . '/../.Build/vendor';
+$createConfig = require $vendorDirectory . '/netresearch/typo3-ci-workflows/config/php-cs-fixer/config.php';
 
 return $createConfig(<<<'EOF'
     This file is part of the package netresearch/nr-browser-ai.
