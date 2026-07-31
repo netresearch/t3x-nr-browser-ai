@@ -482,6 +482,59 @@ final class AssistantControllerTest extends FunctionalTestCase
         }
     }
 
+    #[Test]
+    public function germanBackendTranslationCoversEveryRegisteredLabel(): void
+    {
+        $sourceKeys = $this->translationUnits(
+            'EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf',
+        );
+        $germanKeys = $this->translationUnits(
+            'EXT:nr_browser_ai/Resources/Private/Language/de.locallang_db.xlf',
+        );
+
+        self::assertNotSame([], $sourceKeys);
+        self::assertSame(array_keys($sourceKeys), array_keys($germanKeys));
+        foreach ($germanKeys as $key => $target) {
+            self::assertNotSame('', $target, sprintf('Missing German target for "%s"', $key));
+            self::assertNotSame(
+                $sourceKeys[$key],
+                $target,
+                sprintf('German target for "%s" is still the English source', $key),
+            );
+        }
+    }
+
+    /**
+     * @return array<string, string> Translation-unit id mapped to its target, or source when untranslated
+     */
+    private function translationUnits(string $languageFileReference): array
+    {
+        $languageFile = GeneralUtility::getFileAbsFileName($languageFileReference);
+        self::assertFileExists($languageFile);
+
+        $document = new DOMDocument();
+        self::assertTrue($document->load($languageFile));
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('xlf', 'urn:oasis:names:tc:xliff:document:1.2');
+        $translationUnits = $xpath->query('//xlf:trans-unit');
+        self::assertNotFalse($translationUnits);
+
+        $units = [];
+        foreach ($translationUnits as $translationUnit) {
+            if (!$translationUnit instanceof DOMElement) {
+                continue;
+            }
+            $target = $xpath->query('xlf:target', $translationUnit);
+            $source = $xpath->query('xlf:source', $translationUnit);
+            $value  = $target !== false && $target->length > 0
+                ? $target->item(0)?->textContent
+                : ($source !== false ? $source->item(0)?->textContent : null);
+            $units[$translationUnit->getAttribute('id')] = (string) $value;
+        }
+
+        return $units;
+    }
+
     /**
      * @param array<string, mixed> $contentElementTca
      */
