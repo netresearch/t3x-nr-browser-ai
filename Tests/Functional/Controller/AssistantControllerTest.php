@@ -235,6 +235,23 @@ final class AssistantControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function missingFallbackRendererInjectionFailsClosed(): void
+    {
+        $body = $this->renderAssistant(
+            [
+                'fallbackMode' => 'contentElement',
+                'fallbackContent' => 'tt_content_2',
+            ],
+            false,
+        );
+
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
+            $body,
+        );
+    }
+
+    #[Test]
     public function selectorAndInstructionsAreNormalizedAndEscaped(): void
     {
         $body = $this->renderAssistant([
@@ -376,9 +393,12 @@ final class AssistantControllerTest extends FunctionalTestCase
     /**
      * @param array<string, mixed> $settings
      */
-    private function renderAssistant(array $settings): string
+    private function renderAssistant(array $settings, bool $injectFallbackContentRenderer = true): string
     {
-        $controller = new AssistantController(new FallbackContentRenderer());
+        $controller = new AssistantController();
+        if ($injectFallbackContentRenderer) {
+            $controller->injectFallbackContentRenderer(new FallbackContentRenderer());
+        }
         $controller->injectResponseFactory(GeneralUtility::makeInstance(ResponseFactoryInterface::class));
         $controller->injectStreamFactory(GeneralUtility::makeInstance(StreamFactoryInterface::class));
 

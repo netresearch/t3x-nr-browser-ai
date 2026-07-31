@@ -33,9 +33,11 @@ final class AssistantController extends ActionController
     private const DEFAULT_CONTEXT_USAGE_LIMIT = 0.8;
     private const MAX_CONTEXT_SELECTOR_LENGTH = 256;
 
-    public function __construct(
-        private readonly FallbackContentRenderer $fallbackContentRenderer,
-    ) {
+    private ?FallbackContentRenderer $fallbackContentRenderer = null;
+
+    public function injectFallbackContentRenderer(FallbackContentRenderer $fallbackContentRenderer): void
+    {
+        $this->fallbackContentRenderer = $fallbackContentRenderer;
     }
 
     public function showAction(): ResponseInterface
@@ -45,12 +47,14 @@ final class AssistantController extends ActionController
         $currentContentUid = $currentContentObject instanceof ContentObjectRenderer
             ? $this->normalizeContentUid($currentContentObject->data['uid'] ?? null)
             : 0;
-        $settings['fallbackContent'] = $this->fallbackContentRenderer->render(
-            $settings['fallbackMode'],
-            $this->normalizeContentUid($this->settings['fallbackContent'] ?? null),
-            $currentContentUid,
-            $currentContentObject,
-        );
+        if ($this->fallbackContentRenderer instanceof FallbackContentRenderer) {
+            $settings['fallbackContent'] = $this->fallbackContentRenderer->render(
+                $settings['fallbackMode'],
+                $this->normalizeContentUid($this->settings['fallbackContent'] ?? null),
+                $currentContentUid,
+                $currentContentObject,
+            );
+        }
 
         $this->view->assignMultiple($settings);
 
