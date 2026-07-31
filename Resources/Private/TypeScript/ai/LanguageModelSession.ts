@@ -303,7 +303,7 @@ function translateBrowserError(error: unknown): unknown {
     if (error instanceof LanguageModelSessionError) {
         return error;
     }
-    if (error instanceof Error) {
+    if (isNamedError(error)) {
         if (error.name === 'AbortError') {
             return sessionError('aborted', error);
         }
@@ -315,6 +315,13 @@ function translateBrowserError(error: unknown): unknown {
         }
     }
     return error;
+}
+
+function isNamedError(error: unknown): error is {name: string} {
+    return typeof error === 'object'
+        && error !== null
+        && 'name' in error
+        && typeof error.name === 'string';
 }
 
 function sessionError(code: LanguageModelSessionErrorCode, cause?: unknown): LanguageModelSessionError {

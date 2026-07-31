@@ -7,6 +7,11 @@ tt_content.nrbrowserai_assistant {
     }
 }
 
+page.includeJSFooter.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
+page.includeJSFooter.nrBrowserAi {
+    type = module
+}
+
 plugin.tx_nrbrowserai_assistant {
     view {
         templateRootPaths {

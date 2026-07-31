@@ -170,6 +170,10 @@ final class AssistantControllerTest extends FunctionalTestCase
             '/<[^>]+data-nr-browser-ai-assistant[^>]+hidden(?:="hidden")?[^>]*>/',
             $body,
         );
+        self::assertMatchesRegularExpression(
+            '/<script(?=[^>]*type="module")(?=[^>]*src="[^"]*\/typo3conf\/ext\/nr_browser_ai\/Resources\/Public\/JavaScript\/Assistant\.js[^"]*")[^>]*><\/script>/',
+            $body,
+        );
     }
 
     #[Test]

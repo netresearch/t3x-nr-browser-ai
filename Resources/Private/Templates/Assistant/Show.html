@@ -12,5 +12,24 @@
         </f:comment>
         <f:format.raw>{fallbackContent}</f:format.raw>
     </div>
-    <div data-nr-browser-ai-assistant hidden></div>
+    <div data-nr-browser-ai-assistant hidden>
+        <f:if condition="{title}"><h2>{title}</h2></f:if>
+        <f:if condition="{introduction}"><p>{introduction}</p></f:if>
+        <p data-nr-browser-ai-status role="status"></p>
+        <button type="button" data-nr-browser-ai-setup>Set up browser AI</button>
+        <progress data-nr-browser-ai-progress max="1" value="0">
+            Browser AI model download
+        </progress>
+        <div data-nr-browser-ai-log aria-live="polite"></div>
+        <form data-nr-browser-ai-form>
+            <label>
+                Your question
+                <input type="text" data-nr-browser-ai-question autocomplete="off" required />
+            </label>
+            <button type="submit" data-nr-browser-ai-submit>Ask</button>
+        </form>
+        <button type="button" data-nr-browser-ai-abort>Stop response</button>
+        <button type="button" data-nr-browser-ai-reset>Reset conversation</button>
+        <button type="button" data-nr-browser-ai-retry>Retry</button>
+    </div>
 </section>
