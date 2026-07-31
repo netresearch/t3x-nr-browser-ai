@@ -14,7 +14,9 @@
     },
     "include": [
         "Resources/Private/TypeScript/**/*.ts",
+        "Tests/Fixtures/**/*.ts",
         "Tests/JavaScript/**/*.ts",
+        "Tests/E2E/**/*.ts",
         "vitest.config.ts"
     ]
 }

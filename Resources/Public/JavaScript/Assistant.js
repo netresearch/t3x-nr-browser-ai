@@ -60,6 +60,39 @@ var EXCLUDED_CONTENT = [
 ].join(",");
 var HEADING_ELEMENTS = /^H[1-6]$/u;
 var LOW_INFORMATION_THRESHOLD = 40;
+var INLINE_ELEMENTS = /* @__PURE__ */ new Set([
+  "A",
+  "ABBR",
+  "B",
+  "BDI",
+  "BDO",
+  "BR",
+  "CITE",
+  "CODE",
+  "DATA",
+  "DEL",
+  "DFN",
+  "EM",
+  "I",
+  "INS",
+  "KBD",
+  "MARK",
+  "Q",
+  "RP",
+  "RT",
+  "RUBY",
+  "S",
+  "SAMP",
+  "SMALL",
+  "SPAN",
+  "STRONG",
+  "SUB",
+  "SUP",
+  "TIME",
+  "U",
+  "VAR",
+  "WBR"
+]);
 var PageContextError = class extends Error {
   constructor(code, message) {
     super(message);
@@ -177,6 +210,10 @@ function extractSections(root) {
     node.childNodes.forEach(visitSemanticNode);
   };
   const visitNode = (node) => {
+    if (node.nodeType === node.TEXT_NODE) {
+      inlineParts.push(node.textContent ?? "");
+      return;
+    }
     if (!(node instanceof Element)) {
       return;
     }
@@ -187,6 +224,7 @@ function extractSections(root) {
       return;
     }
     if (node.matches("p,li,table")) {
+      flushInline();
       node.childNodes.forEach(visitSemanticNode);
       flushInline();
       return;
@@ -196,7 +234,13 @@ function extractSections(root) {
       flushInline();
       return;
     }
+    if (INLINE_ELEMENTS.has(node.tagName)) {
+      node.childNodes.forEach(visitNode);
+      return;
+    }
+    flushInline();
     node.childNodes.forEach(visitNode);
+    flushInline();
   };
   visitNode(root);
   flushInline();
@@ -641,6 +685,7 @@ var ChatController = class {
     this.eventListeners = new WindowAbortController();
     this.elements = collectElements(root);
     this.elements.log.replaceChildren();
+    this.announce("");
     this.elements.question.value = "";
     this.bindEvents();
     this.setState("checking");
@@ -732,6 +777,7 @@ var ChatController = class {
       this.session?.destroy();
       this.session = void 0;
       this.elements.log.replaceChildren();
+      this.announce("");
       void this.initializeFromActivation("downloading");
     }, listenerOptions);
   }
@@ -794,6 +840,7 @@ var ChatController = class {
       return;
     }
     this.elements.question.value = "";
+    this.announce("");
     this.appendMessage("user", question);
     this.setState("streaming");
     this.focusStatus();
@@ -829,6 +876,7 @@ var ChatController = class {
         signal
       );
       if (this.isCurrent(operation)) {
+        this.announce(output.textContent ?? "");
         this.setState("ready");
         this.focusQuestion();
       }
@@ -882,6 +930,13 @@ var ChatController = class {
       }
     }
     this.setState("error-retryable");
+  }
+  /**
+   * Publishes the completed answer to the polite live region. The streaming log
+   * carries no live region, so partial chunks are never announced.
+   */
+  announce(answer) {
+    this.elements.announcement.textContent = answer.trim();
   }
   releaseSession() {
     this.session?.destroy();
@@ -953,6 +1008,7 @@ function collectElements(root) {
     setup: required(root, "[data-nr-browser-ai-setup]", HTMLButtonElement),
     progress: required(root, "[data-nr-browser-ai-progress]", HTMLProgressElement),
     log: required(root, "[data-nr-browser-ai-log]", HTMLElement),
+    announcement: required(root, "[data-nr-browser-ai-announcement]", HTMLElement),
     form: required(root, "[data-nr-browser-ai-form]", HTMLFormElement),
     question: required(root, "[data-nr-browser-ai-question]", HTMLInputElement),
     submit: required(root, "[data-nr-browser-ai-submit]", HTMLButtonElement),

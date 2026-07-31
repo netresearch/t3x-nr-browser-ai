@@ -4,10 +4,10 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-if [[ -e "${repository_root}/composer.lock" || -L "${repository_root}/composer.lock" ]]; then
-    echo "composer.lock must not exist at the reusable extension root" >&2
-    exit 1
-fi
+# A lock file is never published for a reusable extension, but the documented
+# `composer ci:test:php:*` commands create one locally. The invariants that matter
+# are that it stays ignored and untracked; both are asserted at the end of this
+# script, so a local, ignored lock file is not treated as a failure here.
 
 php -r '
 $composerFile = $argv[1];
@@ -93,6 +93,7 @@ $expectedDevDependencies = [
     "@axe-core/playwright",
     "@playwright/test",
     "@types/dom-chromium-ai",
+    "@types/node",
     "@vitest/coverage-v8",
     "esbuild",
     "jsdom",

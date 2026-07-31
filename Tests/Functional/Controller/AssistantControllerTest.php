@@ -161,7 +161,18 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertStringContainsString('aria-label="Browser AI assistant"', $body);
         self::assertStringContainsString('for="' . $instanceId . '-question"', $body);
         self::assertStringContainsString('id="' . $instanceId . '-question"', $body);
-        self::assertStringNotContainsString('aria-live=', $body);
+        // The streaming log must stay outside any live region; only the dedicated
+        // announcement element publishes the finished answer.
+        self::assertSame(1, substr_count($body, 'aria-live='));
+        self::assertMatchesRegularExpression(
+            '/<p[^>]+data-nr-browser-ai-announcement(?=[^>]*aria-live="polite")'
+            . '(?=[^>]*aria-atomic="true")[^>]*><\/p>/',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-log[^>]*>(?![^>]*aria-live)/',
+            $body,
+        );
         self::assertStringContainsString('aria-atomic="true"', $body);
         self::assertStringContainsString('Netresearch DTT GmbH', $body);
         self::assertStringContainsString('/typo3conf/ext/nr_browser_ai/Resources/Public/Icons/Extension.svg', $body);
@@ -469,6 +480,59 @@ final class AssistantControllerTest extends FunctionalTestCase
         ] as $expectedKey) {
             self::assertContains($expectedKey, $translationKeys);
         }
+    }
+
+    #[Test]
+    public function germanBackendTranslationCoversEveryRegisteredLabel(): void
+    {
+        $sourceKeys = $this->translationUnits(
+            'EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf',
+        );
+        $germanKeys = $this->translationUnits(
+            'EXT:nr_browser_ai/Resources/Private/Language/de.locallang_db.xlf',
+        );
+
+        self::assertNotSame([], $sourceKeys);
+        self::assertSame(array_keys($sourceKeys), array_keys($germanKeys));
+        foreach ($germanKeys as $key => $target) {
+            self::assertNotSame('', $target, sprintf('Missing German target for "%s"', $key));
+            self::assertNotSame(
+                $sourceKeys[$key],
+                $target,
+                sprintf('German target for "%s" is still the English source', $key),
+            );
+        }
+    }
+
+    /**
+     * @return array<string, string> Translation-unit id mapped to its target, or source when untranslated
+     */
+    private function translationUnits(string $languageFileReference): array
+    {
+        $languageFile = GeneralUtility::getFileAbsFileName($languageFileReference);
+        self::assertFileExists($languageFile);
+
+        $document = new DOMDocument();
+        self::assertTrue($document->load($languageFile));
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('xlf', 'urn:oasis:names:tc:xliff:document:1.2');
+        $translationUnits = $xpath->query('//xlf:trans-unit');
+        self::assertNotFalse($translationUnits);
+
+        $units = [];
+        foreach ($translationUnits as $translationUnit) {
+            if (!$translationUnit instanceof DOMElement) {
+                continue;
+            }
+            $target = $xpath->query('xlf:target', $translationUnit);
+            $source = $xpath->query('xlf:source', $translationUnit);
+            $value  = $target !== false && $target->length > 0
+                ? $target->item(0)?->textContent
+                : ($source !== false ? $source->item(0)?->textContent : null);
+            $units[$translationUnit->getAttribute('id')] = (string) $value;
+        }
+
+        return $units;
     }
 
     /**

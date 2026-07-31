@@ -101,6 +101,55 @@ describe('DomPageContextProvider', () => {
         ]);
     });
 
+    it.each([
+        {
+            name: 'a block wrapper without a paragraph',
+            markup: '<div class="teaser">Teaser ohne Absatz.</div>',
+            expected: 'Teaser ohne Absatz.',
+        },
+        {
+            name: 'a blockquote carrying text directly',
+            markup: '<blockquote>Zitierte Aussage.</blockquote>',
+            expected: 'Zitierte Aussage.',
+        },
+        {
+            name: 'a figure caption',
+            markup: '<figure><img src="x.jpg" alt="Alternativtext"><figcaption>Bildunterschrift.</figcaption></figure>',
+            expected: 'Alternativtext\nBildunterschrift.',
+        },
+        {
+            name: 'a definition list',
+            markup: '<dl><dt>Begriff</dt><dd>Erklärung dazu.</dd></dl>',
+            expected: 'Begriff\nErklärung dazu.',
+        },
+        {
+            name: 'a disclosure summary',
+            markup: '<details><summary>Frage?</summary><p>Antwort.</p></details>',
+            expected: 'Frage?\nAntwort.',
+        },
+        {
+            name: 'inline-only markup inside a wrapper',
+            markup: '<div><span>Nur </span><strong>inline</strong> Text.</div>',
+            expected: 'Nur inline Text.',
+        },
+    ])('extracts text carried by $name', async ({markup, expected}) => {
+        document.body.innerHTML = `<main id="context">${markup}</main>`;
+
+        const result = await new DomPageContextProvider(document).getContext('#context');
+
+        expect(result.sections).toEqual([{heading: '', text: expected}]);
+    });
+
+    it('keeps block wrappers from splitting a single text run', async () => {
+        document.body.innerHTML = '<main id="context"><div><div>Ein Satz mit <em>Betonung</em> darin.</div></div></main>';
+
+        const result = await new DomPageContextProvider(document).getContext('#context');
+
+        expect(result.sections).toEqual([
+            {heading: '', text: 'Ein Satz mit Betonung darin.'},
+        ]);
+    });
+
     it('rejects a missing root with a stable application error code', async () => {
         const provider = new DomPageContextProvider(document);
 
