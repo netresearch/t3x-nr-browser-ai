@@ -26,6 +26,8 @@ use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
+use TYPO3\CMS\Extbase\Mvc\RequestInterface;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -150,10 +152,11 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-root', $body);
-        self::assertStringContainsString('id="nr-browser-ai-1"', $body);
+        self::assertSame(1, preg_match('/id="(nr-browser-ai-1-[1-9][0-9]*)"/', $body, $instanceMatches));
+        $instanceId = $instanceMatches[1];
         self::assertStringContainsString('aria-label="Browser AI assistant"', $body);
-        self::assertStringContainsString('for="nr-browser-ai-1-question"', $body);
-        self::assertStringContainsString('id="nr-browser-ai-1-question"', $body);
+        self::assertStringContainsString('for="' . $instanceId . '-question"', $body);
+        self::assertStringContainsString('id="' . $instanceId . '-question"', $body);
         self::assertStringNotContainsString('aria-live=', $body);
         self::assertStringContainsString('aria-atomic="true"', $body);
         self::assertStringContainsString('Netresearch DTT GmbH', $body);
@@ -347,6 +350,33 @@ final class AssistantControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function repeatedRenderingOfSameContentRecordUsesGloballyUniqueMatchingIds(): void
+    {
+        $bodies = [
+            $this->renderAssistant([], true, 42),
+            $this->renderAssistant([], true, 42),
+        ];
+        $instanceIds = [];
+        $allIds = [];
+
+        foreach ($bodies as $body) {
+            self::assertSame(1, preg_match('/<section\s+id="(nr-browser-ai-42-[1-9][0-9]*)"/', $body, $matches));
+            $instanceId = $matches[1];
+            $instanceIds[] = $instanceId;
+            self::assertStringContainsString('id="' . $instanceId . '-title"', $body);
+            self::assertStringContainsString('id="' . $instanceId . '-status"', $body);
+            self::assertStringContainsString('id="' . $instanceId . '-question"', $body);
+            self::assertStringContainsString('for="' . $instanceId . '-question"', $body);
+            self::assertStringContainsString('aria-describedby="' . $instanceId . '-status"', $body);
+            self::assertSame(4, preg_match_all('/\sid="([^"]+)"/', $body, $idMatches));
+            array_push($allIds, ...$idMatches[1]);
+        }
+
+        self::assertCount(2, array_unique($instanceIds));
+        self::assertCount(8, array_unique($allIds));
+    }
+
+    #[Test]
     public function configuredFlexFormDataStructureResolvesToSupportedSheetStructure(): void
     {
         $tca = $GLOBALS['TCA'] ?? null;
@@ -458,7 +488,11 @@ final class AssistantControllerTest extends FunctionalTestCase
     /**
      * @param array<string, mixed> $settings
      */
-    private function renderAssistant(array $settings, bool $injectFallbackContentRenderer = true): string
+    private function renderAssistant(
+        array $settings,
+        bool $injectFallbackContentRenderer = true,
+        ?int $contentUid = null,
+    ): string
     {
         $controller = new AssistantController();
         if ($injectFallbackContentRenderer) {
@@ -469,6 +503,15 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         $this->setControllerProperty($controller, 'view', $this->createAssistantView());
         $this->setControllerProperty($controller, 'settings', $settings);
+        if ($contentUid !== null) {
+            $contentObject = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+            $contentObject->data = ['uid' => $contentUid];
+            $request = $this->createMock(RequestInterface::class);
+            $request->method('getAttribute')
+                ->with('currentContentObject')
+                ->willReturn($contentObject);
+            $this->setControllerProperty($controller, 'request', $request);
+        }
 
         return (string) $controller->showAction()->getBody();
     }
