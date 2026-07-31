@@ -17,13 +17,12 @@ const EXCLUDED_CONTENT = [
     '[data-nr-browser-ai-exclude]',
 ].join(',');
 
-const SEMANTIC_ELEMENTS = 'h1,h2,h3,h4,h5,h6,p,li,table,img';
 const HEADING_ELEMENTS = /^H[1-6]$/u;
 const LOW_INFORMATION_THRESHOLD = 40;
 
 export class PageContextError extends Error {
     public constructor(
-        public readonly code: 'context-root-missing',
+        public readonly code: 'context-root-missing' | 'context-selector-invalid',
         message: string,
     ) {
         super(message);
@@ -35,7 +34,15 @@ export class DomPageContextProvider implements PageContextProvider {
     public constructor(private readonly sourceDocument: Document = document) {}
 
     public async getContext(selector: string): Promise<PageContext> {
-        const sourceRoot = this.sourceDocument.querySelector(selector);
+        let sourceRoot: Element | null;
+        try {
+            sourceRoot = this.sourceDocument.querySelector(selector);
+        } catch {
+            throw new PageContextError(
+                'context-selector-invalid',
+                `The page context selector "${selector}" is invalid.`,
+            );
+        }
         if (sourceRoot === null) {
             throw new PageContextError(
                 'context-root-missing',
@@ -98,6 +105,7 @@ function extractSections(root: Element): PageSection[] {
     const sections: PageSection[] = [];
     let heading = '';
     let fragments: string[] = [];
+    let inlineParts: string[] = [];
 
     const finishSection = (): void => {
         const text = fragments.filter(Boolean).join('\n');
@@ -107,45 +115,83 @@ function extractSections(root: Element): PageSection[] {
         fragments = [];
     };
 
-    for (const element of root.querySelectorAll(SEMANTIC_ELEMENTS)) {
-        if (HEADING_ELEMENTS.test(element.tagName)) {
-            finishSection();
-            heading = semanticText(element);
-            continue;
-        }
-
-        if (hasAtomicSemanticAncestor(element)) {
-            continue;
-        }
-
-        const text = element.tagName === 'LI'
-            ? listItemText(element)
-            : element.tagName === 'IMG'
-                ? normalizeWhitespace(element.getAttribute('alt') ?? '')
-                : semanticText(element);
+    const flushInline = (): void => {
+        const text = normalizeSemanticText(inlineParts.join(' '));
         if (text.length > 0) {
             fragments.push(text);
         }
-    }
+        inlineParts = [];
+    };
 
+    const visitSemanticNode = (node: Node): void => {
+        if (node.nodeType === node.TEXT_NODE) {
+            inlineParts.push(node.textContent ?? '');
+            return;
+        }
+        if (!(node instanceof Element)) {
+            return;
+        }
+
+        if (HEADING_ELEMENTS.test(node.tagName)) {
+            flushInline();
+            finishSection();
+            heading = semanticText(node);
+            return;
+        }
+
+        if (node.tagName === 'IMG') {
+            inlineParts.push(node.getAttribute('alt') ?? '');
+            return;
+        }
+
+        if (node.matches('p,li,table')) {
+            flushInline();
+            node.childNodes.forEach(visitSemanticNode);
+            flushInline();
+            return;
+        }
+
+        if (node.matches('ol,ul')) {
+            flushInline();
+            node.childNodes.forEach(visitNode);
+            return;
+        }
+
+        node.childNodes.forEach(visitSemanticNode);
+    };
+
+    const visitNode = (node: Node): void => {
+        if (!(node instanceof Element)) {
+            return;
+        }
+
+        if (HEADING_ELEMENTS.test(node.tagName)) {
+            flushInline();
+            finishSection();
+            heading = semanticText(node);
+            return;
+        }
+
+        if (node.matches('p,li,table')) {
+            node.childNodes.forEach(visitSemanticNode);
+            flushInline();
+            return;
+        }
+
+        if (node.tagName === 'IMG') {
+            inlineParts.push(node.getAttribute('alt') ?? '');
+            flushInline();
+            return;
+        }
+
+        node.childNodes.forEach(visitNode);
+    };
+
+    visitNode(root);
+
+    flushInline();
     finishSection();
     return sections;
-}
-
-function hasAtomicSemanticAncestor(element: Element): boolean {
-    const ancestor = element.parentElement?.closest('p,table');
-    if (ancestor !== null && ancestor !== undefined) {
-        return true;
-    }
-
-    return element.tagName !== 'LI'
-        && element.parentElement?.closest('li') !== null;
-}
-
-function listItemText(element: Element): string {
-    const clone = element.cloneNode(true) as Element;
-    clone.querySelectorAll('ol,ul,table').forEach(nested => nested.remove());
-    return semanticText(clone);
 }
 
 function semanticText(element: Element): string {
@@ -165,7 +211,11 @@ function semanticText(element: Element): string {
         node.childNodes.forEach(visit);
     };
     visit(element);
-    return normalizeWhitespace(parts.join(' ')).replace(/\s+([.,;:!?])/gu, '$1');
+    return normalizeSemanticText(parts.join(' '));
+}
+
+function normalizeSemanticText(value: string): string {
+    return normalizeWhitespace(value).replace(/\s+([.,;:!?])/gu, '$1');
 }
 
 function uniqueNonEmptySections(sections: readonly PageSection[]): PageSection[] {

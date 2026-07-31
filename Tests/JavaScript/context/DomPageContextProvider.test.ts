@@ -71,11 +71,50 @@ describe('DomPageContextProvider', () => {
         expect(root.querySelector('script')).not.toBeNull();
     });
 
+    it('includes a semantic selected root itself', async () => {
+        document.body.innerHTML = '<p id="context">Direkt ausgewählter Absatz</p>';
+
+        const result = await new DomPageContextProvider(document).getContext('#context');
+
+        expect(result.sections).toEqual([
+            {heading: '', text: 'Direkt ausgewählter Absatz'},
+        ]);
+    });
+
+    it.each([
+        {
+            name: 'list item',
+            markup: '<ul id="context"><li>Einleitung<h2>Innere Überschrift</h2><p>Danach</p></li></ul>',
+        },
+        {
+            name: 'table',
+            markup: '<table id="context"><tr><td>Einleitung<h2>Innere Überschrift</h2><p>Danach</p></td></tr></table>',
+        },
+    ])('treats headings inside a $name as section boundaries without duplicating container text', async ({markup}) => {
+        document.body.innerHTML = markup;
+
+        const result = await new DomPageContextProvider(document).getContext('#context');
+
+        expect(result.sections).toEqual([
+            {heading: '', text: 'Einleitung'},
+            {heading: 'Innere Überschrift', text: 'Danach'},
+        ]);
+    });
+
     it('rejects a missing root with a stable application error code', async () => {
         const provider = new DomPageContextProvider(document);
 
         await expect(provider.getContext('#missing')).rejects.toMatchObject({
             code: 'context-root-missing',
+        });
+    });
+
+    it('rejects an invalid selector with a distinct stable application error code', async () => {
+        const provider = new DomPageContextProvider(document);
+
+        await expect(provider.getContext('main[')).rejects.toMatchObject({
+            name: 'PageContextError',
+            code: 'context-selector-invalid',
         });
     });
 });
