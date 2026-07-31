@@ -161,7 +161,18 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertStringContainsString('aria-label="Browser AI assistant"', $body);
         self::assertStringContainsString('for="' . $instanceId . '-question"', $body);
         self::assertStringContainsString('id="' . $instanceId . '-question"', $body);
-        self::assertStringNotContainsString('aria-live=', $body);
+        // The streaming log must stay outside any live region; only the dedicated
+        // announcement element publishes the finished answer.
+        self::assertSame(1, substr_count($body, 'aria-live='));
+        self::assertMatchesRegularExpression(
+            '/<p[^>]+data-nr-browser-ai-announcement(?=[^>]*aria-live="polite")'
+            . '(?=[^>]*aria-atomic="true")[^>]*><\/p>/',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-log[^>]*>(?![^>]*aria-live)/',
+            $body,
+        );
         self::assertStringContainsString('aria-atomic="true"', $body);
         self::assertStringContainsString('Netresearch DTT GmbH', $body);
         self::assertStringContainsString('/typo3conf/ext/nr_browser_ai/Resources/Public/Icons/Extension.svg', $body);

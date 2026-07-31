@@ -51,6 +51,7 @@ function markup(id = 'assistant'): HTMLElement {
                 <button type="button" data-nr-browser-ai-setup>Set up</button>
                 <progress data-nr-browser-ai-progress max="1" value="0"></progress>
                 <div data-nr-browser-ai-log></div>
+                <p data-nr-browser-ai-announcement aria-live="polite" aria-atomic="true"></p>
                 <form data-nr-browser-ai-form>
                     <label>Question <input data-nr-browser-ai-question></label>
                     <button type="submit" data-nr-browser-ai-submit>Ask</button>
@@ -247,6 +248,51 @@ describe('ChatController dialogue lifecycle', () => {
         expect(root.querySelector('b')).toBeNull();
         expect(root.querySelector('[data-role="assistant"]')?.textContent).toBe('Safe <img onerror=alert(1)>');
         expect(root.querySelector('img')).toBeNull();
+    });
+
+    it('announces only the finished answer and clears the region for the next question', async () => {
+        const root = markup();
+        const fakes = fixture();
+        const chunks = ['Erster Teil ', 'und zweiter Teil.'];
+        fakes.browserSession.promptStreaming = vi.fn(() => new ReadableStream<string>({
+            start(streamController) {
+                chunks.forEach(chunk => streamController.enqueue(chunk));
+                streamController.close();
+            },
+        }));
+        const subject = controller(root, fakes);
+        await subject.start();
+        const announcement = root.querySelector('[data-nr-browser-ai-announcement]') as HTMLElement;
+        const input = root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement;
+        const form = root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement;
+
+        expect(announcement.textContent).toBe('');
+        expect(root.querySelector('[data-nr-browser-ai-log]')?.hasAttribute('aria-live')).toBe(false);
+        expect(announcement.getAttribute('aria-live')).toBe('polite');
+
+        input.value = 'Frage';
+        form.requestSubmit();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        expect(announcement.textContent).toBe('Erster Teil und zweiter Teil.');
+
+        input.value = 'Zweite Frage';
+        form.requestSubmit();
+        expect(announcement.textContent).toBe('');
+    });
+
+    it('leaves the announcement empty when a response fails', async () => {
+        const root = markup();
+        const fakes = fixture();
+        fakes.browserSession.promptStreaming = vi.fn(() => {
+            throw new DOMException('Full', 'QuotaExceededError');
+        });
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'Frage';
+        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+
+        await vi.waitFor(() => expect(root.dataset.state).toBe('reset-required'));
+        expect((root.querySelector('[data-nr-browser-ai-announcement]') as HTMLElement).textContent).toBe('');
     });
 
     it('aborts an active response and returns to ready', async () => {

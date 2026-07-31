@@ -30,6 +30,7 @@ interface Elements {
     setup: HTMLButtonElement;
     progress: HTMLProgressElement;
     log: HTMLElement;
+    announcement: HTMLElement;
     form: HTMLFormElement;
     question: HTMLInputElement;
     submit: HTMLButtonElement;
@@ -58,6 +59,7 @@ export class ChatController {
         this.eventListeners = new WindowAbortController();
         this.elements = collectElements(root);
         this.elements.log.replaceChildren();
+        this.announce('');
         this.elements.question.value = '';
         this.bindEvents();
         this.setState('checking');
@@ -143,6 +145,7 @@ export class ChatController {
             this.session?.destroy();
             this.session = undefined;
             this.elements.log.replaceChildren();
+            this.announce('');
             void this.initializeFromActivation('downloading');
         }, listenerOptions);
     }
@@ -214,6 +217,7 @@ export class ChatController {
         }
 
         this.elements.question.value = '';
+        this.announce('');
         this.appendMessage('user', question);
         this.setState('streaming');
         this.focusStatus();
@@ -257,6 +261,8 @@ export class ChatController {
                 signal,
             );
             if (this.isCurrent(operation)) {
+                // Announced before the state change so the answer precedes "ready".
+                this.announce(output.textContent ?? '');
                 this.setState('ready');
                 this.focusQuestion();
             }
@@ -313,6 +319,14 @@ export class ChatController {
             }
         }
         this.setState('error-retryable');
+    }
+
+    /**
+     * Publishes the completed answer to the polite live region. The streaming log
+     * carries no live region, so partial chunks are never announced.
+     */
+    private announce(answer: string): void {
+        this.elements.announcement.textContent = answer.trim();
     }
 
     private releaseSession(): void {
@@ -394,6 +408,7 @@ function collectElements(root: HTMLElement): Elements {
         setup: required(root, '[data-nr-browser-ai-setup]', HTMLButtonElement),
         progress: required(root, '[data-nr-browser-ai-progress]', HTMLProgressElement),
         log: required(root, '[data-nr-browser-ai-log]', HTMLElement),
+        announcement: required(root, '[data-nr-browser-ai-announcement]', HTMLElement),
         form: required(root, '[data-nr-browser-ai-form]', HTMLFormElement),
         question: required(root, '[data-nr-browser-ai-question]', HTMLInputElement),
         submit: required(root, '[data-nr-browser-ai-submit]', HTMLButtonElement),

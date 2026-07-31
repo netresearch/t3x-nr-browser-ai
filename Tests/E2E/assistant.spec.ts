@@ -59,6 +59,8 @@ test('accessible assistant supports its complete keyboard lifecycle', async ({pa
     await page.keyboard.press('Enter');
     await expect(root).toHaveAttribute('data-state', 'ready');
     await expect(question).toBeFocused();
+    await expect(root.locator('[data-nr-browser-ai-announcement]'))
+        .toHaveText('Antwort mit https://example.org/quelle');
 
     const results = await new AxeBuilder({page}).include('[data-nr-browser-ai-root]').analyze();
     expect(results.violations).toEqual([]);
@@ -147,6 +149,7 @@ function fixture(fallback = ''): string {
   <button class="nr-browser-ai__button nr-browser-ai__button--primary" type="button" data-nr-browser-ai-setup>Set up browser AI</button>
   <progress class="nr-browser-ai__progress" data-nr-browser-ai-progress max="1" value="0" aria-label="Browser AI model download"></progress>
   <div class="nr-browser-ai__log" data-nr-browser-ai-log></div>
+  <p class="nr-browser-ai__visually-hidden" data-nr-browser-ai-announcement aria-live="polite" aria-atomic="true"></p>
   <form class="nr-browser-ai__form" data-nr-browser-ai-form><label class="nr-browser-ai__label" for="nr-browser-ai-42-question">Your question</label><div class="nr-browser-ai__input-row"><input class="nr-browser-ai__input" id="nr-browser-ai-42-question" data-nr-browser-ai-question autocomplete="off" required aria-describedby="nr-browser-ai-42-status"><button class="nr-browser-ai__button nr-browser-ai__button--primary" type="submit" data-nr-browser-ai-submit>Ask</button></div></form>
   <div class="nr-browser-ai__actions"><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-abort>Stop response</button><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-reset>Reset conversation</button><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-retry>Retry</button></div>
   <footer class="nr-browser-ai__footer"><a href="https://www.netresearch.de/">Netresearch DTT GmbH</a></footer>

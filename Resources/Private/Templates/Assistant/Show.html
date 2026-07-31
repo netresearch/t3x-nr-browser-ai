@@ -38,6 +38,11 @@
         <button class="nr-browser-ai__button nr-browser-ai__button--primary" type="button" data-nr-browser-ai-setup><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.setup" /></button>
         <progress class="nr-browser-ai__progress" data-nr-browser-ai-progress max="1" value="0" aria-label="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:progress.download')}"></progress>
         <div class="nr-browser-ai__log" data-nr-browser-ai-log></div>
+        <f:comment>
+            Announces the finished answer once. The streaming log itself stays outside any
+            live region so assistive technology is not flooded with partial chunks.
+        </f:comment>
+        <p class="nr-browser-ai__visually-hidden" data-nr-browser-ai-announcement aria-live="polite" aria-atomic="true"></p>
         <form class="nr-browser-ai__form" data-nr-browser-ai-form>
             <label class="nr-browser-ai__label" for="{instanceId}-question"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:field.question" /></label>
             <div class="nr-browser-ai__input-row">
