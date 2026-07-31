@@ -2,6 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import {expect, test} from '@playwright/test';
 import {resolve} from 'node:path';
 
+import {assistantDocument} from '../Fixtures/AssistantMarkup';
+
 const assistantScript = resolve(process.cwd(), 'Resources/Public/JavaScript/Assistant.js');
 const assistantStyles = resolve(process.cwd(), 'Resources/Public/Css/Assistant.css');
 
@@ -128,31 +130,14 @@ async function installLanguageModel(page: import('@playwright/test').Page, avail
 }
 
 function fixture(fallback = ''): string {
-    return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Assistant fixture</title></head><body>
-<main><article><h1>Current page</h1><p>Grounded page content.</p></article>
-<section id="nr-browser-ai-42" class="nr-browser-ai" aria-label="Browser AI assistant"
- data-nr-browser-ai-root data-context-selector="main" data-context-usage-limit="0.8"
- data-system-prompt="Answer only from the page." data-supplemental-instruction=""
- data-label-checking="Checking browser AI availability…"
- data-label-downloadable="Browser AI needs to be set up before use."
- data-label-downloading="Setting up browser AI…" data-label-ready="Browser AI is ready."
- data-label-streaming="Generating an answer…"
- data-label-reset-required="The model context is full. Reset the conversation to continue."
- data-label-error-retryable="Browser AI could not be reached. You can retry."
- data-label-unavailable="Browser AI is unavailable in this browser."
- data-label-new-tab="Opens in a new tab.">
- <div data-nr-browser-ai-fallback>${fallback}</div>
- <div data-nr-browser-ai-assistant hidden>
-  <header class="nr-browser-ai__header"><a class="nr-browser-ai__brand-link" href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH"><img class="nr-browser-ai__symbol" alt="" width="48" height="48" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Cpath fill='%232F99A4' d='M0 0h1v1H0z'/%3E%3C/svg%3E"></a><h2 id="nr-browser-ai-42-title" class="nr-browser-ai__title">Browser AI assistant</h2></header>
-  <p id="nr-browser-ai-42-status" class="nr-browser-ai__status" data-nr-browser-ai-status role="status" aria-atomic="true" tabindex="-1"></p>
-  <button class="nr-browser-ai__button nr-browser-ai__button--primary" type="button" data-nr-browser-ai-setup>Set up browser AI</button>
-  <progress class="nr-browser-ai__progress" data-nr-browser-ai-progress max="1" value="0" aria-label="Browser AI model download"></progress>
-  <div class="nr-browser-ai__log" data-nr-browser-ai-log></div>
-  <p class="nr-browser-ai__visually-hidden" data-nr-browser-ai-announcement aria-live="polite" aria-atomic="true"></p>
-  <form class="nr-browser-ai__form" data-nr-browser-ai-form><label class="nr-browser-ai__label" for="nr-browser-ai-42-question">Your question</label><div class="nr-browser-ai__input-row"><input class="nr-browser-ai__input" id="nr-browser-ai-42-question" data-nr-browser-ai-question autocomplete="off" required aria-describedby="nr-browser-ai-42-status"><button class="nr-browser-ai__button nr-browser-ai__button--primary" type="submit" data-nr-browser-ai-submit>Ask</button></div></form>
-  <div class="nr-browser-ai__actions"><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-abort>Stop response</button><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-reset>Reset conversation</button><button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-retry>Retry</button></div>
-  <footer class="nr-browser-ai__footer"><a href="https://www.netresearch.de/">Netresearch DTT GmbH</a></footer>
- </div>
-</section></main></body></html>`;
+    return assistantDocument({
+        id: 'nr-browser-ai-42',
+        fallback,
+        configuration: {
+            contextSelector: 'main',
+            contextUsageLimit: '0.8',
+            systemPrompt: 'Answer only from the page.',
+            supplementalInstruction: '',
+        },
+    });
 }

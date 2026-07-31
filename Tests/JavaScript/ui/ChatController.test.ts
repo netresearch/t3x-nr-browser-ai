@@ -4,7 +4,9 @@ import {
     bootstrapAssistants,
     installAssistantLifecycle,
 } from '../../../Resources/Private/TypeScript/Assistant';
+import {assistantSection} from '../../Fixtures/AssistantMarkup';
 import {ChatController} from '../../../Resources/Private/TypeScript/ui/ChatController';
+import type {UiLabels} from '../../../Resources/Private/TypeScript/ui/ChatController';
 import {PageContextError} from '../../../Resources/Private/TypeScript/context/DomPageContextProvider';
 import type {PageContextProvider} from '../../../Resources/Private/TypeScript/context/PageContextProvider';
 import type {
@@ -21,7 +23,7 @@ const context = {
     wasTruncated: false,
 };
 
-const labels = {
+const labels: UiLabels = {
     checking: 'Verfügbarkeit wird geprüft…',
     downloadable: 'Browser-KI muss zuerst eingerichtet werden.',
     downloading: 'Browser-KI wird eingerichtet…',
@@ -34,33 +36,7 @@ const labels = {
 };
 
 function markup(id = 'assistant'): HTMLElement {
-    document.body.insertAdjacentHTML('beforeend', `
-        <section id="${id}" data-nr-browser-ai-root data-state="checking"
-            data-label-checking="${labels.checking}"
-            data-label-downloadable="${labels.downloadable}"
-            data-label-downloading="${labels.downloading}"
-            data-label-ready="${labels.ready}"
-            data-label-streaming="${labels.streaming}"
-            data-label-reset-required="${labels['reset-required']}"
-            data-label-error-retryable="${labels['error-retryable']}"
-            data-label-unavailable="${labels.unavailable}"
-            data-label-new-tab="${labels.newTab}">
-            <div data-nr-browser-ai-fallback>Fallback</div>
-            <div data-nr-browser-ai-assistant hidden>
-                <p data-nr-browser-ai-status role="status" aria-atomic="true" tabindex="-1"></p>
-                <button type="button" data-nr-browser-ai-setup>Set up</button>
-                <progress data-nr-browser-ai-progress max="1" value="0"></progress>
-                <div data-nr-browser-ai-log></div>
-                <p data-nr-browser-ai-announcement aria-live="polite" aria-atomic="true"></p>
-                <form data-nr-browser-ai-form>
-                    <label>Question <input data-nr-browser-ai-question></label>
-                    <button type="submit" data-nr-browser-ai-submit>Ask</button>
-                </form>
-                <button type="button" data-nr-browser-ai-abort>Stop</button>
-                <button type="button" data-nr-browser-ai-reset>Reset</button>
-                <button type="button" data-nr-browser-ai-retry>Retry</button>
-            </div>
-        </section>`);
+    document.body.insertAdjacentHTML('beforeend', assistantSection({id, labels, fallback: 'Fallback'}));
     return document.querySelector(`#${id}`) as HTMLElement;
 }
 
@@ -245,9 +221,9 @@ describe('ChatController dialogue lifecycle', () => {
         expect(fakes.create).toHaveBeenCalledTimes(1);
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
         expect(root.querySelector('[data-role="user"]')?.textContent).toBe('<b>Question</b>');
-        expect(root.querySelector('b')).toBeNull();
+        expect(root.querySelector('[data-role="user"] b')).toBeNull();
         expect(root.querySelector('[data-role="assistant"]')?.textContent).toBe('Safe <img onerror=alert(1)>');
-        expect(root.querySelector('img')).toBeNull();
+        expect(root.querySelector('[data-role="assistant"] img')).toBeNull();
     });
 
     it('announces only the finished answer and clears the region for the next question', async () => {

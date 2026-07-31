@@ -93,6 +93,7 @@ $expectedDevDependencies = [
     "@axe-core/playwright",
     "@playwright/test",
     "@types/dom-chromium-ai",
+    "@types/node",
     "@vitest/coverage-v8",
     "esbuild",
     "jsdom",
