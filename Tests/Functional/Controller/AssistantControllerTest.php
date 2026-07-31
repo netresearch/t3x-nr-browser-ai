@@ -150,6 +150,14 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-root', $body);
+        self::assertStringContainsString('id="nr-browser-ai-1"', $body);
+        self::assertStringContainsString('aria-label="Browser AI assistant"', $body);
+        self::assertStringContainsString('for="nr-browser-ai-1-question"', $body);
+        self::assertStringContainsString('id="nr-browser-ai-1-question"', $body);
+        self::assertStringNotContainsString('aria-live=', $body);
+        self::assertStringContainsString('aria-atomic="true"', $body);
+        self::assertStringContainsString('Netresearch DTT GmbH', $body);
+        self::assertStringContainsString('/typo3conf/ext/nr_browser_ai/Resources/Public/Icons/Extension.svg', $body);
         self::assertStringContainsString('data-context-selector="main"', $body);
         self::assertStringContainsString('data-context-usage-limit="0.8"', $body);
         self::assertStringContainsString(
@@ -172,6 +180,10 @@ final class AssistantControllerTest extends FunctionalTestCase
         );
         self::assertMatchesRegularExpression(
             '/<script(?=[^>]*type="module")(?=[^>]*src="[^"]*\/typo3conf\/ext\/nr_browser_ai\/Resources\/Public\/JavaScript\/Assistant\.js[^"]*")[^>]*><\/script>/',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<link(?=[^>]*rel="stylesheet")(?=[^>]*href="[^"]*\/typo3conf\/ext\/nr_browser_ai\/Resources\/Public\/Css\/Assistant\.css[^"]*")[^>]*>/',
             $body,
         );
     }
@@ -234,6 +246,8 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(2, substr_count($body, 'data-nr-browser-ai-root'));
+        preg_match_all('/<section[^>]+id="(nr-browser-ai-[^"]+)"[^>]+data-nr-browser-ai-root/', $body, $matches);
+        self::assertCount(2, array_unique($matches[1] ?? []));
         self::assertLessThan(15_000, strlen($body));
     }
 

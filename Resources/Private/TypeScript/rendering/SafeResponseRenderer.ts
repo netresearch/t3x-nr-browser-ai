@@ -13,7 +13,10 @@ const CLOSING_PAIRS: ReadonlyArray<readonly [string, string]> = [
 export class SafeResponseRenderer {
     private rawResponse = '';
 
-    public constructor(private readonly output: HTMLElement) {}
+    public constructor(
+        private readonly output: HTMLElement,
+        private readonly newTabLabel = '',
+    ) {}
 
     /** Add a streaming chunk to the current response and render its complete state. */
     public appendChunk(chunk: string): void {
@@ -39,7 +42,7 @@ export class SafeResponseRenderer {
             const paragraphs = this.rawResponse.split(/\r?\n(?:[\t ]*\r?\n)+/u);
             for (const paragraphText of paragraphs) {
                 const paragraph = this.output.ownerDocument.createElement('p');
-                appendLinkifiedText(paragraph, paragraphText);
+                appendLinkifiedText(paragraph, paragraphText, this.newTabLabel);
                 fragment.append(paragraph);
             }
         }
@@ -48,7 +51,7 @@ export class SafeResponseRenderer {
     }
 }
 
-function appendLinkifiedText(parent: HTMLElement, text: string): void {
+function appendLinkifiedText(parent: HTMLElement, text: string, newTabLabel: string): void {
     const sourceDocument = parent.ownerDocument;
     let textStart = 0;
 
@@ -74,6 +77,13 @@ function appendLinkifiedText(parent: HTMLElement, text: string): void {
             // Keep the dialogue open while protecting the opener from model-provided URLs.
             anchor.target = '_blank';
             anchor.rel = 'noopener noreferrer';
+            const marker = sourceDocument.createElement('span');
+            marker.className = 'nr-browser-ai__new-tab-marker';
+            marker.setAttribute('aria-hidden', 'true');
+            anchor.append(marker);
+            if (newTabLabel.length > 0) {
+                anchor.setAttribute('aria-label', `${candidate} ${newTabLabel}`);
+            }
         }
 
         parent.append(anchor);

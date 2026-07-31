@@ -91,9 +91,11 @@ assert_contains "$installer" 'CONTENT_UID=900001'
 assert_contains "$installer" 'reserved_collision_count='
 assert_contains "$installer" 'Refusing to overwrite non-DDEV records at reserved IDs'
 assert_contains "$installer" 'ON DUPLICATE KEY UPDATE'
+assert_contains "$installer" "title = 'Main TypoScript Rendering'"
 # The dollar-prefixed values below are literal installer contracts.
 # shellcheck disable=SC2016
 assert_contains "$installer" 'composer config --working-dir="$INSTALL_DIR" repositories.nr_browser_ai path "$EXTENSION_PATH"'
+assert_contains "$installer" 'composer install --working-dir="$INSTALL_DIR" --no-progress --no-interaction'
 assert_contains "$installer" 'vendor/bin/typo3 cache:flush'
 assert_contains "$installer" 'data-nr-browser-ai-root'
 assert_not_contains "$installer" 'tt_content.nrbrowserai_assistant = COA'

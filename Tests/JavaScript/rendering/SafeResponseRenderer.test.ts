@@ -65,7 +65,7 @@ describe('SafeResponseRenderer', () => {
     });
 
     it('opens external links in a protected new tab but retains same-origin navigation', () => {
-        const renderer = new SafeResponseRenderer(output);
+        const renderer = new SafeResponseRenderer(output, 'Wird in einem neuen Tab geöffnet.');
         const internalUrl = `${window.location.origin}/help`;
 
         renderer.appendChunk(`Intern ${internalUrl} extern https://example.org/help`);
@@ -73,6 +73,9 @@ describe('SafeResponseRenderer', () => {
         const [internal, external] = [...output.querySelectorAll('a')];
         expect(internal).toMatchObject({target: '', rel: ''});
         expect(external).toMatchObject({target: '_blank', rel: 'noopener noreferrer'});
+        expect(external?.querySelector('.nr-browser-ai__new-tab-marker[aria-hidden="true"]')).not.toBeNull();
+        expect(external?.getAttribute('aria-label'))
+            .toBe('https://example.org/help Wird in einem neuen Tab geöffnet.');
     });
 
     it('re-renders accumulated chunks so split URLs become one correct link', () => {

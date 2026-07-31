@@ -152,6 +152,10 @@ else
     bootstrap_dependencies
 fi
 
+# Re-run installer hooks for path repositories so newly added public assets are
+# published by TYPO3 14 even when the dependency graph itself is unchanged.
+composer install --working-dir="$INSTALL_DIR" --no-progress --no-interaction
+
 if test "$dependencies_ready" = false || ! database_is_healthy; then
     reset_database
     run_typo3_setup
@@ -225,6 +229,13 @@ WHERE uid <> ${TEMPLATE_UID}
   AND pid = 1
   AND title = 'nr-browser-ai demo'
   AND config LIKE '%extensionName = NrBrowserAi%';
+
+-- Remove only the exact welcome template created by TYPO3's disposable setup.
+DELETE FROM sys_template
+WHERE uid <> ${TEMPLATE_UID}
+  AND pid = 1
+  AND title = 'Main TypoScript Rendering'
+  AND config LIKE '%Welcome to a default website made with%';
 
 INSERT INTO sys_template (
     uid, pid, title, root, clear, include_static_file, config, constants, tstamp, crdate

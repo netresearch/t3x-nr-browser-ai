@@ -526,10 +526,12 @@ var CLOSING_PAIRS = [
   ["{", "}"]
 ];
 var SafeResponseRenderer = class {
-  constructor(output) {
+  constructor(output, newTabLabel = "") {
     this.output = output;
+    this.newTabLabel = newTabLabel;
   }
   output;
+  newTabLabel;
   rawResponse = "";
   /** Add a streaming chunk to the current response and render its complete state. */
   appendChunk(chunk) {
@@ -551,14 +553,14 @@ var SafeResponseRenderer = class {
       const paragraphs = this.rawResponse.split(/\r?\n(?:[\t ]*\r?\n)+/u);
       for (const paragraphText of paragraphs) {
         const paragraph = this.output.ownerDocument.createElement("p");
-        appendLinkifiedText(paragraph, paragraphText);
+        appendLinkifiedText(paragraph, paragraphText, this.newTabLabel);
         fragment.append(paragraph);
       }
     }
     this.output.replaceChildren(fragment);
   }
 };
-function appendLinkifiedText(parent, text) {
+function appendLinkifiedText(parent, text, newTabLabel) {
   const sourceDocument = parent.ownerDocument;
   let textStart = 0;
   for (const match of text.matchAll(URL_CANDIDATE)) {
@@ -579,6 +581,13 @@ function appendLinkifiedText(parent, text) {
     if (url.origin !== sourceDocument.location.origin) {
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
+      const marker = sourceDocument.createElement("span");
+      marker.className = "nr-browser-ai__new-tab-marker";
+      marker.setAttribute("aria-hidden", "true");
+      anchor.append(marker);
+      if (newTabLabel.length > 0) {
+        anchor.setAttribute("aria-label", `${candidate} ${newTabLabel}`);
+      }
     }
     parent.append(anchor);
     textStart = matchStart + candidate.length;
@@ -622,16 +631,6 @@ function count(value, character) {
 }
 
 // Resources/Private/TypeScript/ui/ChatController.ts
-var statusMessages = {
-  checking: "Checking browser AI availability\u2026",
-  downloadable: "Browser AI needs to be set up before use.",
-  downloading: "Setting up browser AI\u2026",
-  ready: "Browser AI is ready.",
-  streaming: "Generating an answer\u2026",
-  "reset-required": "The model context is full. Reset the conversation to continue.",
-  "error-retryable": "Browser AI could not be reached. You can retry.",
-  unavailable: "Browser AI is unavailable in this browser."
-};
 var ChatController = class {
   constructor(root, adapter, contextProvider, options) {
     this.root = root;
@@ -722,6 +721,7 @@ var ChatController = class {
     this.elements.retry.addEventListener("click", () => {
       if (this.state === "error-retryable") {
         void this.start();
+        this.focusStatus();
       }
     }, listenerOptions);
     this.elements.reset.addEventListener("click", () => {
@@ -771,27 +771,32 @@ var ChatController = class {
     }
     const operation = ++this.operation;
     this.setState(activeState);
+    this.focusStatus();
     try {
       const initialization = this.createAndInitialize();
       await initialization;
       if (this.isCurrent(operation)) {
         this.setState("ready");
+        this.focusQuestion();
       }
     } catch (error) {
       if (this.isCurrent(operation)) {
         this.releaseSession();
         this.handleInitializationError(error);
+        this.focusForOutcome();
       }
     }
   }
   submitFromActivation() {
     const question = this.elements.question.value.trim();
     if (question.length === 0 || this.destroyed) {
+      this.focusQuestion();
       return;
     }
     this.elements.question.value = "";
     this.appendMessage("user", question);
     this.setState("streaming");
+    this.focusStatus();
     const operation = ++this.operation;
     this.abortController = new AbortController();
     const createsSession = this.session === void 0;
@@ -816,7 +821,7 @@ var ChatController = class {
     }
     try {
       const output = this.appendMessage("assistant", "");
-      const renderer = new SafeResponseRenderer(output);
+      const renderer = new SafeResponseRenderer(output, this.options.labels.newTab);
       const signal = this.abortController?.signal;
       await this.session?.ask(
         question,
@@ -825,10 +830,12 @@ var ChatController = class {
       );
       if (this.isCurrent(operation)) {
         this.setState("ready");
+        this.focusQuestion();
       }
     } catch (error) {
       if (this.isCurrent(operation)) {
         this.handleDialogueError(error);
+        this.focusForOutcome();
       }
     } finally {
       if (this.isCurrent(operation)) {
@@ -886,7 +893,7 @@ var ChatController = class {
     }
     this.state = state;
     this.root.dataset.state = state;
-    this.elements.status.textContent = statusMessages[state];
+    this.elements.status.textContent = this.options.labels[state];
     if (state === "downloading") {
       this.elements.progress.value = 0;
     } else if (state === "ready") {
@@ -902,12 +909,26 @@ var ChatController = class {
     this.elements.reset.hidden = state !== "reset-required";
     this.elements.retry.hidden = state !== "error-retryable";
     const busy = state !== "ready";
-    this.elements.question.disabled = busy;
-    this.elements.submit.disabled = busy;
-    this.elements.setup.disabled = state !== "downloadable";
-    this.elements.abort.disabled = state !== "streaming";
-    this.elements.reset.disabled = state !== "reset-required";
-    this.elements.retry.disabled = state !== "error-retryable";
+    this.elements.question.readOnly = busy;
+    this.elements.question.setAttribute("aria-readonly", String(busy));
+    this.elements.submit.setAttribute("aria-disabled", String(busy));
+    this.elements.setup.setAttribute("aria-disabled", String(state !== "downloadable"));
+    this.elements.abort.setAttribute("aria-disabled", String(state !== "streaming"));
+    this.elements.reset.setAttribute("aria-disabled", String(state !== "reset-required"));
+    this.elements.retry.setAttribute("aria-disabled", String(state !== "error-retryable"));
+  }
+  focusForOutcome() {
+    if (this.state === "ready") {
+      this.focusQuestion();
+    } else {
+      this.focusStatus();
+    }
+  }
+  focusQuestion() {
+    this.elements.question.focus({ preventScroll: true });
+  }
+  focusStatus() {
+    this.elements.status.focus({ preventScroll: true });
   }
   isCurrent(operation) {
     return !this.destroyed && operation === this.operation;
@@ -1025,8 +1046,34 @@ function configuration(root, sourceDocument) {
     systemPrompt,
     supplementalInstruction,
     inputLanguages,
-    outputLanguages: [outputLanguage]
+    outputLanguages: [outputLanguage],
+    labels: labels(root)
   };
+}
+var UI_STATES = [
+  "checking",
+  "downloadable",
+  "downloading",
+  "ready",
+  "streaming",
+  "reset-required",
+  "error-retryable",
+  "unavailable"
+];
+function labels(root) {
+  const result = { newTab: requiredLabel(root, "labelNewTab") };
+  for (const state of UI_STATES) {
+    const datasetKey = `label${state.split("-").map((part) => part[0]?.toUpperCase() + part.slice(1)).join("")}`;
+    result[state] = requiredLabel(root, datasetKey);
+  }
+  return result;
+}
+function requiredLabel(root, key) {
+  const label = root.dataset[key]?.trim() ?? "";
+  if (label.length === 0) {
+    throw new Error(`Missing UI label: ${key}`);
+  }
+  return label;
 }
 function normalizeLanguage(languageTag) {
   const primary = languageTag.trim().toLowerCase().split(/[-_]/u)[0];

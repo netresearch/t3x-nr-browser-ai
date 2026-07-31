@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2026-07-31T00:00:00Z">
+        <body>
+            <trans-unit id="assistant.title"><source>Browser AI assistant</source><target>Browser-KI-Assistent</target></trans-unit>
+            <trans-unit id="assistant.region"><source>Browser AI assistant</source><target>Browser-KI-Assistent</target></trans-unit>
+            <trans-unit id="field.question"><source>Your question</source><target>Ihre Frage</target></trans-unit>
+            <trans-unit id="action.setup"><source>Set up browser AI</source><target>Browser-KI einrichten</target></trans-unit>
+            <trans-unit id="action.ask"><source>Ask</source><target>Fragen</target></trans-unit>
+            <trans-unit id="action.abort"><source>Stop response</source><target>Antwort stoppen</target></trans-unit>
+            <trans-unit id="action.reset"><source>Reset conversation</source><target>Unterhaltung zurücksetzen</target></trans-unit>
+            <trans-unit id="action.retry"><source>Retry</source><target>Erneut versuchen</target></trans-unit>
+            <trans-unit id="progress.download"><source>Browser AI model download</source><target>Download des Browser-KI-Modells</target></trans-unit>
+            <trans-unit id="status.checking"><source>Checking browser AI availability…</source><target>Verfügbarkeit der Browser-KI wird geprüft…</target></trans-unit>
+            <trans-unit id="status.downloadable"><source>Browser AI needs to be set up before use.</source><target>Browser-KI muss vor der Verwendung eingerichtet werden.</target></trans-unit>
+            <trans-unit id="status.downloading"><source>Setting up browser AI…</source><target>Browser-KI wird eingerichtet…</target></trans-unit>
+            <trans-unit id="status.ready"><source>Browser AI is ready.</source><target>Browser-KI ist bereit.</target></trans-unit>
+            <trans-unit id="status.streaming"><source>Generating an answer…</source><target>Antwort wird erstellt…</target></trans-unit>
+            <trans-unit id="status.resetRequired"><source>The model context is full. Reset the conversation to continue.</source><target>Der Modellkontext ist voll. Setzen Sie die Unterhaltung zurück, um fortzufahren.</target></trans-unit>
+            <trans-unit id="status.errorRetryable"><source>Browser AI could not be reached. You can retry.</source><target>Browser-KI konnte nicht erreicht werden. Sie können es erneut versuchen.</target></trans-unit>
+            <trans-unit id="status.unavailable"><source>Browser AI is unavailable in this browser.</source><target>Browser-KI ist in diesem Browser nicht verfügbar.</target></trans-unit>
+            <trans-unit id="link.newTab"><source>Opens in a new tab.</source><target>Wird in einem neuen Tab geöffnet.</target></trans-unit>
+        </body>
+    </file>
+</xliff>

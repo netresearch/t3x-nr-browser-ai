@@ -21,12 +21,33 @@ const context = {
     wasTruncated: false,
 };
 
+const labels = {
+    checking: 'Verfügbarkeit wird geprüft…',
+    downloadable: 'Browser-KI muss zuerst eingerichtet werden.',
+    downloading: 'Browser-KI wird eingerichtet…',
+    ready: 'Browser-KI ist bereit.',
+    streaming: 'Antwort wird erstellt…',
+    'reset-required': 'Der Modellkontext ist voll.',
+    'error-retryable': 'Browser-KI konnte nicht erreicht werden.',
+    unavailable: 'Browser-KI ist in diesem Browser nicht verfügbar.',
+    newTab: 'Wird in einem neuen Tab geöffnet.',
+};
+
 function markup(id = 'assistant'): HTMLElement {
     document.body.insertAdjacentHTML('beforeend', `
-        <section id="${id}" data-nr-browser-ai-root data-state="checking">
+        <section id="${id}" data-nr-browser-ai-root data-state="checking"
+            data-label-checking="${labels.checking}"
+            data-label-downloadable="${labels.downloadable}"
+            data-label-downloading="${labels.downloading}"
+            data-label-ready="${labels.ready}"
+            data-label-streaming="${labels.streaming}"
+            data-label-reset-required="${labels['reset-required']}"
+            data-label-error-retryable="${labels['error-retryable']}"
+            data-label-unavailable="${labels.unavailable}"
+            data-label-new-tab="${labels.newTab}">
             <div data-nr-browser-ai-fallback>Fallback</div>
             <div data-nr-browser-ai-assistant hidden>
-                <p data-nr-browser-ai-status role="status"></p>
+                <p data-nr-browser-ai-status role="status" aria-atomic="true" tabindex="-1"></p>
                 <button type="button" data-nr-browser-ai-setup>Set up</button>
                 <progress data-nr-browser-ai-progress max="1" value="0"></progress>
                 <div data-nr-browser-ai-log></div>
@@ -80,6 +101,7 @@ function controller(root: HTMLElement, fakes: ReturnType<typeof fixture>): ChatC
         supplementalInstruction: 'Antworte kurz.',
         inputLanguages: ['en', 'de'],
         outputLanguages: ['de'],
+        labels,
     });
 }
 
@@ -92,6 +114,19 @@ beforeEach(() => {
 });
 
 describe('ChatController capability and setup states', () => {
+    it('uses translated labels and keeps every action focusable instead of disabling controls', async () => {
+        const root = markup();
+        const fakes = fixture('downloadable');
+
+        await controller(root, fakes).start();
+
+        expect(root.querySelector('[data-nr-browser-ai-status]')?.textContent).toBe(labels.downloadable);
+        expect(root.querySelectorAll(':disabled')).toHaveLength(0);
+        expect((root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).readOnly).toBe(true);
+        expect((root.querySelector('[data-nr-browser-ai-submit]') as HTMLButtonElement).getAttribute('aria-disabled')).toBe('true');
+        expect((root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).getAttribute('aria-disabled')).toBe('false');
+    });
+
     it('shows the retained fallback for an unavailable API without creating a model', async () => {
         const root = markup();
         const fakes = fixture('unavailable');
@@ -127,6 +162,7 @@ describe('ChatController capability and setup states', () => {
         finishDownload();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
         expect(progress.value).toBe(1);
+        expect(document.activeElement).toBe(root.querySelector('[data-nr-browser-ai-question]'));
     });
 
     it('becomes ready for available capability without passively creating a model', async () => {
@@ -151,6 +187,7 @@ describe('ChatController capability and setup states', () => {
         (root.querySelector('[data-nr-browser-ai-retry]') as HTMLButtonElement).click();
         expect(root.dataset.state).toBe('checking');
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        expect(document.activeElement).toBe(root.querySelector('[data-nr-browser-ai-status]'));
     });
 
     it('treats a permanently missing context root as unavailable', async () => {
@@ -234,6 +271,7 @@ describe('ChatController dialogue lifecycle', () => {
 
         (root.querySelector('[data-nr-browser-ai-abort]') as HTMLButtonElement).click();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        expect(document.activeElement).toBe(root.querySelector('[data-nr-browser-ai-question]'));
     });
 
     it.each(['QuotaExceededError', 'context-limit'] as const)('moves %s failures from an initialized dialogue to reset-required', async kind => {

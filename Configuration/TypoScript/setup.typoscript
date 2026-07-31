@@ -7,10 +7,12 @@ tt_content.nrbrowserai_assistant {
     }
 }
 
-page.includeJSFooter.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
-page.includeJSFooter.nrBrowserAi {
+page.includeJS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
+page.includeJS.nrBrowserAi {
     type = module
 }
+
+page.includeCSS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/Css/Assistant.css
 
 plugin.tx_nrbrowserai_assistant {
     view {

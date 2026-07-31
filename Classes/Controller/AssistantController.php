@@ -18,6 +18,7 @@ use function is_numeric;
 use function is_string;
 use function mb_strlen;
 use function preg_match;
+use function spl_object_id;
 
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use Psr\Http\Message\ResponseInterface;
@@ -47,6 +48,8 @@ final class AssistantController extends ActionController
         $currentContentUid = $currentContentObject instanceof ContentObjectRenderer
             ? $this->normalizeContentUid($currentContentObject->data['uid'] ?? null)
             : 0;
+        $instanceNumber = $currentContentUid > 0 ? $currentContentUid : spl_object_id($this);
+        $settings['instanceId'] = 'nr-browser-ai-' . $instanceNumber;
         if ($this->fallbackContentRenderer instanceof FallbackContentRenderer) {
             $settings['fallbackContent'] = $this->fallbackContentRenderer->render(
                 $settings['fallbackMode'],

@@ -18,7 +18,10 @@ export interface ChatControllerOptions extends ModelOptions {
     contextSelector: string;
     contextUsageLimit: number;
     supplementalInstruction: string;
+    labels: UiLabels;
 }
+
+export type UiLabels = Record<UiState, string> & {newTab: string};
 
 interface Elements {
     assistant: HTMLElement;
@@ -34,17 +37,6 @@ interface Elements {
     reset: HTMLButtonElement;
     retry: HTMLButtonElement;
 }
-
-const statusMessages: Record<UiState, string> = {
-    checking: 'Checking browser AI availability…',
-    downloadable: 'Browser AI needs to be set up before use.',
-    downloading: 'Setting up browser AI…',
-    ready: 'Browser AI is ready.',
-    streaming: 'Generating an answer…',
-    'reset-required': 'The model context is full. Reset the conversation to continue.',
-    'error-retryable': 'Browser AI could not be reached. You can retry.',
-    unavailable: 'Browser AI is unavailable in this browser.',
-};
 
 export class ChatController {
     private readonly elements: Elements;
@@ -140,6 +132,7 @@ export class ChatController {
         this.elements.retry.addEventListener('click', () => {
             if (this.state === 'error-retryable') {
                 void this.start();
+                this.focusStatus();
             }
         }, listenerOptions);
         this.elements.reset.addEventListener('click', () => {
@@ -196,16 +189,19 @@ export class ChatController {
         }
         const operation = ++this.operation;
         this.setState(activeState);
+        this.focusStatus();
         try {
             const initialization = this.createAndInitialize();
             await initialization;
             if (this.isCurrent(operation)) {
                 this.setState('ready');
+                this.focusQuestion();
             }
         } catch (error: unknown) {
             if (this.isCurrent(operation)) {
                 this.releaseSession();
                 this.handleInitializationError(error);
+                this.focusForOutcome();
             }
         }
     }
@@ -213,12 +209,14 @@ export class ChatController {
     private submitFromActivation(): void {
         const question = this.elements.question.value.trim();
         if (question.length === 0 || this.destroyed) {
+            this.focusQuestion();
             return;
         }
 
         this.elements.question.value = '';
         this.appendMessage('user', question);
         this.setState('streaming');
+        this.focusStatus();
         const operation = ++this.operation;
         this.abortController = new AbortController();
 
@@ -251,7 +249,7 @@ export class ChatController {
         }
         try {
             const output = this.appendMessage('assistant', '');
-            const renderer = new SafeResponseRenderer(output);
+            const renderer = new SafeResponseRenderer(output, this.options.labels.newTab);
             const signal = this.abortController?.signal;
             await this.session?.ask(
                 question,
@@ -260,10 +258,12 @@ export class ChatController {
             );
             if (this.isCurrent(operation)) {
                 this.setState('ready');
+                this.focusQuestion();
             }
         } catch (error: unknown) {
             if (this.isCurrent(operation)) {
                 this.handleDialogueError(error);
+                this.focusForOutcome();
             }
         } finally {
             if (this.isCurrent(operation)) {
@@ -326,7 +326,7 @@ export class ChatController {
         }
         this.state = state;
         this.root.dataset.state = state;
-        this.elements.status.textContent = statusMessages[state];
+        this.elements.status.textContent = this.options.labels[state];
         if (state === 'downloading') {
             this.elements.progress.value = 0;
         } else if (state === 'ready') {
@@ -344,12 +344,29 @@ export class ChatController {
         this.elements.retry.hidden = state !== 'error-retryable';
 
         const busy = state !== 'ready';
-        this.elements.question.disabled = busy;
-        this.elements.submit.disabled = busy;
-        this.elements.setup.disabled = state !== 'downloadable';
-        this.elements.abort.disabled = state !== 'streaming';
-        this.elements.reset.disabled = state !== 'reset-required';
-        this.elements.retry.disabled = state !== 'error-retryable';
+        this.elements.question.readOnly = busy;
+        this.elements.question.setAttribute('aria-readonly', String(busy));
+        this.elements.submit.setAttribute('aria-disabled', String(busy));
+        this.elements.setup.setAttribute('aria-disabled', String(state !== 'downloadable'));
+        this.elements.abort.setAttribute('aria-disabled', String(state !== 'streaming'));
+        this.elements.reset.setAttribute('aria-disabled', String(state !== 'reset-required'));
+        this.elements.retry.setAttribute('aria-disabled', String(state !== 'error-retryable'));
+    }
+
+    private focusForOutcome(): void {
+        if (this.state === 'ready') {
+            this.focusQuestion();
+        } else {
+            this.focusStatus();
+        }
+    }
+
+    private focusQuestion(): void {
+        this.elements.question.focus({preventScroll: true});
+    }
+
+    private focusStatus(): void {
+        this.elements.status.focus({preventScroll: true});
     }
 
     private isCurrent(operation: number): boolean {

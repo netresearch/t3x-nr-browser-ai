@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2026-07-31T00:00:00Z">
+        <body>
+            <trans-unit id="assistant.title"><source>Browser AI assistant</source></trans-unit>
+            <trans-unit id="assistant.region"><source>Browser AI assistant</source></trans-unit>
+            <trans-unit id="field.question"><source>Your question</source></trans-unit>
+            <trans-unit id="action.setup"><source>Set up browser AI</source></trans-unit>
+            <trans-unit id="action.ask"><source>Ask</source></trans-unit>
+            <trans-unit id="action.abort"><source>Stop response</source></trans-unit>
+            <trans-unit id="action.reset"><source>Reset conversation</source></trans-unit>
+            <trans-unit id="action.retry"><source>Retry</source></trans-unit>
+            <trans-unit id="progress.download"><source>Browser AI model download</source></trans-unit>
+            <trans-unit id="status.checking"><source>Checking browser AI availability…</source></trans-unit>
+            <trans-unit id="status.downloadable"><source>Browser AI needs to be set up before use.</source></trans-unit>
+            <trans-unit id="status.downloading"><source>Setting up browser AI…</source></trans-unit>
+            <trans-unit id="status.ready"><source>Browser AI is ready.</source></trans-unit>
+            <trans-unit id="status.streaming"><source>Generating an answer…</source></trans-unit>
+            <trans-unit id="status.resetRequired"><source>The model context is full. Reset the conversation to continue.</source></trans-unit>
+            <trans-unit id="status.errorRetryable"><source>Browser AI could not be reached. You can retry.</source></trans-unit>
+            <trans-unit id="status.unavailable"><source>Browser AI is unavailable in this browser.</source></trans-unit>
+            <trans-unit id="link.newTab"><source>Opens in a new tab.</source></trans-unit>
+        </body>
+    </file>
+</xliff>
