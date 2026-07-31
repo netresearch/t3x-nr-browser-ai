@@ -52,6 +52,7 @@ export class ChatController {
     private context?: PageContext;
     private session?: LanguageModelSession;
     private abortController?: AbortController;
+    private readonly eventListeners: AbortController;
     private destroyed = false;
     private operation = 0;
 
@@ -61,6 +62,8 @@ export class ChatController {
         private readonly contextProvider: PageContextProvider,
         private readonly options: ChatControllerOptions,
     ) {
+        const WindowAbortController = root.ownerDocument.defaultView?.AbortController ?? AbortController;
+        this.eventListeners = new WindowAbortController();
         this.elements = collectElements(root);
         this.bindEvents();
         this.setState('checking');
@@ -110,32 +113,33 @@ export class ChatController {
         this.operation++;
         this.abortController?.abort();
         this.abortController = undefined;
-        this.session?.destroy();
-        this.session = undefined;
+        this.eventListeners.abort();
+        this.releaseSession();
     }
 
     private bindEvents(): void {
+        const listenerOptions = {signal: this.eventListeners.signal};
         this.elements.setup.addEventListener('click', () => {
             if (this.state === 'downloadable') {
                 void this.initializeFromActivation('downloading');
             }
-        });
+        }, listenerOptions);
         this.elements.form.addEventListener('submit', event => {
             event.preventDefault();
             if (this.state === 'ready') {
                 this.submitFromActivation();
             }
-        });
+        }, listenerOptions);
         this.elements.abort.addEventListener('click', () => {
             if (this.state === 'streaming') {
                 this.abortController?.abort();
             }
-        });
+        }, listenerOptions);
         this.elements.retry.addEventListener('click', () => {
             if (this.state === 'error-retryable') {
                 void this.start();
             }
-        });
+        }, listenerOptions);
         this.elements.reset.addEventListener('click', () => {
             if (this.state !== 'reset-required') {
                 return;
@@ -145,7 +149,7 @@ export class ChatController {
             this.session = undefined;
             this.elements.log.replaceChildren();
             void this.initializeFromActivation('downloading');
-        });
+        }, listenerOptions);
     }
 
     private applyAvailability(availability: Availability): void {
@@ -199,7 +203,7 @@ export class ChatController {
         } catch (error: unknown) {
             if (this.isCurrent(operation)) {
                 this.releaseSession();
-                this.handleError(error);
+                this.handleInitializationError(error);
             }
         }
     }
@@ -230,9 +234,20 @@ export class ChatController {
     ): Promise<void> {
         try {
             await initialization;
-            if (!this.isCurrent(operation)) {
-                return;
+        } catch (error: unknown) {
+            if (this.isCurrent(operation)) {
+                if (createsSession) {
+                    this.releaseSession();
+                }
+                this.abortController = undefined;
+                this.handleInitializationError(error);
             }
+            return;
+        }
+        if (!this.isCurrent(operation)) {
+            return;
+        }
+        try {
             const output = this.appendMessage('assistant', '');
             const renderer = new SafeResponseRenderer(output);
             const signal = this.abortController?.signal;
@@ -246,11 +261,7 @@ export class ChatController {
             }
         } catch (error: unknown) {
             if (this.isCurrent(operation)) {
-                if (createsSession) {
-                    this.session?.destroy();
-                    this.session = undefined;
-                }
-                this.handleError(error);
+                this.handleDialogueError(error);
             }
         } finally {
             if (this.isCurrent(operation)) {
@@ -269,7 +280,22 @@ export class ChatController {
         return message;
     }
 
-    private handleError(error: unknown): void {
+    private handleInitializationError(error: unknown): void {
+        if (error instanceof LanguageModelSessionError) {
+            switch (error.code) {
+                case 'aborted':
+                    this.setState('ready');
+                    return;
+                case 'context-limit-reached':
+                case 'not-supported':
+                    this.setState('unavailable');
+                    return;
+            }
+        }
+        this.setState('error-retryable');
+    }
+
+    private handleDialogueError(error: unknown): void {
         if (error instanceof LanguageModelSessionError) {
             switch (error.code) {
                 case 'aborted':
@@ -293,6 +319,9 @@ export class ChatController {
     }
 
     private setState(state: UiState): void {
+        if (state === 'unavailable') {
+            this.releaseSession();
+        }
         this.state = state;
         this.root.dataset.state = state;
         this.elements.status.textContent = statusMessages[state];

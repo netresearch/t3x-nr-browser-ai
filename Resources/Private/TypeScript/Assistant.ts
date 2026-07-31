@@ -32,11 +32,44 @@ export function bootstrapAssistants(
         }
     }
 
-    sourceDocument.defaultView?.addEventListener('pagehide', () => {
-        controllers.forEach(controller => controller.destroy());
-    }, {once: true});
-
     return controllers;
+}
+
+export function installAssistantLifecycle(
+    sourceDocument: Document = document,
+    adapterFactory: AdapterFactory = () => new BrowserLanguageModelAdapter(),
+    providerFactory: ProviderFactory = () => new DomPageContextProvider(sourceDocument),
+): () => void {
+    let controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+    const WindowAbortController = sourceDocument.defaultView?.AbortController ?? AbortController;
+    const lifecycleEvents = new WindowAbortController();
+
+    const destroyControllers = (): void => {
+        controllers.forEach(controller => controller.destroy());
+        controllers = [];
+    };
+
+    sourceDocument.defaultView?.addEventListener('pagehide', event => {
+        destroyControllers();
+        if (!isPersistedPageTransition(event)) {
+            lifecycleEvents.abort();
+        }
+    }, {signal: lifecycleEvents.signal});
+    sourceDocument.defaultView?.addEventListener('pageshow', event => {
+        if (isPersistedPageTransition(event)) {
+            destroyControllers();
+            controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+        }
+    }, {signal: lifecycleEvents.signal});
+
+    return (): void => {
+        lifecycleEvents.abort();
+        destroyControllers();
+    };
+}
+
+function isPersistedPageTransition(event: Event): boolean {
+    return 'persisted' in event && event.persisted === true;
 }
 
 function configuration(root: HTMLElement, sourceDocument: Document) {
@@ -79,4 +112,6 @@ function normalizeLanguage(languageTag: string): string | undefined {
     return primary !== undefined && SUPPORTED_LANGUAGES.has(primary) ? primary : undefined;
 }
 
-bootstrapAssistants();
+if (document.querySelector('[data-nr-browser-ai-root]') !== null) {
+    installAssistantLifecycle();
+}

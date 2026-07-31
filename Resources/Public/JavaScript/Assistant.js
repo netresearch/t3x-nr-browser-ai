@@ -638,6 +638,8 @@ var ChatController = class {
     this.adapter = adapter;
     this.contextProvider = contextProvider;
     this.options = options;
+    const WindowAbortController = root.ownerDocument.defaultView?.AbortController ?? AbortController;
+    this.eventListeners = new WindowAbortController();
     this.elements = collectElements(root);
     this.bindEvents();
     this.setState("checking");
@@ -651,6 +653,7 @@ var ChatController = class {
   context;
   session;
   abortController;
+  eventListeners;
   destroyed = false;
   operation = 0;
   async start() {
@@ -693,31 +696,32 @@ var ChatController = class {
     this.operation++;
     this.abortController?.abort();
     this.abortController = void 0;
-    this.session?.destroy();
-    this.session = void 0;
+    this.eventListeners.abort();
+    this.releaseSession();
   }
   bindEvents() {
+    const listenerOptions = { signal: this.eventListeners.signal };
     this.elements.setup.addEventListener("click", () => {
       if (this.state === "downloadable") {
         void this.initializeFromActivation("downloading");
       }
-    });
+    }, listenerOptions);
     this.elements.form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (this.state === "ready") {
         this.submitFromActivation();
       }
-    });
+    }, listenerOptions);
     this.elements.abort.addEventListener("click", () => {
       if (this.state === "streaming") {
         this.abortController?.abort();
       }
-    });
+    }, listenerOptions);
     this.elements.retry.addEventListener("click", () => {
       if (this.state === "error-retryable") {
         void this.start();
       }
-    });
+    }, listenerOptions);
     this.elements.reset.addEventListener("click", () => {
       if (this.state !== "reset-required") {
         return;
@@ -727,7 +731,7 @@ var ChatController = class {
       this.session = void 0;
       this.elements.log.replaceChildren();
       void this.initializeFromActivation("downloading");
-    });
+    }, listenerOptions);
   }
   applyAvailability(availability) {
     switch (availability) {
@@ -774,7 +778,7 @@ var ChatController = class {
     } catch (error) {
       if (this.isCurrent(operation)) {
         this.releaseSession();
-        this.handleError(error);
+        this.handleInitializationError(error);
       }
     }
   }
@@ -795,9 +799,20 @@ var ChatController = class {
   async askAfterInitialization(initialization, question, operation, createsSession) {
     try {
       await initialization;
-      if (!this.isCurrent(operation)) {
-        return;
+    } catch (error) {
+      if (this.isCurrent(operation)) {
+        if (createsSession) {
+          this.releaseSession();
+        }
+        this.abortController = void 0;
+        this.handleInitializationError(error);
       }
+      return;
+    }
+    if (!this.isCurrent(operation)) {
+      return;
+    }
+    try {
       const output = this.appendMessage("assistant", "");
       const renderer = new SafeResponseRenderer(output);
       const signal = this.abortController?.signal;
@@ -811,11 +826,7 @@ var ChatController = class {
       }
     } catch (error) {
       if (this.isCurrent(operation)) {
-        if (createsSession) {
-          this.session?.destroy();
-          this.session = void 0;
-        }
-        this.handleError(error);
+        this.handleDialogueError(error);
       }
     } finally {
       if (this.isCurrent(operation)) {
@@ -832,7 +843,21 @@ var ChatController = class {
     this.elements.log.append(message);
     return message;
   }
-  handleError(error) {
+  handleInitializationError(error) {
+    if (error instanceof LanguageModelSessionError) {
+      switch (error.code) {
+        case "aborted":
+          this.setState("ready");
+          return;
+        case "context-limit-reached":
+        case "not-supported":
+          this.setState("unavailable");
+          return;
+      }
+    }
+    this.setState("error-retryable");
+  }
+  handleDialogueError(error) {
     if (error instanceof LanguageModelSessionError) {
       switch (error.code) {
         case "aborted":
@@ -854,6 +879,9 @@ var ChatController = class {
     this.session = void 0;
   }
   setState(state) {
+    if (state === "unavailable") {
+      this.releaseSession();
+    }
     this.state = state;
     this.root.dataset.state = state;
     this.elements.status.textContent = statusMessages[state];
@@ -937,10 +965,35 @@ function bootstrapAssistants(sourceDocument = document, adapterFactory = () => n
       showPermanentFallback(root);
     }
   }
-  sourceDocument.defaultView?.addEventListener("pagehide", () => {
-    controllers.forEach((controller) => controller.destroy());
-  }, { once: true });
   return controllers;
+}
+function installAssistantLifecycle(sourceDocument = document, adapterFactory = () => new BrowserLanguageModelAdapter(), providerFactory = () => new DomPageContextProvider(sourceDocument)) {
+  let controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+  const WindowAbortController = sourceDocument.defaultView?.AbortController ?? AbortController;
+  const lifecycleEvents = new WindowAbortController();
+  const destroyControllers = () => {
+    controllers.forEach((controller) => controller.destroy());
+    controllers = [];
+  };
+  sourceDocument.defaultView?.addEventListener("pagehide", (event) => {
+    destroyControllers();
+    if (!isPersistedPageTransition(event)) {
+      lifecycleEvents.abort();
+    }
+  }, { signal: lifecycleEvents.signal });
+  sourceDocument.defaultView?.addEventListener("pageshow", (event) => {
+    if (isPersistedPageTransition(event)) {
+      destroyControllers();
+      controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+    }
+  }, { signal: lifecycleEvents.signal });
+  return () => {
+    lifecycleEvents.abort();
+    destroyControllers();
+  };
+}
+function isPersistedPageTransition(event) {
+  return "persisted" in event && event.persisted === true;
 }
 function configuration(root, sourceDocument) {
   const contextSelector = root.dataset.contextSelector?.trim() ?? "";
@@ -977,7 +1030,10 @@ function normalizeLanguage(languageTag) {
   const primary = languageTag.trim().toLowerCase().split(/[-_]/u)[0];
   return primary !== void 0 && SUPPORTED_LANGUAGES.has(primary) ? primary : void 0;
 }
-bootstrapAssistants();
+if (document.querySelector("[data-nr-browser-ai-root]") !== null) {
+  installAssistantLifecycle();
+}
 export {
-  bootstrapAssistants
+  bootstrapAssistants,
+  installAssistantLifecycle
 };

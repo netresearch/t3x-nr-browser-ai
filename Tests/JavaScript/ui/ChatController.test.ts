@@ -1,6 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {bootstrapAssistants} from '../../../Resources/Private/TypeScript/Assistant';
+import {
+    bootstrapAssistants,
+    installAssistantLifecycle,
+} from '../../../Resources/Private/TypeScript/Assistant';
 import {ChatController} from '../../../Resources/Private/TypeScript/ui/ChatController';
 import {PageContextError} from '../../../Resources/Private/TypeScript/context/DomPageContextProvider';
 import type {PageContextProvider} from '../../../Resources/Private/TypeScript/context/PageContextProvider';
@@ -233,16 +236,18 @@ describe('ChatController dialogue lifecycle', () => {
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
     });
 
-    it.each(['QuotaExceededError', 'context-limit'] as const)('moves %s failures to reset-required', async kind => {
+    it.each(['QuotaExceededError', 'context-limit'] as const)('moves %s failures from an initialized dialogue to reset-required', async kind => {
         const root = markup();
-        const fakes = fixture('available');
+        const fakes = fixture('downloadable');
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
         if (kind === 'QuotaExceededError') {
             fakes.browserSession.promptStreaming = vi.fn(() => { throw new DOMException('Full', 'QuotaExceededError'); });
         } else {
             Object.defineProperty(fakes.browserSession, 'contextUsage', {value: 900});
         }
-        const subject = controller(root, fakes);
-        await subject.start();
         (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'Question';
         (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
 
@@ -275,6 +280,72 @@ describe('ChatController dialogue lifecycle', () => {
         (root.querySelector('[data-nr-browser-ai-reset]') as HTMLButtonElement).click();
         expect(order).toEqual(['create', 'destroy', 'create']);
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+    });
+
+    it('classifies quota failures from adapter creation as retryable instead of reset-required', async () => {
+        const root = markup();
+        const fakes = fixture('available');
+        fakes.create.mockRejectedValue(new DOMException('No capacity', 'QuotaExceededError'));
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'Question';
+
+        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+
+        await vi.waitFor(() => expect(root.dataset.state).toBe('error-retryable'));
+    });
+
+    it('treats an initial context measurement overflow as permanently unavailable', async () => {
+        const root = markup();
+        const fakes = fixture('available');
+        fakes.browserSession.measureContextUsage = vi.fn(async () => 900);
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'Question';
+
+        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+
+        await vi.waitFor(() => expect(root.dataset.state).toBe('unavailable'));
+        expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('classifies quota failures while appending initial page context as retryable', async () => {
+        const root = markup();
+        const fakes = fixture('available');
+        fakes.browserSession.append = vi.fn(async () => {
+            throw new DOMException('No capacity', 'QuotaExceededError');
+        });
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'Question';
+
+        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+
+        await vi.waitFor(() => expect(root.dataset.state).toBe('error-retryable'));
+        expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('releases an existing model when a follow-up becomes unsupported', async () => {
+        const root = markup();
+        const fakes = fixture('downloadable');
+        const subject = controller(root, fakes);
+        await subject.start();
+        (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        const input = root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement;
+        const form = root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement;
+        input.value = 'First';
+        form.requestSubmit();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        fakes.browserSession.promptStreaming = vi.fn(() => {
+            throw new DOMException('Unsupported', 'NotSupportedError');
+        });
+        input.value = 'Follow-up';
+
+        form.requestSubmit();
+
+        await vi.waitFor(() => expect(root.dataset.state).toBe('unavailable'));
+        expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
     });
 
     it('discards a transiently failed initialization and creates a fresh session on the next activated submit', async () => {
@@ -311,6 +382,18 @@ describe('ChatController dialogue lifecycle', () => {
 
         expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
     });
+
+    it('removes its DOM listeners when destroyed', async () => {
+        const root = markup();
+        const fakes = fixture('available');
+        const subject = controller(root, fakes);
+        await subject.start();
+        subject.destroy();
+        const form = root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement;
+        const event = new SubmitEvent('submit', {bubbles: true, cancelable: true});
+
+        expect(form.dispatchEvent(event)).toBe(true);
+    });
 });
 
 describe('Assistant bootstrap', () => {
@@ -339,27 +422,32 @@ describe('Assistant bootstrap', () => {
         }));
     });
 
-    it('uses English for unsupported or blank page language and destroys all instances on pagehide', async () => {
-        const first = markup('first');
-        const second = markup('second');
-        for (const root of [first, second]) {
-            root.dataset.contextSelector = 'main';
-            root.dataset.contextUsageLimit = '0.8';
-            root.dataset.systemPrompt = 'Answer only from this page.';
-        }
+    it('destroys on persisted pagehide, reboots once on persisted pageshow and remains interactive', async () => {
+        const root = markup('bfcache');
+        root.dataset.contextSelector = 'main';
+        root.dataset.contextUsageLimit = '0.8';
+        root.dataset.systemPrompt = 'Answer only from this page.';
         document.documentElement.lang = 'nl-NL';
-        const instances = [fixture('downloadable'), fixture('downloadable')];
-        let index = 0;
+        const fakes = fixture('downloadable');
 
-        bootstrapAssistants(document, () => instances[index].adapter, () => instances[index++].provider);
+        const dispose = installAssistantLifecycle(document, () => fakes.adapter, () => fakes.provider);
         await flush();
-        (first.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
-        (second.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
-        await vi.waitFor(() => expect(second.dataset.state).toBe('ready'));
-        expect(instances[0].availabilitySpy).toHaveBeenCalledWith(expect.objectContaining({inputLanguages: ['en'], outputLanguages: ['en']}));
+        (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        expect(fakes.availabilitySpy).toHaveBeenCalledWith(expect.objectContaining({inputLanguages: ['en'], outputLanguages: ['en']}));
 
-        window.dispatchEvent(new PageTransitionEvent('pagehide'));
-        expect(instances[0].browserDestroy).toHaveBeenCalledTimes(1);
-        expect(instances[1].browserDestroy).toHaveBeenCalledTimes(1);
+        window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}));
+        expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
+        window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}));
+        await vi.waitFor(() => expect(root.dataset.state).toBe('downloadable'));
+        (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'After restore';
+        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+
+        expect(fakes.create).toHaveBeenCalledTimes(2);
+        expect(fakes.browserSession.promptStreaming).toHaveBeenCalledTimes(1);
+        dispose();
     });
 });
