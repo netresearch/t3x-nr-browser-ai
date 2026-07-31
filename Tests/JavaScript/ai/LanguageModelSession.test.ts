@@ -283,6 +283,87 @@ describe('LanguageModelSession dialogue', () => {
         expect(chunks).toEqual(['Die ', 'Antwort ', 'ist 42.']);
     });
 
+    it('cancels an unfinished stream and preserves an onChunk error when cancellation fails', async () => {
+        const callbackFailure = new Error('renderer failed');
+        const cancellationFailure = new Error('cancel failed');
+        const cancel = vi.fn(() => {
+            throw cancellationFailure;
+        });
+        const openStream = new ReadableStream<string>({
+            start(controller): void {
+                controller.enqueue('first chunk');
+            },
+            cancel,
+        });
+        const fakes = fixture({stream: openStream});
+        const dialogue = subject(fakes);
+        await dialogue.initialize(pageContext);
+
+        await expect(dialogue.ask('Frage', () => {
+            throw callbackFailure;
+        })).rejects.toBe(callbackFailure);
+
+        expect(cancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a concurrent response and accepts another question after the active stream ends', async () => {
+        let streamController: ReadableStreamDefaultController<string> | undefined;
+        let markFirstChunk: (() => void) | undefined;
+        const firstChunk = new Promise<void>(resolve => {
+            markFirstChunk = resolve;
+        });
+        const openStream = new ReadableStream<string>({
+            start(controller): void {
+                streamController = controller;
+                controller.enqueue('first');
+            },
+        });
+        const fakes = fixture();
+        fakes.promptStreaming
+            .mockReturnValueOnce(openStream)
+            .mockReturnValueOnce(streamOf('later'));
+        const dialogue = subject(fakes);
+        await dialogue.initialize(pageContext);
+
+        const activeResponse = dialogue.ask('Erste Frage', () => markFirstChunk?.());
+        await firstChunk;
+        const concurrentOutcome = await dialogue.ask('Parallele Frage', vi.fn()).then(
+            () => undefined,
+            (error: unknown) => error,
+        );
+        streamController?.close();
+        await activeResponse;
+
+        expect(concurrentOutcome).toMatchObject({
+            name: 'LanguageModelSessionError',
+            code: 'response-in-progress',
+        });
+        expect(fakes.promptStreaming).toHaveBeenCalledTimes(1);
+
+        await expect(dialogue.ask('Spätere Frage', vi.fn())).resolves.toBeUndefined();
+        expect(fakes.promptStreaming).toHaveBeenCalledTimes(2);
+    });
+
+    it('checks context quota from one immediate snapshot per question', async () => {
+        const fakes = fixture();
+        const usage = vi.fn(() => 100);
+        const window = vi.fn(() => 1_000);
+        Object.defineProperties(fakes.browserSession, {
+            contextUsage: {configurable: true, get: usage},
+            contextWindow: {configurable: true, get: window},
+        });
+        const dialogue = subject(fakes);
+        fakes.measure.mockResolvedValue(0);
+        await dialogue.initialize(pageContext);
+        usage.mockReset().mockReturnValueOnce(700).mockReturnValue(900);
+        window.mockReset().mockReturnValueOnce(1_000).mockReturnValue(1);
+
+        await expect(dialogue.ask('Frage', vi.fn())).resolves.toBeUndefined();
+
+        expect(usage).toHaveBeenCalledTimes(1);
+        expect(window).toHaveBeenCalledTimes(1);
+    });
+
     it.each([
         {usage: 800, window: 1_000},
         {usage: 900, window: 1_000},

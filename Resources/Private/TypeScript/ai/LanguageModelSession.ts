@@ -18,7 +18,8 @@ export type LanguageModelSessionErrorCode =
     | 'invalid-prompt'
     | 'not-initialized'
     | 'not-supported'
-    | 'quota-exceeded';
+    | 'quota-exceeded'
+    | 'response-in-progress';
 
 export class LanguageModelSessionError extends Error {
     public constructor(
@@ -48,6 +49,7 @@ export class LanguageModelSession {
     private initialization?: Promise<LanguageModelSessionInitialization>;
     private session?: ModelSession;
     private destroyed = false;
+    private responseInProgress = false;
 
     public constructor(
         private readonly adapter: LanguageModelAdapter,
@@ -95,20 +97,29 @@ export class LanguageModelSession {
         if (question.trim().length === 0) {
             throw sessionError('invalid-prompt');
         }
-        if (contextLimitReached(session, this.contextUsageLimit)) {
-            throw sessionError('context-limit-reached');
+        if (this.responseInProgress) {
+            throw sessionError('response-in-progress');
         }
-        if (signal?.aborted === true) {
-            throw sessionError('aborted', signal.reason);
-        }
+        this.responseInProgress = true;
 
         let reader: ReadableStreamDefaultReader<string> | undefined;
+        let streamConsumed = false;
         try {
+            const contextUsage = session.contextUsage;
+            const contextWindow = session.contextWindow;
+            if (contextLimitReached(contextUsage, contextWindow, this.contextUsageLimit)) {
+                throw sessionError('context-limit-reached');
+            }
+            if (signal?.aborted === true) {
+                throw sessionError('aborted', signal.reason);
+            }
+
             const stream = session.promptStreaming(question, {signal});
             reader = stream.getReader();
             while (true) {
                 const result = await reader.read();
                 if (result.done) {
+                    streamConsumed = true;
                     return;
                 }
                 onChunk(result.value);
@@ -116,7 +127,19 @@ export class LanguageModelSession {
         } catch (error: unknown) {
             throw translateBrowserError(error);
         } finally {
-            reader?.releaseLock();
+            if (reader !== undefined && !streamConsumed) {
+                try {
+                    await reader.cancel();
+                } catch {
+                    // Preserve the original streaming or consumer error.
+                }
+            }
+            try {
+                reader?.releaseLock();
+            } catch {
+                // Stream cleanup must not replace the operation's outcome.
+            }
+            this.responseInProgress = false;
         }
     }
 
@@ -204,15 +227,19 @@ function remainingContextBudget(session: ModelSession, usageLimit: number): numb
     return Number.isFinite(budget) ? Math.max(0, budget) : 0;
 }
 
-function contextLimitReached(session: ModelSession, usageLimit: number): boolean {
+function contextLimitReached(
+    contextUsage: number,
+    contextWindow: number,
+    usageLimit: number,
+): boolean {
     if (
-        !Number.isFinite(session.contextUsage)
-        || !Number.isFinite(session.contextWindow)
-        || session.contextWindow <= 0
+        !Number.isFinite(contextUsage)
+        || !Number.isFinite(contextWindow)
+        || contextWindow <= 0
     ) {
         return true;
     }
-    return session.contextUsage / session.contextWindow >= usageLimit;
+    return contextUsage / contextWindow >= usageLimit;
 }
 
 function fitsBudget(usage: number, budget: number): boolean {
@@ -299,6 +326,7 @@ function sessionError(code: LanguageModelSessionErrorCode, cause?: unknown): Lan
         'not-initialized': 'Initialize the model session before asking a question.',
         'not-supported': 'The requested language model operation is not supported.',
         'quota-exceeded': 'The browser language model quota has been exceeded.',
+        'response-in-progress': 'Wait for the active response to finish before asking again.',
     };
     return new LanguageModelSessionError(code, messages[code], cause === undefined ? undefined : {cause});
 }
