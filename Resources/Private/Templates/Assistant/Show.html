@@ -5,6 +5,12 @@
     data-system-prompt="{systemPrompt -> f:format.htmlspecialchars()}"
     data-supplemental-instruction="{supplementalInstruction -> f:format.htmlspecialchars()}"
 >
-    <div data-nr-browser-ai-fallback></div>
+    <div data-nr-browser-ai-fallback>
+        <f:comment>
+            Trust boundary: fallbackContent is rendered by TYPO3's CONTENT object from an enabled tt_content record.
+            Only this server-rendered value may bypass Fluid escaping; model output must never use format.raw.
+        </f:comment>
+        <f:format.raw>{fallbackContent}</f:format.raw>
+    </div>
     <div data-nr-browser-ai-assistant hidden></div>
 </section>

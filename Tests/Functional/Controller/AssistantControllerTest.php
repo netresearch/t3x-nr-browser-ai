@@ -15,6 +15,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use Netresearch\NrBrowserAi\Controller\AssistantController;
+use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -161,7 +162,74 @@ final class AssistantControllerTest extends FunctionalTestCase
         );
         self::assertStringContainsString('data-nr-browser-ai-fallback', $body);
         self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*'
+            . '<p data-fallback-output>Rendered fallback content<\\/p>\\s*<\\/div>/',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
             '/<[^>]+data-nr-browser-ai-assistant[^>]+hidden(?:="hidden")?[^>]*>/',
+            $body,
+        );
+    }
+
+    #[Test]
+    public function noneModeRendersAnEmptyFallbackThroughFrontendDispatch(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/none'))->withPageId(2),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
+            $body,
+        );
+        self::assertStringNotContainsString('Rendered fallback content', $body);
+    }
+
+    #[Test]
+    public function selfReferenceFailsClosedWithoutRenderingThePluginRecursively(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/self-reference'))->withPageId(3),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(1, substr_count($body, 'data-nr-browser-ai-root'));
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
+            $body,
+        );
+    }
+
+    #[Test]
+    public function nonScalarUidExpressionIsRejectedThroughFrontendDispatch(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest('https://website.local/invalid-fallback'))->withPageId(4),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
+            $body,
+        );
+        self::assertStringNotContainsString('Rendered fallback content', $body);
+    }
+
+    #[Test]
+    public function missingCurrentContentRecordFailsClosed(): void
+    {
+        $body = $this->renderAssistant([
+            'fallbackMode' => 'contentElement',
+            'fallbackContent' => 'tt_content_2',
+        ]);
+
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-fallback[^>]*>\\s*<\\/div>/',
             $body,
         );
     }
@@ -310,7 +378,7 @@ final class AssistantControllerTest extends FunctionalTestCase
      */
     private function renderAssistant(array $settings): string
     {
-        $controller = new AssistantController();
+        $controller = new AssistantController(new FallbackContentRenderer());
         $controller->injectResponseFactory(GeneralUtility::makeInstance(ResponseFactoryInterface::class));
         $controller->injectStreamFactory(GeneralUtility::makeInstance(StreamFactoryInterface::class));
 

@@ -5,6 +5,12 @@ page {
         table = tt_content
         select {
             orderBy = sorting
+            where = colPos=0
         }
     }
+}
+
+tt_content.text = TEXT
+tt_content.text {
+    value = <p data-fallback-output>Rendered fallback content</p>
 }

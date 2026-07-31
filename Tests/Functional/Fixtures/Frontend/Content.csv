@@ -1,9 +1,12 @@
 "pages"
 ,"uid","pid","title","slug","deleted","hidden"
 ,1,0,"Browser AI test",/,0,0
+,2,1,"Browser AI none fallback",/none,0,0
+,3,1,"Browser AI self-reference",/self-reference,0,0
+,4,1,"Browser AI invalid fallback",/invalid-fallback,0,0
 "tt_content"
-,"uid","pid","CType","header","sorting","deleted","hidden","sys_language_uid","pi_flexform"
-,1,1,"nrbrowserai_assistant","Assistant",256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+,"uid","pid","CType","header","bodytext","colPos","sorting","deleted","hidden","sys_language_uid","pi_flexform"
+,1,1,"nrbrowserai_assistant","Assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <T3FlexForms>
     <data>
         <sheet index=""sDEF"">
@@ -13,6 +16,58 @@
                 </field>
                 <field index=""settings.supplementalInstruction"">
                     <value index=""vDEF"">&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</value>
+                </field>
+                <field index=""settings.fallbackMode"">
+                    <value index=""vDEF"">contentElement</value>
+                </field>
+                <field index=""settings.fallbackContent"">
+                    <value index=""vDEF"">tt_content_2</value>
+                </field>
+            </language>
+        </sheet>
+    </data>
+</T3FlexForms>"
+,2,1,"text","Fallback","",1,512,0,0,0,""
+,3,2,"nrbrowserai_assistant","No fallback","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms>
+    <data>
+        <sheet index=""sDEF"">
+            <language index=""lDEF"">
+                <field index=""settings.fallbackMode"">
+                    <value index=""vDEF"">none</value>
+                </field>
+                <field index=""settings.fallbackContent"">
+                    <value index=""vDEF"">tt_content_2</value>
+                </field>
+            </language>
+        </sheet>
+    </data>
+</T3FlexForms>"
+,4,3,"nrbrowserai_assistant","Self reference","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms>
+    <data>
+        <sheet index=""sDEF"">
+            <language index=""lDEF"">
+                <field index=""settings.fallbackMode"">
+                    <value index=""vDEF"">contentElement</value>
+                </field>
+                <field index=""settings.fallbackContent"">
+                    <value index=""vDEF"">tt_content_4</value>
+                </field>
+            </language>
+        </sheet>
+    </data>
+</T3FlexForms>"
+,5,4,"nrbrowserai_assistant","Invalid fallback","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms>
+    <data>
+        <sheet index=""sDEF"">
+            <language index=""lDEF"">
+                <field index=""settings.fallbackMode"">
+                    <value index=""vDEF"">contentElement</value>
+                </field>
+                <field index=""settings.fallbackContent"">
+                    <value index=""vDEF"">tt_content_2,3 OR uid&gt;0</value>
                 </field>
             </language>
         </sheet>
