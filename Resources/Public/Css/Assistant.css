@@ -1,0 +1,250 @@
+.nr-browser-ai {
+    --nr-primary: #2F99A4;
+    --nr-primary-dark: #15585E;
+    --nr-accent: #FF4D00;
+    --nr-text: #585961;
+    --nr-border: #CCCDCC;
+    --nr-bg: #fff;
+    box-sizing: border-box;
+    max-inline-size: 52rem;
+    margin-block: 2rem;
+    border: 0.0625rem solid var(--nr-border);
+    border-block-start: 0.25rem solid var(--nr-primary);
+    border-radius: 0.25rem;
+    background: var(--nr-bg);
+    color: var(--nr-text);
+    font-family: "Open Sans", system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.nr-browser-ai,
+.nr-browser-ai *,
+.nr-browser-ai *::before,
+.nr-browser-ai *::after {
+    box-sizing: inherit;
+}
+
+.nr-browser-ai [hidden] {
+    display: none !important;
+}
+
+.nr-browser-ai [data-nr-browser-ai-assistant] {
+    padding: clamp(1rem, 4vw, 3rem);
+}
+
+.nr-browser-ai__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-block-end: 1.5rem;
+}
+
+.nr-browser-ai__brand-link {
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-inline-size: 3rem;
+    min-block-size: 3rem;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.nr-browser-ai__symbol {
+    display: block;
+    inline-size: 3rem;
+    block-size: 3rem;
+}
+
+.nr-browser-ai__title,
+.nr-browser-ai__button {
+    font-family: Raleway, system-ui, sans-serif;
+}
+
+.nr-browser-ai__title {
+    margin: 0;
+    color: var(--nr-text);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.25;
+}
+
+.nr-browser-ai__introduction {
+    margin-block: 0 1.5rem;
+}
+
+.nr-browser-ai__status {
+    margin-block: 0 1rem;
+    border-inline-start: 0.25rem solid var(--nr-accent);
+    padding: 0.75rem 1rem;
+    background: color-mix(in srgb, var(--nr-border) 25%, var(--nr-bg));
+    color: var(--nr-text);
+}
+
+.nr-browser-ai__progress {
+    inline-size: 100%;
+    block-size: 1rem;
+    accent-color: var(--nr-primary-dark);
+}
+
+.nr-browser-ai__log {
+    display: grid;
+    gap: 1rem;
+    margin-block: 1.5rem;
+}
+
+.nr-browser-ai__log [data-role] {
+    max-inline-size: 90%;
+    padding: 0.75rem 1rem;
+    border: 0.0625rem solid var(--nr-border);
+    border-radius: 0.25rem;
+    overflow-wrap: anywhere;
+}
+
+.nr-browser-ai__log [data-role="user"] {
+    margin-inline-start: auto;
+    border-inline-end: 0.25rem solid var(--nr-primary);
+}
+
+.nr-browser-ai__log [data-role="assistant"] {
+    border-inline-start: 0.25rem solid var(--nr-accent);
+}
+
+.nr-browser-ai__log p {
+    margin-block: 0 1rem;
+}
+
+.nr-browser-ai__log p:last-child {
+    margin-block-end: 0;
+}
+
+.nr-browser-ai__log a,
+.nr-browser-ai__footer a {
+    color: var(--nr-primary-dark);
+    text-decoration: underline;
+    text-decoration-thickness: 0.0625rem;
+    text-underline-offset: 0.1875rem;
+}
+
+.nr-browser-ai__new-tab-marker::after {
+    content: " ↗";
+    font-size: 0.9em;
+}
+
+.nr-browser-ai__form {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-start: 1.5rem;
+}
+
+.nr-browser-ai__label {
+    font-weight: 600;
+}
+
+.nr-browser-ai__input-row,
+.nr-browser-ai__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.nr-browser-ai__input {
+    flex: 1 1 16rem;
+    min-inline-size: 0;
+    min-block-size: 2.75rem;
+    border: 0.125rem solid var(--nr-text);
+    border-radius: 0.25rem;
+    padding: 0.625rem 0.75rem;
+    background: var(--nr-bg);
+    color: var(--nr-text);
+    font: inherit;
+}
+
+.nr-browser-ai__button {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    border: 0.125rem solid var(--nr-primary-dark);
+    border-radius: 0.25rem;
+    padding: 0.625rem 1rem;
+    background: var(--nr-primary-dark);
+    color: var(--nr-bg);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.nr-browser-ai__button--secondary {
+    background: var(--nr-bg);
+    color: var(--nr-primary-dark);
+}
+
+.nr-browser-ai [aria-disabled="true"] {
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+.nr-browser-ai :focus-visible {
+    outline: 0.1875rem solid var(--nr-primary-dark);
+    outline-offset: 0.1875rem;
+}
+
+.nr-browser-ai__footer {
+    margin-block-start: 2rem;
+    padding-block-start: 1rem;
+    border-block-start: 0.0625rem solid var(--nr-border);
+    margin-inline: calc(clamp(1rem, 4vw, 3rem) * -1);
+    margin-block-end: calc(clamp(1rem, 4vw, 3rem) * -1);
+    padding: 1rem clamp(1rem, 4vw, 3rem);
+    background: var(--nr-text);
+    color: var(--nr-bg);
+    font-size: 0.875rem;
+}
+
+.nr-browser-ai__footer a {
+    color: var(--nr-bg);
+}
+
+.nr-browser-ai__footer a:focus-visible {
+    outline-color: var(--nr-bg);
+}
+
+.nr-browser-ai__visually-hidden {
+    position: absolute;
+    inline-size: 0.0625rem;
+    block-size: 0.0625rem;
+    margin: -0.0625rem;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nr-browser-ai *,
+    .nr-browser-ai *::before,
+    .nr-browser-ai *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (forced-colors: active) {
+    .nr-browser-ai,
+    .nr-browser-ai__status,
+    .nr-browser-ai__log [data-role],
+    .nr-browser-ai__input,
+    .nr-browser-ai__button {
+        border-color: CanvasText;
+    }
+
+    .nr-browser-ai__button {
+        forced-color-adjust: auto;
+    }
+
+    .nr-browser-ai :focus-visible {
+        outline-color: Highlight;
+    }
+}

@@ -1,0 +1,33 @@
+# DDEV-generated state
+/.dbimageBuild/
+/.webimageBuild/
+/.ddev-docker-compose-base.yaml
+/.ddev-docker-compose-full.yaml
+/.ddev-docker-compose-*.yaml
+/.router-status.yaml
+/mutagen/
+/.homeadditions/
+/addon-metadata/
+/db-build/
+/db_snapshots/
+/homeadditions/
+/mysql/
+/nginx_full/
+/php/
+/providers/
+/share-providers/
+/traefik/
+/web-entrypoint.d/
+/xhprof/
+/commands/.gitattributes
+/commands/db/
+/commands/host/
+/commands/web/README.txt
+/apache/README.apache.txt
+/apache/apache-site.conf
+/apache/*.example
+/web-build/README.txt
+/web-build/*.example
+
+# Keep the maintained Compose override.
+!/docker-compose.web.yaml

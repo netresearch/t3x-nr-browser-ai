@@ -1,0 +1,4 @@
+.. This file contains shared substitutions for the Browser AI manual.
+
+.. |extension_name| replace:: Netresearch Browser AI
+.. |extension_key| replace:: nr_browser_ai

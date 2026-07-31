@@ -1,0 +1,23 @@
+name: nr-browser-ai
+type: php
+docroot: ""
+no_project_mount: true
+php_version: "8.3"
+composer_version: "2"
+webserver_type: apache-fpm
+xdebug_enabled: false
+timezone: Europe/Berlin
+database:
+  type: mariadb
+  version: "11.8"
+additional_hostnames:
+  - v12.nr-browser-ai
+  - v13.nr-browser-ai
+  - v14.nr-browser-ai
+additional_fqdns: []
+use_dns_when_possible: true
+web_environment:
+  - TYPO3_CONTEXT=Development
+webimage_extra_dockerfiles:
+  - web-build
+default_container_timeout: "600"

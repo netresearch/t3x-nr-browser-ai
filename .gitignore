@@ -1,0 +1,12 @@
+/.Build/
+/composer.lock
+/var/
+/node_modules/
+/coverage/
+/playwright-report/
+/test-results/
+/blob-report/
+/Documentation-GENERATED-temp/
+/.env
+/.env.*
+!/.env.example

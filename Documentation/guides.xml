@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<guides
+    xmlns="https://www.phpdoc.org/guides"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://www.phpdoc.org/guides vendor/phpdocumentor/guides-cli/resources/schema/guides.xsd"
+    theme="typo3docs"
+    default-code-language="php"
+    links-are-relative="true"
+>
+    <project
+        title="Netresearch Browser AI"
+        version="0.1"
+        release="0.1.0"
+        copyright="since 2026 by Netresearch DTT GmbH"
+    />
+
+    <extension
+        class="\T3Docs\Typo3DocsTheme\DependencyInjection\Typo3DocsThemeExtension"
+        typo3-core-preferred="stable"
+        interlink-shortcode="netresearch/nr-browser-ai"
+        project-home="https://github.com/netresearch/t3x-nr-browser-ai"
+        project-contact="https://github.com/netresearch/t3x-nr-browser-ai/issues"
+        project-repository="https://github.com/netresearch/t3x-nr-browser-ai"
+        project-issues="https://github.com/netresearch/t3x-nr-browser-ai/issues"
+        project-discussions="https://github.com/netresearch/t3x-nr-browser-ai/discussions"
+        edit-on-github="netresearch/t3x-nr-browser-ai"
+        edit-on-github-branch="main"
+        edit-on-github-directory="Documentation"
+    />
+</guides>

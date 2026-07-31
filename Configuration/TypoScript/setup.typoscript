@@ -1,0 +1,29 @@
+tt_content.nrbrowserai_assistant = COA
+tt_content.nrbrowserai_assistant {
+    20 = EXTBASEPLUGIN
+    20 {
+        extensionName = NrBrowserAi
+        pluginName = Assistant
+    }
+}
+
+page.includeJS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
+page.includeJS.nrBrowserAi {
+    type = module
+}
+
+page.includeCSS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/Css/Assistant.css
+
+plugin.tx_nrbrowserai_assistant {
+    view {
+        templateRootPaths {
+            10 = EXT:nr_browser_ai/Resources/Private/Templates/
+        }
+    }
+
+    settings {
+        contextSelector = {$plugin.tx_nrbrowserai_assistant.settings.contextSelector}
+        contextUsageLimit = {$plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit}
+        systemPrompt = {$plugin.tx_nrbrowserai_assistant.settings.systemPrompt}
+    }
+}

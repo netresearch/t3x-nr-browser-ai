@@ -6,7 +6,7 @@
 
 **Architecture:** TYPO3 renders a progressively enhanced Fluid component and optional fallback content. Focused TypeScript modules extract the current DOM, wrap the browser `LanguageModel` API, manage one in-memory chat session and render output through safe DOM construction; no application AI endpoint or dialogue persistence exists.
 
-**Tech Stack:** PHP 8.2–8.5, TYPO3 Extbase/Fluid 12.4–14.3, TypoScript, TypeScript 5, esbuild, Vitest with jsdom, Playwright with axe-core, PHPUnit, PHPStan, PHP-CS-Fixer, Netresearch reusable GitHub workflows.
+**Tech Stack:** PHP 8.2–8.5, TYPO3 Extbase/Fluid 12.4–14.3, TypoScript, TypeScript 7/current, esbuild, Vitest with jsdom, Playwright with axe-core, PHPUnit, PHPStan, PHP-CS-Fixer, Netresearch reusable GitHub workflows.
 
 ---
 
@@ -135,11 +135,11 @@ Create `composer.json` with:
     "typo3/cms-frontend": "^12.4 || ^13.4 || ^14.3"
   },
   "require-dev": {
-    "netresearch/typo3-ci-workflows": "^1.2",
     "ergebnis/phpstan-rules": "^2.6",
     "friendsofphp/php-cs-fixer": "^3.68",
+    "netresearch/typo3-ci-workflows": "^1.2",
     "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^10.5 || ^11.5",
+    "phpunit/phpunit": "^10.5 || ^11.5 || ^12.5 || ^13.2",
     "typo3/testing-framework": "^8.2 || ^9.0"
   },
   "autoload": {
@@ -182,6 +182,9 @@ Create `package.json`:
 {
   "name": "@netresearch/nr-browser-ai",
   "private": true,
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
   "scripts": {
     "build": "esbuild Resources/Private/TypeScript/Assistant.ts --bundle --format=esm --target=chrome148 --outfile=Resources/Public/JavaScript/Assistant.js",
     "build:css": "cp Resources/Private/Styles/Assistant.css Resources/Public/Css/Assistant.css",
@@ -191,14 +194,14 @@ Create `package.json`:
     "ci": "npm run build && npm run build:css && npm run test:js"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.2",
-    "@playwright/test": "^1.55.0",
-    "@types/dom-chromium-ai": "^0.0.15",
-    "@vitest/coverage-v8": "^3.2.4",
-    "esbuild": "^0.25.8",
-    "jsdom": "^26.1.0",
-    "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.0",
+    "@types/dom-chromium-ai": "^0.0.17",
+    "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
 ```
@@ -210,13 +213,29 @@ reporters `text`, `json`, `html`, and `lcov`.
 
 - [ ] **Step 5: Install dependencies and run the metadata assertion**
 
-Run: `composer update --no-interaction && npm install && bash Tests/Repository/metadata.sh`  
-Expected: PASS and lock files generated.
+Run a fresh root resolution, validate it, then remove its ephemeral lock before
+the repository assertion:
+
+```bash
+cleanup_root_lock() { test ! -e composer.lock || unlink composer.lock; }
+trap cleanup_root_lock EXIT
+composer update --no-interaction
+composer audit --locked
+composer validate --strict
+cleanup_root_lock
+npm install
+bash Tests/Repository/metadata.sh
+```
+
+Expected: PASS. The cleanup is mandatory: a root `composer.lock` is ignored but
+the repository assertion rejects even an untracked copy. Prefer disposable
+project directories for compatibility-matrix resolutions. `package-lock.json`
+is generated and committed for the Node.js toolchain.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add composer.json composer.lock ext_emconf.php package.json package-lock.json \
+git add composer.json ext_emconf.php package.json package-lock.json \
   tsconfig.json vitest.config.ts .gitignore LICENSE Tests/Repository/metadata.sh
 git commit -S -s -m "chore: scaffold nr browser ai extension"
 ```
@@ -441,7 +460,12 @@ it('maps a missing LanguageModel global to unavailable', async () => {
 
 it('forwards normalized download progress', async () => {
   const progress: number[] = [];
-  const session = await adapter.create({onDownloadProgress: value => progress.push(value)});
+  const session = await adapter.create({
+    systemPrompt: 'Answer from the source.',
+    inputLanguages: ['en'],
+    outputLanguages: ['en'],
+    onDownloadProgress: value => progress.push(value),
+  });
   expect(progress).toEqual([0.25, 1]);
   expect(session).toBe(fakeSession);
 });
@@ -465,11 +489,18 @@ export interface ModelOptions {
   outputLanguages: string[];
 }
 
+export interface ModelMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export type ModelPrompt = string | ModelMessage[];
+
 export interface ModelSession {
   readonly contextUsage: number;
   readonly contextWindow: number;
-  measureContextUsage(input: LanguageModelPrompt): Promise<number>;
-  append(input: LanguageModelPrompt): Promise<void>;
+  measureContextUsage(input: ModelPrompt): Promise<number>;
+  append(input: ModelPrompt): Promise<void>;
   promptStreaming(input: string, options?: {signal?: AbortSignal}): ReadableStream<string>;
   destroy(): void;
 }
@@ -482,14 +513,18 @@ export interface LanguageModelAdapter {
 }
 ```
 
-The browser adapter feature-detects `globalThis.LanguageModel`, passes identical
-language options to `availability()` and `create()`, converts
-`downloadprogress.loaded` to `0..1`, and never starts `create()` during a passive
-availability check.
+For the Chrome 148 Prompt API shape represented by `@types/dom-chromium-ai`
+0.0.17, the browser adapter maps the application's language options to identical
+`expectedInputs` and `expectedOutputs` text capabilities for `availability()`
+and `create()`. Only `create()` receives the administrator prompt as the first
+`initialPrompts` system message and a `monitor` callback. The adapter
+feature-detects `globalThis.LanguageModel`, maps unknown availability results to
+`unavailable`, forwards only finite `downloadprogress.loaded` values clamped to
+`0..1`, and never starts `create()` during a passive availability check.
 
 - [ ] **Step 4: Run tests and typecheck**
 
-Run: `npm run test:js -- Tests/JavaScript/ai/BrowserLanguageModelAdapter.test.ts && npx tsc`  
+Run: `npm run test:js -- Tests/JavaScript/ai/BrowserLanguageModelAdapter.test.ts && npm run typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -825,10 +860,12 @@ git commit -S -s -m "feat: add accessible branded assistant interface"
 ### Task 10: Complete compatibility, quality and browser test matrices
 
 **Files:**
+- Modify: `composer.json`
 - Create: `Build/UnitTests.xml`
 - Create: `Build/FunctionalTests.xml`
 - Create: `Build/phpstan.neon`
 - Create: `Build/.php-cs-fixer.dist.php`
+- Create: `Build/rector.php`
 - Create: `Tests/E2E/playwright.config.ts`
 - Create: `.github/workflows/ci.yml`
 - Create: `.github/workflows/checks.yml`
@@ -850,8 +887,25 @@ jobs:
       run-functional-tests: true
       functional-test-db: sqlite
       upload-coverage: true
-      remove-dev-deps: '[{"dep":"netresearch/typo3-ci-workflows","only-for":"^13.4|^14.3"}]'
+      remove-dev-deps: '[{"dep":"netresearch/typo3-ci-workflows","only-for":"^12.4"}]'
 ```
+
+`remove-dev-deps` is the reusable workflow's matrix-aware JSON input. The
+TYPO3 12.4 cell removes the current CI meta-package because its TYPO3-aware
+PHPStan dependency supports only TYPO3 13/14. That cell is compatibility-only:
+it runs CGL, unit and functional tests, but does not claim the full
+TYPO3-aware PHPStan/Rector gates. Task 10 must add the listed PHPStan, CGL and
+Rector configs/scripts so the reusable workflow's default gates do not
+auto-skip them for the normal TYPO3 13.4/14.3 cells.
+
+Public TYPO3 12.4 releases are EOL and currently blocked by Composer
+advisories. A disposable 12.4 compatibility resolution may set
+`audit.block-insecure=false` only for proving extension API compatibility.
+Run and report `composer audit --locked` separately for that resolved graph;
+an advisory-bearing result is expected and must never be described as secure.
+Production use requires a maintained ELTS or otherwise security-patched
+distribution/repository chosen and licensed by the project owner. Do not add
+credentials or vendor-specific private repository details to this extension.
 
 Add a Node job for `npm ci`, `npm run build`, `npm run test:js:coverage`, artifact
 comparison of committed builds, and Codecov upload of `coverage/lcov.info`.
@@ -869,10 +923,16 @@ extension key `nr_browser_ai`.
 Run:
 
 ```bash
+cleanup_root_lock() { test ! -e composer.lock || unlink composer.lock; }
+trap cleanup_root_lock EXIT
+composer update --no-interaction
+composer audit --locked
 composer ci:test:php:cgl
 composer ci:test:php:phpstan
 composer ci:test:php:unit
 typo3DatabaseDriver=pdo_sqlite composer ci:test:php:functional
+cleanup_root_lock
+bash Tests/Repository/metadata.sh
 npm ci
 npm run ci
 npm run test:js:coverage
@@ -880,6 +940,7 @@ git diff --exit-code Resources/Public
 ```
 
 Expected: all commands exit 0 and committed public assets match their sources.
+The EXIT trap removes the root lock even when a preceding Composer check fails.
 
 - [ ] **Step 4: Commit**
 

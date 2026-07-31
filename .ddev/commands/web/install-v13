@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+## Description: Install TYPO3 13.4 with the local nr-browser-ai extension
+## Usage: install-v13
+## Example: ddev install-v13
+
+set -euo pipefail
+
+# Runtime contract: TYPO3_SETUP_ADMIN_USERNAME, TYPO3_SETUP_ADMIN_PASSWORD,
+# composer config repositories.nr_browser_ai path "$EXTENSION_PATH",
+# vendor/bin/typo3 cache:flush, data-nr-browser-ai-root.
+exec /mnt/ddev_config/commands/web/_install-typo3 v13

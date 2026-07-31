@@ -1,0 +1,57 @@
+<section
+    id="{instanceId}"
+    class="nr-browser-ai"
+    aria-label="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:assistant.region')}"
+    data-nr-browser-ai-root
+    data-context-selector="{contextSelector -> f:format.htmlspecialchars()}"
+    data-context-usage-limit="{contextUsageLimit}"
+    data-system-prompt="{systemPrompt -> f:format.htmlspecialchars()}"
+    data-supplemental-instruction="{supplementalInstruction -> f:format.htmlspecialchars()}"
+    data-label-checking="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.checking')}"
+    data-label-downloadable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.downloadable')}"
+    data-label-downloading="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.downloading')}"
+    data-label-ready="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.ready')}"
+    data-label-streaming="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.streaming')}"
+    data-label-reset-required="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.resetRequired')}"
+    data-label-error-retryable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.errorRetryable')}"
+    data-label-unavailable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.unavailable')}"
+    data-label-new-tab="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:link.newTab')}"
+>
+    <div data-nr-browser-ai-fallback>
+        <f:comment>
+            Trust boundary: fallbackContent is rendered by TYPO3's CONTENT object from an enabled tt_content record.
+            Only this server-rendered value may bypass Fluid escaping; model output must never use format.raw.
+        </f:comment>
+        <f:format.raw>{fallbackContent}</f:format.raw>
+    </div>
+    <div data-nr-browser-ai-assistant hidden>
+        <header class="nr-browser-ai__header">
+            <a class="nr-browser-ai__brand-link" href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH">
+                <img class="nr-browser-ai__symbol" src="{f:uri.resource(path: 'Icons/Extension.svg', extensionName: 'NrBrowserAi')}" alt="" width="48" height="48" />
+            </a>
+            <h2 id="{instanceId}-title" class="nr-browser-ai__title">
+                <f:if condition="{title}"><f:then>{title}</f:then><f:else><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:assistant.title" /></f:else></f:if>
+            </h2>
+        </header>
+        <f:if condition="{introduction}"><p class="nr-browser-ai__introduction">{introduction}</p></f:if>
+        <p id="{instanceId}-status" class="nr-browser-ai__status" data-nr-browser-ai-status role="status" aria-atomic="true" tabindex="-1"></p>
+        <button class="nr-browser-ai__button nr-browser-ai__button--primary" type="button" data-nr-browser-ai-setup><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.setup" /></button>
+        <progress class="nr-browser-ai__progress" data-nr-browser-ai-progress max="1" value="0" aria-label="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:progress.download')}"></progress>
+        <div class="nr-browser-ai__log" data-nr-browser-ai-log></div>
+        <form class="nr-browser-ai__form" data-nr-browser-ai-form>
+            <label class="nr-browser-ai__label" for="{instanceId}-question"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:field.question" /></label>
+            <div class="nr-browser-ai__input-row">
+                <input class="nr-browser-ai__input" id="{instanceId}-question" type="text" data-nr-browser-ai-question autocomplete="off" required aria-describedby="{instanceId}-status" />
+                <button class="nr-browser-ai__button nr-browser-ai__button--primary" type="submit" data-nr-browser-ai-submit><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.ask" /></button>
+            </div>
+        </form>
+        <div class="nr-browser-ai__actions">
+            <button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-abort><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.abort" /></button>
+            <button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-reset><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.reset" /></button>
+            <button class="nr-browser-ai__button nr-browser-ai__button--secondary" type="button" data-nr-browser-ai-retry><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.retry" /></button>
+        </div>
+        <footer class="nr-browser-ai__footer">
+            <a href="https://www.netresearch.de/">Netresearch DTT GmbH</a>
+        </footer>
+    </div>
+</section>

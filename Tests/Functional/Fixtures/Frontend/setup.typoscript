@@ -1,0 +1,16 @@
+page = PAGE
+page {
+    10 = CONTENT
+    10 {
+        table = tt_content
+        select {
+            orderBy = sorting
+            where = colPos=0
+        }
+    }
+}
+
+tt_content.text = TEXT
+tt_content.text {
+    field = bodytext
+}

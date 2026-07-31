@@ -1,0 +1,10 @@
+includes:
+    - %currentWorkingDirectory%/.Build/vendor/netresearch/typo3-ci-workflows/config/phpstan/phpstan.neon
+
+parameters:
+    phpVersion: 80200
+
+    paths:
+        - %currentWorkingDirectory%/Classes/
+
+    tmpDir: %currentWorkingDirectory%/.Build/var/phpstan

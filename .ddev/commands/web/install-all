@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+## Description: Install all supported TYPO3 environments
+## Usage: install-all
+## Example: ddev install-all
+
+set -euo pipefail
+
+# Equivalent host commands: ddev install-v12, ddev install-v13, ddev install-v14.
+/mnt/ddev_config/commands/web/install-v12
+/mnt/ddev_config/commands/web/install-v13
+/mnt/ddev_config/commands/web/install-v14
+
+printf '\nAll TYPO3 environments are installed.\n'
+printf 'Landing: https://nr-browser-ai.ddev.site/\n'
+printf 'Backend credentials: admin / Joh316!!\n'
