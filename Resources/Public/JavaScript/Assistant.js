@@ -641,6 +641,8 @@ var ChatController = class {
     const WindowAbortController = root.ownerDocument.defaultView?.AbortController ?? AbortController;
     this.eventListeners = new WindowAbortController();
     this.elements = collectElements(root);
+    this.elements.log.replaceChildren();
+    this.elements.question.value = "";
     this.bindEvents();
     this.setState("checking");
   }

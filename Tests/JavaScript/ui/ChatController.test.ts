@@ -435,19 +435,31 @@ describe('Assistant bootstrap', () => {
         (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
         expect(fakes.availabilitySpy).toHaveBeenCalledWith(expect.objectContaining({inputLanguages: ['en'], outputLanguages: ['en']}));
+        const input = root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement;
+        const form = root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement;
+        const log = root.querySelector('[data-nr-browser-ai-log]') as HTMLElement;
+        input.value = 'Before freeze';
+        form.requestSubmit();
+        await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
+        expect(log.querySelectorAll('[data-role]')).toHaveLength(2);
+        input.value = 'Unsaved draft';
 
         window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}));
         expect(fakes.browserDestroy).toHaveBeenCalledTimes(1);
         window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}));
         await vi.waitFor(() => expect(root.dataset.state).toBe('downloadable'));
+        expect(log.querySelectorAll('[data-role]')).toHaveLength(0);
+        expect(input.value).toBe('');
         (root.querySelector('[data-nr-browser-ai-setup]') as HTMLButtonElement).click();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
-        (root.querySelector('[data-nr-browser-ai-question]') as HTMLInputElement).value = 'After restore';
-        (root.querySelector('[data-nr-browser-ai-form]') as HTMLFormElement).requestSubmit();
+        input.value = 'After restore';
+        form.requestSubmit();
         await vi.waitFor(() => expect(root.dataset.state).toBe('ready'));
 
         expect(fakes.create).toHaveBeenCalledTimes(2);
-        expect(fakes.browserSession.promptStreaming).toHaveBeenCalledTimes(1);
+        expect(fakes.browserSession.promptStreaming).toHaveBeenCalledTimes(2);
+        expect(log.querySelectorAll('[data-role="user"]')).toHaveLength(1);
+        expect(log.querySelector('[data-role="user"]')?.textContent).toBe('After restore');
         dispose();
     });
 });
