@@ -36,11 +36,14 @@ if (($composer["require"]["php"] ?? null) !== "^8.2") {
 if (array_key_exists("platform", $composer["config"] ?? [])) {
     throw new RuntimeException("Reusable extensions must not pin a Composer platform");
 }
-if (($composer["require-dev"]["phpunit/phpunit"] ?? null) !== "^10.5 || ^11.5 || ^12.5 || ^13.2") {
-    throw new RuntimeException("Unexpected PHPUnit constraint");
+if (array_key_exists("phpunit/phpunit", $composer["require-dev"] ?? [])) {
+    throw new RuntimeException("PHPUnit must be resolved through the TYPO3 testing framework");
 }
-if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1.2") {
+if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1.3") {
     throw new RuntimeException("Unexpected Netresearch CI tooling constraint");
+}
+if (($composer["require-dev"]["typo3/testing-framework"] ?? null) !== "^8.2 || ^9.0") {
+    throw new RuntimeException("Unexpected TYPO3 testing framework constraint");
 }
 foreach ($expectedTypo3Packages as $packageName) {
     if (($composer["require"][$packageName] ?? null) !== $expectedCoreConstraint) {

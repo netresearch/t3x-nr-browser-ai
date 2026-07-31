@@ -10,7 +10,7 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="nr_browser_ai_unit">
+        <testsuite name="unit">
             <directory>../Tests/Unit</directory>
         </testsuite>
     </testsuites>

@@ -18,7 +18,7 @@
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.12.1",
-        "@playwright/test": "^1.62.0",
+        "@playwright/test": "^1.62.1",
         "@types/dom-chromium-ai": "^0.0.17",
         "@vitest/coverage-v8": "^4.1.10",
         "esbuild": "^0.28.1",

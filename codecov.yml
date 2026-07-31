@@ -1,0 +1,41 @@
+coverage:
+  precision: 2
+  round: down
+  range: "60...100"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5%
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true
+
+flags:
+  unit:
+    paths:
+      - Classes/
+    carryforward: true
+  functional:
+    paths:
+      - Classes/
+    carryforward: true
+  browser:
+    paths:
+      - Resources/Private/TypeScript/
+    carryforward: true
+
+ignore:
+  - "Tests/**/*"
+  - ".Build/**/*"
+  - ".ddev/**/*"
+  - "Build/**/*"
+  - "Resources/Public/**/*"
+  - "ext_emconf.php"
+  - "ext_localconf.php"

@@ -17,9 +17,11 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function mb_strlen;
-use function preg_match;
 
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
+
+use function preg_match;
+
 use Psr\Http\Message\ResponseInterface;
 
 use function trim;
@@ -29,8 +31,10 @@ use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class AssistantController extends ActionController
 {
-    private const DEFAULT_CONTEXT_SELECTOR    = 'main';
+    private const DEFAULT_CONTEXT_SELECTOR = 'main';
+
     private const DEFAULT_CONTEXT_USAGE_LIMIT = 0.8;
+
     private const MAX_CONTEXT_SELECTOR_LENGTH = 256;
 
     private static int $renderSequence = 0;
@@ -44,9 +48,9 @@ final class AssistantController extends ActionController
 
     public function showAction(): ResponseInterface
     {
-        $settings = $this->normalizedSettings();
+        $settings             = $this->normalizedSettings();
         $currentContentObject = $this->currentContentObject();
-        $currentContentUid = $currentContentObject instanceof ContentObjectRenderer
+        $currentContentUid    = $currentContentObject instanceof ContentObjectRenderer
             ? $this->normalizeContentUid($currentContentObject->data['uid'] ?? null)
             : 0;
         $settings['instanceId'] = 'nr-browser-ai-' . $currentContentUid . '-' . ++self::$renderSequence;
@@ -132,8 +136,9 @@ final class AssistantController extends ActionController
     private function normalizeContentUid(mixed $value): int
     {
         if (is_int($value)) {
-            return $value > 0 ? $value : 0;
+            return max($value, 0);
         }
+
         if (!is_string($value)) {
             return 0;
         }

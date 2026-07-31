@@ -11,9 +11,17 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Functional\Controller;
 
+use function call_user_func;
+use function class_exists;
+
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+
+use function file_get_contents;
+use function is_array;
+use function is_callable;
+
 use Netresearch\NrBrowserAi\Controller\AssistantController;
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,6 +29,9 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use ReflectionMethod;
 use ReflectionProperty;
+
+use function str_repeat;
+
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -30,13 +41,6 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
-
-use function call_user_func;
-use function class_exists;
-use function file_get_contents;
-use function is_array;
-use function is_callable;
-use function str_repeat;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {
@@ -292,7 +296,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function missingCurrentContentRecordFailsClosed(): void
     {
         $body = $this->renderAssistant([
-            'fallbackMode' => 'contentElement',
+            'fallbackMode'    => 'contentElement',
             'fallbackContent' => 'tt_content_2',
         ]);
 
@@ -307,7 +311,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     {
         $body = $this->renderAssistant(
             [
-                'fallbackMode' => 'contentElement',
+                'fallbackMode'    => 'contentElement',
                 'fallbackContent' => 'tt_content_2',
             ],
             false,
@@ -357,11 +361,11 @@ final class AssistantControllerTest extends FunctionalTestCase
             $this->renderAssistant([], true, 42),
         ];
         $instanceIds = [];
-        $allIds = [];
+        $allIds      = [];
 
         foreach ($bodies as $body) {
             self::assertSame(1, preg_match('/<section\s+id="(nr-browser-ai-42-[1-9][0-9]*)"/', $body, $matches));
-            $instanceId = $matches[1];
+            $instanceId    = $matches[1];
             $instanceIds[] = $instanceId;
             self::assertStringContainsString('id="' . $instanceId . '-title"', $body);
             self::assertStringContainsString('id="' . $instanceId . '-status"', $body);
@@ -473,11 +477,9 @@ final class AssistantControllerTest extends FunctionalTestCase
     private function flexFormDataStructureReference(array $contentElementTca): string
     {
         if ((new Typo3Version())->getMajorVersion() >= 14) {
-            $reference = $contentElementTca['types']['nrbrowserai_assistant']
-                ['columnsOverrides']['pi_flexform']['config']['ds'] ?? null;
+            $reference = $contentElementTca['types']['nrbrowserai_assistant']['columnsOverrides']['pi_flexform']['config']['ds'] ?? null;
         } else {
-            $reference = $contentElementTca['columns']['pi_flexform']['config']['ds']
-                ['*,nrbrowserai_assistant'] ?? null;
+            $reference = $contentElementTca['columns']['pi_flexform']['config']['ds']['*,nrbrowserai_assistant'] ?? null;
         }
 
         self::assertIsString($reference);
@@ -492,8 +494,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         array $settings,
         bool $injectFallbackContentRenderer = true,
         ?int $contentUid = null,
-    ): string
-    {
+    ): string {
         $controller = new AssistantController();
         if ($injectFallbackContentRenderer) {
             $controller->injectFallbackContentRenderer(new FallbackContentRenderer());
@@ -504,9 +505,9 @@ final class AssistantControllerTest extends FunctionalTestCase
         $this->setControllerProperty($controller, 'view', $this->createAssistantView());
         $this->setControllerProperty($controller, 'settings', $settings);
         if ($contentUid !== null) {
-            $contentObject = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+            $contentObject       = GeneralUtility::makeInstance(ContentObjectRenderer::class);
             $contentObject->data = ['uid' => $contentUid];
-            $request = $this->createMock(RequestInterface::class);
+            $request             = $this->createMock(RequestInterface::class);
             $request->method('getAttribute')
                 ->with('currentContentObject')
                 ->willReturn($contentObject);

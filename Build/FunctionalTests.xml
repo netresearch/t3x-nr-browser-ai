@@ -10,7 +10,7 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="nr_browser_ai_functional">
+        <testsuite name="functional">
             <directory>../Tests/Functional</directory>
         </testsuite>
     </testsuites>

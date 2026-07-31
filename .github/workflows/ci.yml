@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Per-extension test matrix (intentional-drift). TYPO3 12.4 is retained as an
+# EOL compatibility target; its advisory state is not treated as a security
+# claim. Security reporting remains a separate job in checks.yml.
+jobs:
+  php:
+    uses: netresearch/typo3-ci-workflows/.github/workflows/ci.yml@main
+    permissions:
+      contents: read
+    with:
+      php-versions: '["8.2","8.3","8.4","8.5"]'
+      typo3-versions: '["^13.4","^14.3"]'
+      run-functional-tests: true
+      functional-test-db: sqlite
+      upload-coverage: true
+      coverage-tool: xdebug
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  php-typo3-12-compatibility:
+    uses: netresearch/typo3-ci-workflows/.github/workflows/ci.yml@main
+    permissions:
+      contents: read
+    with:
+      php-versions: '["8.2","8.3","8.4"]'
+      typo3-versions: '["^12.4"]'
+      run-cgl: false
+      run-phpstan: false
+      run-rector: false
+      run-functional-tests: true
+      functional-test-db: sqlite
+      upload-coverage: false
+      # `only-for` declares the versions on which a dependency is retained;
+      # because this call contains only ^12.4, the PHPStan-heavy meta-package
+      # is removed while the direct testing-framework dependency remains.
+      remove-dev-deps: '[{"dep":"netresearch/typo3-ci-workflows","only-for":"^13.4|^14.3"}]'
+
+  browser:
+    name: Browser assets and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.15.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check browser sources
+        run: npm run typecheck
+
+      - name: Run browser unit tests with coverage
+        run: npm run test:js:coverage
+
+      - name: Rebuild distributable assets
+        run: |
+          npm run build
+          npm run build:css
+
+      - name: Verify committed assets are current
+        run: git diff --exit-code -- Resources/Public
+
+      - name: Upload browser coverage
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: coverage/lcov.info
+          flags: browser
+          token: ${{ secrets.CODECOV_TOKEN }}

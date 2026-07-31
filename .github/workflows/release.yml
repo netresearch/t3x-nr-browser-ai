@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions: {}
+
+# The `with:` block (archive-prefix / package-name / extension-key) is
+# per-extension, so this file is listed under intentional-drift in
+# .github/template.yaml — set this repo's real values here.
+jobs:
+  release:
+    uses: netresearch/typo3-ci-workflows/.github/workflows/release-typo3-extension.yml@main
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      archive-prefix: nr_browser_ai
+      package-name: netresearch/nr-browser-ai
+      extension-key: nr_browser_ai
+    secrets:
+      TYPO3_TER_ACCESS_TOKEN: ${{ secrets.TYPO3_TER_ACCESS_TOKEN }}

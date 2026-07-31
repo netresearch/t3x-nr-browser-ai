@@ -85,8 +85,8 @@ final class FallbackContentRendererTest extends TestCase
     #[Test]
     public function indirectCycleStopsBeforeRenderingAnAlreadyActiveContentElement(): void
     {
-        $subject = new FallbackContentRenderer();
-        $renderCalls = 0;
+        $subject               = new FallbackContentRenderer();
+        $renderCalls           = 0;
         $contentObjectRenderer = $this->createMock(ContentObjectRenderer::class);
         $contentObjectRenderer
             ->expects(self::once())
@@ -107,7 +107,7 @@ final class FallbackContentRendererTest extends TestCase
     #[Test]
     public function renderStackIsClearedAfterRenderingThrows(): void
     {
-        $subject = new FallbackContentRenderer();
+        $subject         = new FallbackContentRenderer();
         $failingRenderer = $this->createMock(ContentObjectRenderer::class);
         $failingRenderer
             ->expects(self::once())

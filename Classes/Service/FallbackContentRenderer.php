@@ -32,7 +32,7 @@ final class FallbackContentRenderer
             || $selectedContentUid <= 0
             || $currentContentUid <= 0
             || $selectedContentUid === $currentContentUid
-            || $contentObjectRenderer === null
+            || !$contentObjectRenderer instanceof ContentObjectRenderer
         ) {
             return '';
         }
@@ -45,6 +45,7 @@ final class FallbackContentRenderer
         if ($addedCurrentContent) {
             $this->renderStack[] = $currentContentUid;
         }
+
         $this->renderStack[] = $selectedContentUid;
 
         try {

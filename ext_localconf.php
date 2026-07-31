@@ -12,7 +12,7 @@ declare(strict_types=1);
 use Netresearch\NrBrowserAi\Controller\AssistantController;
 use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
-defined('TYPO3') or exit;
+defined('TYPO3') || exit;
 
 ExtensionUtility::configurePlugin(
     'NrBrowserAi',
