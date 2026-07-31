@@ -1,0 +1,34 @@
+# Normalize text files across development environments
+* text=auto eol=lf
+
+*.php text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.rst text eol=lf
+*.txt text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+
+# Exclude development-only files from release archives
+/.claude export-ignore
+/.ddev export-ignore
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/AGENTS.md export-ignore
+/Build export-ignore
+/CONTRIBUTING.md export-ignore
+/Makefile export-ignore
+/SECURITY.md export-ignore
+/Tests export-ignore
+/codecov.yml export-ignore
+/docs export-ignore
+/package-lock.json export-ignore
+/package.json export-ignore
+/tsconfig.json export-ignore
+/vitest.config.ts export-ignore
