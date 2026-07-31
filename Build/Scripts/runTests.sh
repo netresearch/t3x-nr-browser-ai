@@ -133,7 +133,8 @@ else
     exit 1
 fi
 
-CONTAINER_ARGS=(--rm --init -v "${ROOT_DIR}:${ROOT_DIR}" -w "${ROOT_DIR}")
+CONTAINER_ARGS=(--rm --init -v "${ROOT_DIR}:${ROOT_DIR}")
+CONTAINER_WORKDIR="${ROOT_DIR}"
 if [[ "$(uname -s)" != "Darwin" ]]; then
     CONTAINER_ARGS+=(--user "$(id -u):$(id -g)")
 fi
@@ -158,7 +159,7 @@ if [[ ! -t 0 || ! -t 1 ]]; then
 fi
 
 run_container() {
-    "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" \
+    "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" -w "${CONTAINER_WORKDIR}" \
         -e COMPOSER_ROOT_VERSION=0.1.x-dev \
         -e XDEBUG_MODE=off \
         "${PHP_IMAGE}" "$@"
@@ -264,7 +265,7 @@ run_functional() {
         esac
     fi
 
-    "${CONTAINER_BIN}" run "${runtime_args[@]}" \
+    "${CONTAINER_BIN}" run "${runtime_args[@]}" -w "${CONTAINER_WORKDIR}" \
         -e COMPOSER_ROOT_VERSION=0.1.x-dev \
         -e XDEBUG_MODE=off \
         -e "NR_BROWSER_AI_AUTOLOAD=${RUNTIME_VENDOR}/autoload.php" \
@@ -311,9 +312,24 @@ case "${SUITE}" in
             exit 1
         fi
         ensure_runtime
-        sed "s#%currentWorkingDirectory%/.Build/vendor#${RUNTIME_VENDOR}#" \
+        # The shared config resolves its bootstrap stubs against
+        # %currentWorkingDirectory%/.Build/vendor, but this runner keeps the vendor tree
+        # in the per-version runtime directory. Materialise a rewritten copy so the
+        # config never depends on a Composer install at the repository root.
+        shared_config="${RUNTIME_VENDOR}/netresearch/typo3-ci-workflows/config/phpstan/phpstan.neon"
+        sed -e "s#%currentWorkingDirectory%/.Build/vendor#${RUNTIME_VENDOR}#g" \
+            -e "s#%currentWorkingDirectory%#${ROOT_DIR}#g" \
+            "${shared_config}" > "${RUNTIME_DIR}/phpstan-shared.neon"
+        sed -e "s#%currentWorkingDirectory%/.Build/vendor/netresearch/typo3-ci-workflows/config/phpstan/phpstan.neon#${RUNTIME_DIR}/phpstan-shared.neon#" \
+            -e "s#%currentWorkingDirectory%#${ROOT_DIR}#g" \
             Build/phpstan.neon > "${RUNTIME_DIR}/phpstan.neon"
-        run_php "${RUNTIME_BIN}/phpstan" analyze --configuration "${RUNTIME_DIR}/phpstan.neon" --memory-limit=-1 "${EXTRA_ARGS[@]}"
+        # PHPStan boots the Composer autoloader of its working directory. From the
+        # repository root that is .Build/vendor, which would be loaded in addition to
+        # the runtime vendor tree and abort on a duplicate TYPO3 class-alias loader.
+        # Analyse from the runtime directory; the generated config uses absolute paths.
+        CONTAINER_WORKDIR="${RUNTIME_DIR}"
+        run_php "${RUNTIME_BIN}/phpstan" analyze \
+            --configuration "${RUNTIME_DIR}/phpstan.neon" --memory-limit=-1 "${EXTRA_ARGS[@]}"
         ;;
     cgl) run_cgl ;;
     cgl:fix)
@@ -333,7 +349,7 @@ case "${SUITE}" in
         git diff --exit-code -- Resources/Public
         ;;
     e2e)
-        "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" \
+        "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" -w "${CONTAINER_WORKDIR}" \
             -e CI="${CI:-}" \
             -e TYPO3_BASE_URL="${TYPO3_BASE_URL:-https://v14.nr-browser-ai.ddev.site/}" \
             "${PLAYWRIGHT_IMAGE}" bash -lc 'npm ci && npm run test:e2e'
