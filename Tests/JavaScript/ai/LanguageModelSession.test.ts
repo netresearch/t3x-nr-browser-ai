@@ -123,6 +123,8 @@ describe('LanguageModelSession initialization', () => {
         expect(fakes.create).toHaveBeenCalledWith({
             systemPrompt: `Antworte ausschließlich aus dem Quelldokument.
 
+Answer in the language of the question. If that language is unclear, answer in German.
+
 Additional editor instruction:
 Antworte kurz.`,
             inputLanguages: ['de', 'en'],
@@ -147,7 +149,45 @@ Antworte kurz.`,
         await dialogue.initialize(pageContext);
 
         expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
-            systemPrompt: 'Antworte ausschließlich aus dem Quelldokument.',
+            systemPrompt: `Antworte ausschließlich aus dem Quelldokument.
+
+Answer in the language of the question. If that language is unclear, answer in German.`,
+        }));
+    });
+
+    it('asks for the question language with the page language as the fallback', async () => {
+        const fakes = fixture();
+        const dialogue = new LanguageModelSession(fakes.adapter, fakes.provider, {
+            systemPrompt: 'Answer only from the source.',
+            supplementalInstruction: '',
+            inputLanguages: ['en', 'fr'],
+            outputLanguages: ['fr'],
+        });
+
+        await dialogue.initialize(pageContext);
+
+        expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
+            systemPrompt: `Answer only from the source.
+
+Answer in the language of the question. If that language is unclear, answer in French.`,
+        }));
+    });
+
+    it('omits the fallback clause when the output language has no known name', async () => {
+        const fakes = fixture();
+        const dialogue = new LanguageModelSession(fakes.adapter, fakes.provider, {
+            systemPrompt: 'Answer only from the source.',
+            supplementalInstruction: '',
+            inputLanguages: ['en'],
+            outputLanguages: ['kl'],
+        });
+
+        await dialogue.initialize(pageContext);
+
+        expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
+            systemPrompt: `Answer only from the source.
+
+Answer in the language of the question.`,
         }));
     });
 
