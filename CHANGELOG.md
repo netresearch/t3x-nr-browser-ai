@@ -36,6 +36,10 @@ this entry covers the extension as a whole.
 - Keyboard-complete lifecycle with controls that stay focusable rather than
   disabled, and a polite live region that announces the finished answer once
   instead of streaming partial output to assistive technology.
+- Answers in the language of the question, falling back to the page language
+  from the `html` element's `lang` attribute when the question is too short to
+  identify. The Prompt API's `expectedOutputs` capability alone does not
+  constrain the response, so the requirement is stated in the instruction.
 - German translations for the frontend and the backend labels.
 - Public demo at <https://netresearch.github.io/t3x-nr-browser-ai/>, running
   the distributable bundle against the demo page's own content.
