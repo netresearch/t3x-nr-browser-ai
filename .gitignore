@@ -3,6 +3,7 @@
 /var/
 /node_modules/
 /coverage/
+/public/
 /playwright-report/
 /test-results/
 /blob-report/
