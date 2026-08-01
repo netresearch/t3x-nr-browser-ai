@@ -563,12 +563,24 @@ function sessionError(code, cause) {
 // Resources/Private/TypeScript/rendering/SafeResponseRenderer.ts
 var WEB_PROTOCOLS = /* @__PURE__ */ new Set(["http:", "https:"]);
 var URL_CANDIDATE = /https?:\/\/[^\s<>"']+/giu;
+var URL_AT_START = /^https?:\/\/[^\s<>"']+/u;
 var ALWAYS_TRAILING_PUNCTUATION = /* @__PURE__ */ new Set([".", ",", ";", ":", "!", "?"]);
 var CLOSING_PAIRS = [
   ["(", ")"],
   ["[", "]"],
   ["{", "}"]
 ];
+var MARKDOWN_LINK = /^\[([^\]\n]*)\]\(([^\s)]*)\)/u;
+var WORD_CHARACTER = /[\p{L}\p{N}]/u;
+var MAXIMUM_INDENT = 3;
+var MAXIMUM_HEADING_MARKS = 6;
+var MINIMUM_FENCE_LENGTH = 3;
+var MINIMUM_BREAK_LENGTH = 3;
+var UNORDERED_MARKERS = "-*+";
+var EMPHASIS_MARKERS = "*_";
+var BREAK_MARKERS = "-*_";
+var HEADING_BASE_LEVEL = 3;
+var MAXIMUM_HEADING_LEVEL = 6;
 var SafeResponseRenderer = class {
   constructor(output, newTabLabel = "") {
     this.output = output;
@@ -592,18 +604,342 @@ var SafeResponseRenderer = class {
     this.clear();
   }
   render() {
-    const fragment = this.output.ownerDocument.createDocumentFragment();
-    if (this.rawResponse.length > 0) {
-      const paragraphs = this.rawResponse.split(/\r?\n(?:[\t ]*\r?\n)+/u);
-      for (const paragraphText of paragraphs) {
-        const paragraph = this.output.ownerDocument.createElement("p");
-        appendLinkifiedText(paragraph, paragraphText, this.newTabLabel);
-        fragment.append(paragraph);
-      }
+    const sourceDocument = this.output.ownerDocument;
+    const fragment = sourceDocument.createDocumentFragment();
+    for (const block of parseBlocks(this.rawResponse)) {
+      fragment.append(renderBlock(block, sourceDocument, this.newTabLabel));
     }
     this.output.replaceChildren(fragment);
   }
 };
+function parseBlocks(source) {
+  const lines = source.replace(/\r\n?/gu, "\n").split("\n");
+  const blocks = [];
+  let index = 0;
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    if (line.trim() === "") {
+      index++;
+      continue;
+    }
+    const consumed = consumeBlock(lines, index, blocks);
+    index = consumed;
+  }
+  return blocks;
+}
+function consumeBlock(lines, start, blocks) {
+  const line = lines[start] ?? "";
+  if (isFence(line)) {
+    return consumeFence(lines, start, blocks);
+  }
+  if (isThematicBreak(line)) {
+    blocks.push({ kind: "break" });
+    return start + 1;
+  }
+  const heading = parseHeading(line);
+  if (heading !== null) {
+    blocks.push({ kind: "heading", ...heading });
+    return start + 1;
+  }
+  if (parseListItem(line) !== null) {
+    return consumeList(lines, start, blocks);
+  }
+  if (parseQuote(line) !== null) {
+    return consumeQuote(lines, start, blocks);
+  }
+  return consumeParagraph(lines, start, blocks);
+}
+function consumeFence(lines, start, blocks) {
+  let index = start + 1;
+  const code = [];
+  while (index < lines.length && !isFence(lines[index] ?? "")) {
+    code.push(lines[index] ?? "");
+    index++;
+  }
+  blocks.push({ kind: "code", text: code.join("\n") });
+  return index + 1;
+}
+function consumeList(lines, start, blocks) {
+  const ordered = parseListItem(lines[start] ?? "")?.ordered === true;
+  const items = [];
+  let index = start;
+  while (index < lines.length) {
+    const candidate = lines[index] ?? "";
+    const item = parseListItem(candidate);
+    if (item !== null && item.ordered === ordered) {
+      items.push(item.content);
+      index++;
+      continue;
+    }
+    if (items.length > 0 && candidate.trim() !== "" && !startsBlock(candidate)) {
+      items[items.length - 1] += `
+${candidate.trim()}`;
+      index++;
+      continue;
+    }
+    break;
+  }
+  blocks.push({ kind: "list", ordered, items });
+  return index;
+}
+function consumeQuote(lines, start, blocks) {
+  const quoted = [];
+  let index = start;
+  while (index < lines.length) {
+    const content = parseQuote(lines[index] ?? "");
+    if (content === null) {
+      break;
+    }
+    quoted.push(content);
+    index++;
+  }
+  blocks.push({ kind: "quote", lines: quoted });
+  return index;
+}
+function consumeParagraph(lines, start, blocks) {
+  const paragraph = [];
+  let index = start;
+  while (index < lines.length) {
+    const candidate = lines[index] ?? "";
+    if (candidate.trim() === "" || startsBlock(candidate)) {
+      break;
+    }
+    paragraph.push(candidate);
+    index++;
+  }
+  blocks.push({ kind: "paragraph", lines: paragraph });
+  return index;
+}
+function startsBlock(line) {
+  return isFence(line) || isThematicBreak(line) || parseHeading(line) !== null || parseListItem(line) !== null || parseQuote(line) !== null;
+}
+function contentStart(line) {
+  let index = 0;
+  while (index < line.length && line[index] === " ") {
+    index++;
+  }
+  return index > MAXIMUM_INDENT ? -1 : index;
+}
+function repeatedRun(line, from, character) {
+  let index = from;
+  while (index < line.length && line[index] === character) {
+    index++;
+  }
+  return index - from;
+}
+function isFence(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return false;
+  }
+  const marker = line[start];
+  return (marker === "`" || marker === "~") && repeatedRun(line, start, marker) >= MINIMUM_FENCE_LENGTH;
+}
+function isThematicBreak(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return false;
+  }
+  const marker = line[start] ?? "";
+  if (!BREAK_MARKERS.includes(marker)) {
+    return false;
+  }
+  return repeatedRun(line, start, marker) >= MINIMUM_BREAK_LENGTH && line.slice(start).trim().length === repeatedRun(line, start, marker);
+}
+function parseHeading(line) {
+  const start = contentStart(line);
+  if (start < 0 || line[start] !== "#") {
+    return null;
+  }
+  const level = repeatedRun(line, start, "#");
+  if (level > MAXIMUM_HEADING_MARKS || !isSpace(line[start + level])) {
+    return null;
+  }
+  let text = line.slice(start + level).trim();
+  const trailing = text.length - trimEndRun(text, "#");
+  if (trailing > 0 && isSpace(text[text.length - trailing - 1])) {
+    text = text.slice(0, text.length - trailing).trim();
+  }
+  return { level, text };
+}
+function parseListItem(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return null;
+  }
+  const marker = line[start] ?? "";
+  if (UNORDERED_MARKERS.includes(marker) && isSpace(line[start + 1])) {
+    return { ordered: false, content: line.slice(start + 2).trim() };
+  }
+  let digits = start;
+  while (digits < line.length && isDigit(line[digits])) {
+    digits++;
+  }
+  const delimiter = line[digits] ?? "";
+  if (digits > start && (delimiter === "." || delimiter === ")") && isSpace(line[digits + 1])) {
+    return { ordered: true, content: line.slice(digits + 2).trim() };
+  }
+  return null;
+}
+function parseQuote(line) {
+  const start = contentStart(line);
+  if (start < 0 || line[start] !== ">") {
+    return null;
+  }
+  const offset = isSpace(line[start + 1]) ? 2 : 1;
+  return line.slice(start + offset);
+}
+function trimEndRun(value, character) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === character) {
+    end--;
+  }
+  return end;
+}
+function isSpace(character) {
+  return character === " " || character === "	";
+}
+function isDigit(character) {
+  return character !== void 0 && character >= "0" && character <= "9";
+}
+function renderBlock(block, sourceDocument, newTabLabel) {
+  switch (block.kind) {
+    case "code": {
+      const pre = sourceDocument.createElement("pre");
+      const code = sourceDocument.createElement("code");
+      code.textContent = block.text;
+      pre.append(code);
+      return pre;
+    }
+    case "heading": {
+      const level = Math.min(HEADING_BASE_LEVEL + block.level - 1, MAXIMUM_HEADING_LEVEL);
+      const heading = sourceDocument.createElement(`h${level}`);
+      appendInline(heading, block.text, newTabLabel);
+      return heading;
+    }
+    case "list": {
+      const list = sourceDocument.createElement(block.ordered ? "ol" : "ul");
+      for (const item of block.items) {
+        const entry = sourceDocument.createElement("li");
+        appendInline(entry, item, newTabLabel);
+        list.append(entry);
+      }
+      return list;
+    }
+    case "quote": {
+      const quote = sourceDocument.createElement("blockquote");
+      const paragraph = sourceDocument.createElement("p");
+      appendInline(paragraph, block.lines.join("\n"), newTabLabel);
+      quote.append(paragraph);
+      return quote;
+    }
+    case "break":
+      return sourceDocument.createElement("hr");
+    case "paragraph":
+    default: {
+      const paragraph = sourceDocument.createElement("p");
+      appendInline(paragraph, block.lines.join("\n"), newTabLabel);
+      return paragraph;
+    }
+  }
+}
+function appendInline(parent, text, newTabLabel) {
+  const sourceDocument = parent.ownerDocument;
+  let plain = "";
+  let index = 0;
+  const flushPlain = () => {
+    if (plain.length > 0) {
+      appendLinkifiedText(parent, plain, newTabLabel);
+      plain = "";
+    }
+  };
+  while (index < text.length) {
+    const rest = text.slice(index);
+    const bareUrl = URL_AT_START.exec(rest);
+    if (bareUrl !== null) {
+      plain += bareUrl[0];
+      index += bareUrl[0].length;
+      continue;
+    }
+    const codeSpan = matchCodeSpan(text, index);
+    if (codeSpan !== null) {
+      flushPlain();
+      const code = sourceDocument.createElement("code");
+      code.textContent = codeSpan.content;
+      parent.append(code);
+      index += codeSpan.length;
+      continue;
+    }
+    const link = MARKDOWN_LINK.exec(rest);
+    if (link !== null) {
+      const url = parseWebUrl(link[2] ?? "");
+      if (url !== null) {
+        flushPlain();
+        const label = (link[1] ?? "").trim();
+        appendAnchor(parent, url, label.length > 0 ? label : url.href, newTabLabel);
+        index += link[0].length;
+        continue;
+      }
+    }
+    const emphasised = matchEmphasis(text, index);
+    if (emphasised !== null) {
+      flushPlain();
+      const element = sourceDocument.createElement(emphasised.tag);
+      appendInline(element, emphasised.content, newTabLabel);
+      parent.append(element);
+      index += emphasised.length;
+      continue;
+    }
+    plain += text[index];
+    index++;
+  }
+  flushPlain();
+}
+function matchEmphasis(text, index) {
+  const marker = text[index] ?? "";
+  if (!EMPHASIS_MARKERS.includes(marker)) {
+    return null;
+  }
+  if (marker === "_" && WORD_CHARACTER.test(text[index - 1] ?? "")) {
+    return null;
+  }
+  const doubled = text[index + 1] === marker;
+  const delimiter = doubled ? marker + marker : marker;
+  const contentStartIndex = index + delimiter.length;
+  if (isBlank(text[contentStartIndex])) {
+    return null;
+  }
+  const closing = text.indexOf(delimiter, contentStartIndex + 1);
+  if (closing < 0) {
+    return null;
+  }
+  const content = text.slice(contentStartIndex, closing);
+  if (content.length === 0 || isBlank(content[content.length - 1])) {
+    return null;
+  }
+  return {
+    tag: doubled ? "strong" : "em",
+    content,
+    length: delimiter.length * 2 + content.length
+  };
+}
+function matchCodeSpan(text, index) {
+  if (text[index] !== "`") {
+    return null;
+  }
+  const closing = text.indexOf("`", index + 1);
+  if (closing < 0) {
+    return null;
+  }
+  const content = text.slice(index + 1, closing);
+  if (content.length === 0 || content.includes("\n")) {
+    return null;
+  }
+  return { content, length: content.length + 2 };
+}
+function isBlank(character) {
+  return character === void 0 || character === " " || character === "	" || character === "\n";
+}
 function appendLinkifiedText(parent, text, newTabLabel) {
   const sourceDocument = parent.ownerDocument;
   let textStart = 0;
@@ -619,24 +955,28 @@ function appendLinkifiedText(parent, text, newTabLabel) {
       continue;
     }
     parent.append(sourceDocument.createTextNode(text.slice(textStart, matchStart)));
-    const anchor = sourceDocument.createElement("a");
-    anchor.href = url.href;
-    anchor.textContent = candidate;
-    if (url.origin !== sourceDocument.location.origin) {
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      const marker = sourceDocument.createElement("span");
-      marker.className = "nr-browser-ai__new-tab-marker";
-      marker.setAttribute("aria-hidden", "true");
-      anchor.append(marker);
-      if (newTabLabel.length > 0) {
-        anchor.setAttribute("aria-label", `${candidate} ${newTabLabel}`);
-      }
-    }
-    parent.append(anchor);
+    appendAnchor(parent, url, candidate, newTabLabel);
     textStart = matchStart + candidate.length;
   }
   parent.append(sourceDocument.createTextNode(text.slice(textStart)));
+}
+function appendAnchor(parent, url, label, newTabLabel) {
+  const sourceDocument = parent.ownerDocument;
+  const anchor = sourceDocument.createElement("a");
+  anchor.href = url.href;
+  anchor.textContent = label;
+  if (url.origin !== sourceDocument.location.origin) {
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    const marker = sourceDocument.createElement("span");
+    marker.className = "nr-browser-ai__new-tab-marker";
+    marker.setAttribute("aria-hidden", "true");
+    anchor.append(marker);
+    if (newTabLabel.length > 0) {
+      anchor.setAttribute("aria-label", `${label} ${newTabLabel}`);
+    }
+  }
+  parent.append(anchor);
 }
 function isEmbeddedInAnotherScheme(text, start) {
   return start > 0 && /[\p{L}\p{N}_:/]/u.test(text[start - 1] ?? "");

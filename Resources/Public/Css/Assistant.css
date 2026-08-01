@@ -117,6 +117,62 @@
     margin-block-end: 0;
 }
 
+/* Structures produced by the restricted Markdown subset of the response renderer. */
+.nr-browser-ai__log :is(h3, h4, h5, h6) {
+    margin-block: 0 0.5rem;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.nr-browser-ai__log :is(ul, ol) {
+    margin-block: 0 1rem;
+    padding-inline-start: 1.5rem;
+}
+
+.nr-browser-ai__log li {
+    margin-block-end: 0.25rem;
+}
+
+.nr-browser-ai__log :is(ul, ol):last-child,
+.nr-browser-ai__log pre:last-child,
+.nr-browser-ai__log blockquote:last-child {
+    margin-block-end: 0;
+}
+
+.nr-browser-ai__log code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    padding: 0.1em 0.3em;
+    border-radius: 0.2rem;
+    background: color-mix(in srgb, var(--nr-border) 30%, var(--nr-bg));
+}
+
+.nr-browser-ai__log pre {
+    margin-block: 0 1rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.25rem;
+    background: color-mix(in srgb, var(--nr-border) 30%, var(--nr-bg));
+    overflow-x: auto;
+}
+
+.nr-browser-ai__log pre code {
+    padding: 0;
+    background: none;
+}
+
+.nr-browser-ai__log blockquote {
+    margin-block: 0 1rem;
+    margin-inline: 0;
+    padding-inline-start: 0.9rem;
+    border-inline-start: 0.1875rem solid var(--nr-border);
+}
+
+.nr-browser-ai__log hr {
+    margin-block: 1rem;
+    border: 0;
+    border-block-start: 0.0625rem solid var(--nr-border);
+}
+
 .nr-browser-ai__log a,
 .nr-browser-ai__footer a {
     color: var(--nr-primary-dark);
