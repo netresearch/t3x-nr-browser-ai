@@ -46,9 +46,16 @@ decisions without appropriate independent controls.
 Output and fallback rendering
 =============================
 
-Model output is rendered with DOM text nodes. Link-like output is accepted
-only for validated HTTP(S) URLs and receives a visible new-tab indication.
-The model cannot inject raw HTML into the page.
+Model output is rendered with DOM APIs only. A restricted Markdown subset —
+emphasis, inline code, fenced code, lists, headings and block quotes — is
+recognised and built from ``createElement`` and text nodes; every other
+character stays literal text. No markup string is ever assembled and no HTML
+is ever parsed, so the model cannot inject elements or attributes of its
+choosing. Headings are emitted below the assistant's own heading level.
+
+Link-like output is accepted only for validated HTTP(S) URLs, whether written
+as a bare URL or in Markdown link syntax, and receives a visible new-tab
+indication. Other schemes remain inert text.
 
 Fallback content is normal TYPO3-rendered content selected by an editor. Only
 an enabled record is accepted; hidden, deleted and cyclic references produce no

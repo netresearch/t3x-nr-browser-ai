@@ -191,9 +191,11 @@
         <article class="card">
           <h3>Model output cannot inject markup</h3>
           <p>
-            Answers are rendered as DOM text nodes. No HTML and no Markdown is
-            interpreted. Link-like output becomes a link only for validated HTTP and
-            HTTPS URLs, and external links are marked and opened with
+            Answers are built with DOM APIs only. A restricted Markdown subset —
+            emphasis, code, lists, headings, quotes — becomes real elements via
+            <code>createElement</code>; everything else stays literal text. No markup
+            string is ever assembled and no HTML is parsed. Links are limited to
+            validated HTTP and HTTPS URLs and open with
             <code>rel="noopener noreferrer"</code>.
           </p>
         </article>

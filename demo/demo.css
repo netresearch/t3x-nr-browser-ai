@@ -90,7 +90,11 @@ a:focus-visible {
     border-radius: 0.125rem;
 }
 
-code {
+/*
+ * Scoped away from the assistant: the widget ships its own stylesheet, and the
+ * demo must show exactly what a TYPO3 site renders, not this page's typography.
+ */
+code:not(.nr-browser-ai *) {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.9em;
     background: var(--nr-bg-alt);
@@ -98,7 +102,7 @@ code {
     border-radius: 0.2rem;
 }
 
-pre {
+pre:not(.nr-browser-ai *) {
     background: var(--nr-bg-alt);
     border: 0.0625rem solid var(--nr-border-light);
     border-inline-start: 0.25rem solid var(--nr-primary);
@@ -108,7 +112,7 @@ pre {
     font-size: 0.9rem;
     line-height: 1.55;
 }
-pre code { background: none; padding: 0; font-size: 1em; }
+pre:not(.nr-browser-ai *) code { background: none; padding: 0; font-size: 1em; }
 
 .wrap {
     max-inline-size: var(--wrap);

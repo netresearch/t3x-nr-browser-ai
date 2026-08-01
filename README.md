@@ -79,7 +79,9 @@ or navigation. Chrome manages the model download and storage; the extension
 has no server endpoint, database persistence, cookies or analytics for chat
 data.
 
-Model output is rendered as text with validated HTTP(S) links. Site owners
+Model output is rendered with DOM APIs only: a restricted Markdown subset is
+built from `createElement` and text nodes, links are limited to validated
+HTTP(S) URLs, and no HTML is ever parsed. Site owners
 remain responsible for the page content selected as context, their privacy
 notice, Chrome/browser governance and their Content-Security-Policy.
 

@@ -100,6 +100,118 @@ describe('SafeResponseRenderer', () => {
         ]);
     });
 
+    it('renders inline emphasis and code as elements without leaving markers behind', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('Ein **fetter** und *kursiver* Teil mit `code()`.');
+
+        expect(output.querySelector('strong')?.textContent).toBe('fetter');
+        expect(output.querySelector('em')?.textContent).toBe('kursiver');
+        expect(output.querySelector('code')?.textContent).toBe('code()');
+        expect(output.textContent).toBe('Ein fetter und kursiver Teil mit code().');
+    });
+
+    it('renders bullet and numbered lists as real list elements', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('Punkte:\n\n- Erster\n- Zweiter\n\n1. Eins\n2. Zwei');
+
+        expect([...output.querySelectorAll('ul > li')].map(item => item.textContent))
+            .toEqual(['Erster', 'Zweiter']);
+        expect([...output.querySelectorAll('ol > li')].map(item => item.textContent))
+            .toEqual(['Eins', 'Zwei']);
+    });
+
+    it('maps headings below the widget title and never emits h1 or h2', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('# Eins\n\n## Zwei\n\n##### Fünf');
+
+        expect([...output.querySelectorAll('h1, h2')]).toHaveLength(0);
+        expect([...output.children].map(child => child.tagName)).toEqual(['H3', 'H4', 'H6']);
+        expect(output.querySelector('h3')?.textContent).toBe('Eins');
+    });
+
+    it('renders fenced code verbatim, including markup that must stay inert', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('```\n<script>alert(1)</script>\n**not bold**\n```');
+
+        const code = output.querySelector('pre > code');
+        expect(code?.textContent).toBe('<script>alert(1)</script>\n**not bold**');
+        expect(output.querySelector('script')).toBeNull();
+        expect(output.querySelector('strong')).toBeNull();
+    });
+
+    it('accepts markdown links only for validated web URLs', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk(
+            '[gut](https://example.org/a) [boese](javascript:alert(1)) [daten](data:text/html,x)',
+        );
+
+        const links = [...output.querySelectorAll('a')];
+        expect(links).toHaveLength(1);
+        expect(links[0]?.getAttribute('href')).toBe('https://example.org/a');
+        expect(links[0]?.textContent).toContain('gut');
+        expect(output.textContent).toContain('[boese](javascript:alert(1))');
+        expect(output.textContent).toContain('[daten](data:text/html,x)');
+    });
+
+    it('renders block quotes without interpreting their content as markup', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('> Zitat mit <b>Text</b>');
+
+        expect(output.querySelector('blockquote')?.textContent).toBe('Zitat mit <b>Text</b>');
+        expect(output.querySelector('b')).toBeNull();
+    });
+
+    it('leaves underscores inside words and inside URLs untouched', () => {
+        const renderer = new SafeResponseRenderer(output);
+        const response = 'Die Variable snake_case_name und https://example.org/a_b_c*d sind roh.';
+
+        renderer.appendChunk(response);
+
+        expect(output.querySelector('em')).toBeNull();
+        expect(output.querySelector('strong')).toBeNull();
+        expect(output.textContent).toBe(response);
+        expect(output.querySelector('a')?.getAttribute('href'))
+            .toBe('https://example.org/a_b_c*d');
+    });
+
+    it('keeps an unterminated emphasis marker as literal text', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('Teil **unvollstaendig');
+
+        expect(output.querySelector('strong')).toBeNull();
+        expect(output.textContent).toBe('Teil **unvollstaendig');
+    });
+
+    it('renders an unterminated code fence with what has arrived so far', () => {
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('Davor\n\n```\nnoch offen');
+        expect(output.querySelector('pre > code')?.textContent).toBe('noch offen');
+
+        renderer.appendChunk('er Code\n```');
+        expect(output.querySelector('pre > code')?.textContent).toBe('noch offener Code');
+    });
+
+    it('builds markdown structures without any HTML parsing sink', () => {
+        const innerHtml = vi.spyOn(Element.prototype, 'innerHTML', 'set');
+        const adjacentHtml = vi.spyOn(Element.prototype, 'insertAdjacentHTML');
+        const parseFromString = vi.spyOn(DOMParser.prototype, 'parseFromString');
+        const renderer = new SafeResponseRenderer(output);
+
+        renderer.appendChunk('# H\n\n- **a** `b` [c](https://example.org)\n\n> q\n\n```\nx\n```');
+
+        expect(innerHtml).not.toHaveBeenCalled();
+        expect(adjacentHtml).not.toHaveBeenCalled();
+        expect(parseFromString).not.toHaveBeenCalled();
+    });
+
     it('clears both rendered DOM and the accumulated raw response', () => {
         const renderer = new SafeResponseRenderer(output);
         renderer.appendChunk('Vorher https://example.org');
