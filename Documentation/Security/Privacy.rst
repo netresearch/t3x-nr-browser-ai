@@ -51,8 +51,11 @@ only for validated HTTP(S) URLs and receives a visible new-tab indication.
 The model cannot inject raw HTML into the page.
 
 Fallback content is normal TYPO3-rendered content selected by an editor. Only
-an enabled same-page record is accepted; hidden, deleted, cross-page and cyclic
-references produce no fallback output.
+an enabled record is accepted; hidden, deleted and cyclic references produce no
+fallback output. A record on another page is permitted, so one shared element
+can serve as the fallback for many pages. Access restrictions still apply: the
+record is rendered through TYPO3's ``RECORDS`` object, which honors the usual
+enable fields including access groups and time-based publishing.
 
 .. _security-csp:
 

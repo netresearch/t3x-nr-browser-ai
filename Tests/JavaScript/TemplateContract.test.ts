@@ -18,6 +18,7 @@ const template = readFileSync(
     resolve(process.cwd(), 'Resources/Private/Templates/Assistant/Show.html'),
     'utf8',
 );
+const demoPage = readFileSync(resolve(process.cwd(), 'demo/index.html'), 'utf8');
 
 function attributesIn(source: string, pattern: RegExp): string[] {
     return [...new Set([...source.matchAll(pattern)].map(match => match[0]))].sort();
@@ -46,6 +47,15 @@ describe('assistant template contract', () => {
         );
         expect(/data-nr-browser-ai-log[^>]*aria-live/u.test(template)).toBe(false);
         expect([...template.matchAll(/aria-live=/gu)]).toHaveLength(1);
+    });
+
+    it('is reproduced faithfully by the published demo page', () => {
+        // The demo runs the real bundle, so a demo that drifts from the template
+        // would advertise a component the extension no longer renders.
+        expect(attributesIn(demoPage, HOOK_PATTERN)).toEqual(attributesIn(template, HOOK_PATTERN));
+        expect(attributesIn(demoPage, LABEL_PATTERN)).toEqual(attributesIn(template, LABEL_PATTERN));
+        expect(attributesIn(demoPage, CONFIGURATION_PATTERN))
+            .toEqual(attributesIn(template, CONFIGURATION_PATTERN));
     });
 
     it('satisfies every element the controller requires', () => {

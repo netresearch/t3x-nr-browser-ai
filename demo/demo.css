@@ -1,0 +1,235 @@
+/*
+ * Netresearch brand styling for the nr_browser_ai demo page.
+ *
+ * Fonts are self-hosted: the page must issue no third-party request, both
+ * because it argues for on-device processing and because hotlinking a font CDN
+ * is not an option for a German company.
+ *
+ * Teal #2F99A4 reaches only 3.38:1 on white, so it is used for large text, fills
+ * and borders only. Body-size teal text uses #15585E (8.1:1) and teal fills
+ * carrying normal-size white text use #257880 (5.2:1).
+ */
+
+@font-face {
+    font-family: 'Raleway';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/raleway-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Raleway';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/raleway-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/open-sans-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/open-sans-latin-600-normal.woff2') format('woff2');
+}
+
+:root {
+    --nr-primary: #2F99A4;
+    --nr-primary-dark: #257880;
+    --nr-primary-text: #15585E;
+    --nr-accent: #FF4D00;
+    --nr-text: #585961;
+    --nr-text-strong: #3F4046;
+    --nr-border: #CCCDCC;
+    --nr-border-light: #E5E5E5;
+    --nr-bg: #FFFFFF;
+    --nr-bg-alt: #F5F5F5;
+    --font-headline: 'Raleway', system-ui, sans-serif;
+    --font-body: 'Open Sans', system-ui, sans-serif;
+    --wrap: 64rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--nr-bg);
+    color: var(--nr-text);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-headline);
+    font-weight: 700;
+    color: var(--nr-text-strong);
+    line-height: 1.25;
+    text-wrap: balance;
+}
+
+h1 { font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3rem); margin: 0 0 1rem; }
+h2 { font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.15rem); margin: 0 0 0.75rem; }
+h3 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.5rem; }
+
+p { margin: 0 0 1rem; }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--nr-primary-text); text-underline-offset: 0.15em; }
+a:hover { color: var(--nr-primary-dark); }
+a:focus-visible {
+    outline: 0.1875rem solid var(--nr-primary-dark);
+    outline-offset: 0.125rem;
+    border-radius: 0.125rem;
+}
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--nr-bg-alt);
+    padding: 0.1em 0.35em;
+    border-radius: 0.2rem;
+}
+
+pre {
+    background: var(--nr-bg-alt);
+    border: 0.0625rem solid var(--nr-border-light);
+    border-inline-start: 0.25rem solid var(--nr-primary);
+    border-radius: 0.25rem;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+pre code { background: none; padding: 0; font-size: 1em; }
+
+.wrap {
+    max-inline-size: var(--wrap);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+}
+
+/* Header ---------------------------------------------------------------- */
+
+.site-header {
+    border-block-end: 0.0625rem solid var(--nr-border-light);
+    background: var(--nr-bg);
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 10;
+}
+
+.site-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.85rem;
+}
+
+.brand { display: inline-flex; align-items: center; }
+.brand__logo { inline-size: 2.75rem; block-size: 2.75rem; display: block; }
+
+.site-nav { display: flex; flex-wrap: wrap; gap: 1.25rem; font-family: var(--font-headline); font-weight: 600; }
+.site-nav a { text-decoration: none; }
+.site-nav a:hover { text-decoration: underline; }
+.site-nav__repo { color: var(--nr-text); }
+
+/* Sections -------------------------------------------------------------- */
+
+.hero { padding-block: clamp(2.5rem, 1rem + 6vw, 5rem); }
+
+.eyebrow {
+    font-family: var(--font-headline);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--nr-primary-text);
+    margin-block-end: 0.75rem;
+}
+
+.hero__lead { font-size: 1.15rem; max-inline-size: 44rem; }
+
+.status-line {
+    margin-block-start: 1.75rem;
+    padding: 0.9rem 1.15rem;
+    border-inline-start: 0.25rem solid var(--nr-accent);
+    background: var(--nr-bg-alt);
+    border-radius: 0.25rem;
+    max-inline-size: 44rem;
+}
+
+.section { padding-block: clamp(2.5rem, 1rem + 5vw, 4.5rem); }
+.section--alt { background: var(--nr-bg-alt); }
+.section__lead { font-size: 1.075rem; max-inline-size: 44rem; margin-block-end: 2rem; }
+
+.req-list { margin: 0 0 1.5rem; padding-inline-start: 1.25rem; }
+.req-list li { margin-block-end: 0.6rem; }
+
+/* Cards ----------------------------------------------------------------- */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1.25rem;
+}
+
+.card {
+    background: var(--nr-bg);
+    border: 0.0625rem solid var(--nr-border-light);
+    border-block-start: 0.1875rem solid var(--nr-primary);
+    border-radius: 0.25rem;
+    padding: 1.35rem 1.4rem;
+}
+
+.section--alt .card { border-color: var(--nr-border); border-block-start-color: var(--nr-primary); }
+
+/* Assistant embedding --------------------------------------------------- */
+
+.nr-browser-ai { max-inline-size: none; }
+
+.fallback-note {
+    border: 0.0625rem dashed var(--nr-border);
+    border-radius: 0.25rem;
+    padding: 1.25rem 1.4rem;
+    background: var(--nr-bg-alt);
+}
+
+.link-strong { font-family: var(--font-headline); font-weight: 600; }
+
+/* Footer ---------------------------------------------------------------- */
+
+.site-footer {
+    background: var(--nr-text);
+    color: #FFFFFF;
+    padding-block: 2.25rem;
+    margin-block-start: 1rem;
+}
+
+.site-footer a { color: #FFFFFF; }
+.site-footer a:focus-visible { outline-color: #FFFFFF; }
+.site-footer__meta { font-size: 0.875rem; opacity: 0.85; margin-block-start: 0.5rem; }
+
+/* Motion ---------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .card, pre, .fallback-note { border-color: CanvasText; }
+}

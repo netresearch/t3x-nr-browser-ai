@@ -91,6 +91,8 @@ $expectedScripts = [
 ];
 $expectedDevDependencies = [
     "@axe-core/playwright",
+    "@fontsource/open-sans",
+    "@fontsource/raleway",
     "@playwright/test",
     "@types/dom-chromium-ai",
     "@types/node",
