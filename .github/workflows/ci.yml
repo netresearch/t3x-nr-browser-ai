@@ -76,7 +76,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Type-check browser sources
         run: npm run typecheck

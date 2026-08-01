@@ -352,7 +352,7 @@ case "${SUITE}" in
         "${CONTAINER_BIN}" run "${CONTAINER_ARGS[@]}" -w "${CONTAINER_WORKDIR}" \
             -e CI="${CI:-}" \
             -e TYPO3_BASE_URL="${TYPO3_BASE_URL:-https://v14.nr-browser-ai.ddev.site/}" \
-            "${PLAYWRIGHT_IMAGE}" bash -lc 'npm ci && npm run test:e2e'
+            "${PLAYWRIGHT_IMAGE}" bash -lc 'npm ci --ignore-scripts && npm run test:e2e'
         ;;
     ci)
         "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s lint
@@ -363,7 +363,7 @@ case "${SUITE}" in
         fi
         "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s unit
         "$0" -p "${PHP_VERSION}" -t "${TYPO3_VERSION}" -s functional
-        npm ci
+        npm ci --ignore-scripts
         npm run typecheck
         npm run test:js:coverage
         "$0" -s assets
