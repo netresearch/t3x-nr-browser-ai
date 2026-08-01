@@ -14,7 +14,7 @@ uses the Chrome Prompt API locally. The POC context scope is the current page.
   questions, context or answers.
 - Treat selected page content and editor instructions as untrusted model data.
 - Render model output with safe DOM APIs; allow only validated HTTP(S) links.
-- Preserve fallback modes `none` and same-page `contentElement`.
+- Preserve fallback modes `none` and `contentElement`.
 - Keep administrator system prompt and editor supplement as separate layers.
 - Do not commit the root `composer.lock`; do commit `package-lock.json` and
   generated public frontend assets.
