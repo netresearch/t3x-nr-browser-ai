@@ -199,6 +199,26 @@ describe('SafeResponseRenderer', () => {
         expect(output.querySelector('pre > code')?.textContent).toBe('noch offener Code');
     });
 
+    it('stays fast on pathological delimiter input', () => {
+        const renderer = new SafeResponseRenderer(output);
+        // Nested-looking emphasis and unclosed fences are the shapes that make a
+        // backtracking parser hang. Model output is untrusted, so this must not.
+        const hostile = [
+            '*'.repeat(5_000),
+            '_'.repeat(5_000),
+            `${'**'.repeat(2_000)}kein Ende`,
+            `${'`'.repeat(3_000)}`,
+            `${'- '.repeat(2_000)}`,
+        ].join('\n\n');
+
+        const started = performance.now();
+        renderer.appendChunk(hostile);
+        const elapsed = performance.now() - started;
+
+        expect(elapsed).toBeLessThan(2_000);
+        expect(output.childNodes.length).toBeGreaterThan(0);
+    });
+
     it('builds markdown structures without any HTML parsing sink', () => {
         const innerHtml = vi.spyOn(Element.prototype, 'innerHTML', 'set');
         const adjacentHtml = vi.spyOn(Element.prototype, 'insertAdjacentHTML');

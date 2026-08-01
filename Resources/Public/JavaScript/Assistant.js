@@ -570,17 +570,15 @@ var CLOSING_PAIRS = [
   ["[", "]"],
   ["{", "}"]
 ];
-var CODE_FENCE = /^\s*(?:`{3,}|~{3,})/u;
-var ATX_HEADING = /^(#{1,6})\s+(.*)$/u;
-var THEMATIC_BREAK = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/u;
-var UNORDERED_ITEM = /^\s{0,3}[-*+]\s+(.*)$/u;
-var ORDERED_ITEM = /^\s{0,3}\d{1,9}[.)]\s+(.*)$/u;
-var BLOCK_QUOTE = /^\s{0,3}>\s?(.*)$/u;
-var CODE_SPAN = /^`([^`\n]+)`/u;
-var MARKDOWN_LINK = /^\[([^\]\n]*)\]\(\s*([^\s)]+)\s*\)/u;
-var STRONG = /^(\*\*|__)(?=\S)([\s\S]*?\S)\1/u;
-var EMPHASIS = /^(\*|_)(?=\S)([\s\S]*?\S)\1/u;
+var MARKDOWN_LINK = /^\[([^\]\n]*)\]\(([^\s)]*)\)/u;
 var WORD_CHARACTER = /[\p{L}\p{N}]/u;
+var MAXIMUM_INDENT = 3;
+var MAXIMUM_HEADING_MARKS = 6;
+var MINIMUM_FENCE_LENGTH = 3;
+var MINIMUM_BREAK_LENGTH = 3;
+var UNORDERED_MARKERS = "-*+";
+var EMPHASIS_MARKERS = "*_";
+var BREAK_MARKERS = "-*_";
 var HEADING_BASE_LEVEL = 3;
 var MAXIMUM_HEADING_LEVEL = 6;
 var SafeResponseRenderer = class {
@@ -620,88 +618,189 @@ function parseBlocks(source) {
   let index = 0;
   while (index < lines.length) {
     const line = lines[index] ?? "";
-    if (CODE_FENCE.test(line)) {
-      index++;
-      const code = [];
-      while (index < lines.length && !CODE_FENCE.test(lines[index] ?? "")) {
-        code.push(lines[index] ?? "");
-        index++;
-      }
-      index++;
-      blocks.push({ kind: "code", text: code.join("\n") });
-      continue;
-    }
     if (line.trim() === "") {
       index++;
       continue;
     }
-    if (THEMATIC_BREAK.test(line)) {
-      blocks.push({ kind: "break" });
-      index++;
-      continue;
-    }
-    const heading = ATX_HEADING.exec(line);
-    if (heading !== null) {
-      blocks.push({
-        kind: "heading",
-        level: (heading[1] ?? "").length,
-        text: (heading[2] ?? "").replace(/\s+#+\s*$/u, "").trim()
-      });
-      index++;
-      continue;
-    }
-    if (UNORDERED_ITEM.test(line) || ORDERED_ITEM.test(line)) {
-      const ordered = ORDERED_ITEM.test(line);
-      const items = [];
-      while (index < lines.length) {
-        const candidate = lines[index] ?? "";
-        const item = (ordered ? ORDERED_ITEM : UNORDERED_ITEM).exec(candidate);
-        if (item !== null) {
-          items.push(item[1] ?? "");
-          index++;
-          continue;
-        }
-        if (items.length > 0 && candidate.trim() !== "" && !startsBlock(candidate)) {
-          items[items.length - 1] += `
-${candidate.trim()}`;
-          index++;
-          continue;
-        }
-        break;
-      }
-      blocks.push({ kind: "list", ordered, items });
-      continue;
-    }
-    const quote = BLOCK_QUOTE.exec(line);
-    if (quote !== null) {
-      const quoted = [quote[1] ?? ""];
-      index++;
-      while (index < lines.length) {
-        const continuation = BLOCK_QUOTE.exec(lines[index] ?? "");
-        if (continuation === null) {
-          break;
-        }
-        quoted.push(continuation[1] ?? "");
-        index++;
-      }
-      blocks.push({ kind: "quote", lines: quoted });
-      continue;
-    }
-    const paragraph = [];
-    while (index < lines.length) {
-      const candidate = lines[index] ?? "";
-      if (candidate.trim() === "" || startsBlock(candidate)) {
-        break;
-      }
-      paragraph.push(candidate);
-      index++;
-    }
-    blocks.push({ kind: "paragraph", lines: paragraph });
+    const consumed = consumeBlock(lines, index, blocks);
+    index = consumed;
   }
   return blocks;
 }
+function consumeBlock(lines, start, blocks) {
+  const line = lines[start] ?? "";
+  if (isFence(line)) {
+    return consumeFence(lines, start, blocks);
+  }
+  if (isThematicBreak(line)) {
+    blocks.push({ kind: "break" });
+    return start + 1;
+  }
+  const heading = parseHeading(line);
+  if (heading !== null) {
+    blocks.push({ kind: "heading", ...heading });
+    return start + 1;
+  }
+  if (parseListItem(line) !== null) {
+    return consumeList(lines, start, blocks);
+  }
+  if (parseQuote(line) !== null) {
+    return consumeQuote(lines, start, blocks);
+  }
+  return consumeParagraph(lines, start, blocks);
+}
+function consumeFence(lines, start, blocks) {
+  let index = start + 1;
+  const code = [];
+  while (index < lines.length && !isFence(lines[index] ?? "")) {
+    code.push(lines[index] ?? "");
+    index++;
+  }
+  blocks.push({ kind: "code", text: code.join("\n") });
+  return index + 1;
+}
+function consumeList(lines, start, blocks) {
+  const ordered = parseListItem(lines[start] ?? "")?.ordered === true;
+  const items = [];
+  let index = start;
+  while (index < lines.length) {
+    const candidate = lines[index] ?? "";
+    const item = parseListItem(candidate);
+    if (item !== null && item.ordered === ordered) {
+      items.push(item.content);
+      index++;
+      continue;
+    }
+    if (items.length > 0 && candidate.trim() !== "" && !startsBlock(candidate)) {
+      items[items.length - 1] += `
+${candidate.trim()}`;
+      index++;
+      continue;
+    }
+    break;
+  }
+  blocks.push({ kind: "list", ordered, items });
+  return index;
+}
+function consumeQuote(lines, start, blocks) {
+  const quoted = [];
+  let index = start;
+  while (index < lines.length) {
+    const content = parseQuote(lines[index] ?? "");
+    if (content === null) {
+      break;
+    }
+    quoted.push(content);
+    index++;
+  }
+  blocks.push({ kind: "quote", lines: quoted });
+  return index;
+}
+function consumeParagraph(lines, start, blocks) {
+  const paragraph = [];
+  let index = start;
+  while (index < lines.length) {
+    const candidate = lines[index] ?? "";
+    if (candidate.trim() === "" || startsBlock(candidate)) {
+      break;
+    }
+    paragraph.push(candidate);
+    index++;
+  }
+  blocks.push({ kind: "paragraph", lines: paragraph });
+  return index;
+}
 function startsBlock(line) {
-  return CODE_FENCE.test(line) || THEMATIC_BREAK.test(line) || ATX_HEADING.test(line) || UNORDERED_ITEM.test(line) || ORDERED_ITEM.test(line) || BLOCK_QUOTE.test(line);
+  return isFence(line) || isThematicBreak(line) || parseHeading(line) !== null || parseListItem(line) !== null || parseQuote(line) !== null;
+}
+function contentStart(line) {
+  let index = 0;
+  while (index < line.length && line[index] === " ") {
+    index++;
+  }
+  return index > MAXIMUM_INDENT ? -1 : index;
+}
+function repeatedRun(line, from, character) {
+  let index = from;
+  while (index < line.length && line[index] === character) {
+    index++;
+  }
+  return index - from;
+}
+function isFence(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return false;
+  }
+  const marker = line[start];
+  return (marker === "`" || marker === "~") && repeatedRun(line, start, marker) >= MINIMUM_FENCE_LENGTH;
+}
+function isThematicBreak(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return false;
+  }
+  const marker = line[start] ?? "";
+  if (!BREAK_MARKERS.includes(marker)) {
+    return false;
+  }
+  return repeatedRun(line, start, marker) >= MINIMUM_BREAK_LENGTH && line.slice(start).trim().length === repeatedRun(line, start, marker);
+}
+function parseHeading(line) {
+  const start = contentStart(line);
+  if (start < 0 || line[start] !== "#") {
+    return null;
+  }
+  const level = repeatedRun(line, start, "#");
+  if (level > MAXIMUM_HEADING_MARKS || !isSpace(line[start + level])) {
+    return null;
+  }
+  let text = line.slice(start + level).trim();
+  const trailing = text.length - trimEndRun(text, "#");
+  if (trailing > 0 && isSpace(text[text.length - trailing - 1])) {
+    text = text.slice(0, text.length - trailing).trim();
+  }
+  return { level, text };
+}
+function parseListItem(line) {
+  const start = contentStart(line);
+  if (start < 0) {
+    return null;
+  }
+  const marker = line[start] ?? "";
+  if (UNORDERED_MARKERS.includes(marker) && isSpace(line[start + 1])) {
+    return { ordered: false, content: line.slice(start + 2).trim() };
+  }
+  let digits = start;
+  while (digits < line.length && isDigit(line[digits])) {
+    digits++;
+  }
+  const delimiter = line[digits] ?? "";
+  if (digits > start && (delimiter === "." || delimiter === ")") && isSpace(line[digits + 1])) {
+    return { ordered: true, content: line.slice(digits + 2).trim() };
+  }
+  return null;
+}
+function parseQuote(line) {
+  const start = contentStart(line);
+  if (start < 0 || line[start] !== ">") {
+    return null;
+  }
+  const offset = isSpace(line[start + 1]) ? 2 : 1;
+  return line.slice(start + offset);
+}
+function trimEndRun(value, character) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === character) {
+    end--;
+  }
+  return end;
+}
+function isSpace(character) {
+  return character === " " || character === "	";
+}
+function isDigit(character) {
+  return character !== void 0 && character >= "0" && character <= "9";
 }
 function renderBlock(block, sourceDocument, newTabLabel) {
   switch (block.kind) {
@@ -762,13 +861,13 @@ function appendInline(parent, text, newTabLabel) {
       index += bareUrl[0].length;
       continue;
     }
-    const codeSpan = CODE_SPAN.exec(rest);
+    const codeSpan = matchCodeSpan(text, index);
     if (codeSpan !== null) {
       flushPlain();
       const code = sourceDocument.createElement("code");
-      code.textContent = codeSpan[1] ?? "";
+      code.textContent = codeSpan.content;
       parent.append(code);
-      index += codeSpan[0].length;
+      index += codeSpan.length;
       continue;
     }
     const link = MARKDOWN_LINK.exec(rest);
@@ -782,7 +881,7 @@ function appendInline(parent, text, newTabLabel) {
         continue;
       }
     }
-    const emphasised = matchEmphasis(text, index, rest);
+    const emphasised = matchEmphasis(text, index);
     if (emphasised !== null) {
       flushPlain();
       const element = sourceDocument.createElement(emphasised.tag);
@@ -796,18 +895,50 @@ function appendInline(parent, text, newTabLabel) {
   }
   flushPlain();
 }
-function matchEmphasis(text, index, rest) {
-  for (const [pattern, tag] of [[STRONG, "strong"], [EMPHASIS, "em"]]) {
-    const match = pattern.exec(rest);
-    if (match === null) {
-      continue;
-    }
-    if ((match[1] ?? "").startsWith("_") && WORD_CHARACTER.test(text[index - 1] ?? "")) {
-      continue;
-    }
-    return { tag, content: match[2] ?? "", length: match[0].length };
+function matchEmphasis(text, index) {
+  const marker = text[index] ?? "";
+  if (!EMPHASIS_MARKERS.includes(marker)) {
+    return null;
   }
-  return null;
+  if (marker === "_" && WORD_CHARACTER.test(text[index - 1] ?? "")) {
+    return null;
+  }
+  const doubled = text[index + 1] === marker;
+  const delimiter = doubled ? marker + marker : marker;
+  const contentStartIndex = index + delimiter.length;
+  if (isBlank(text[contentStartIndex])) {
+    return null;
+  }
+  const closing = text.indexOf(delimiter, contentStartIndex + 1);
+  if (closing < 0) {
+    return null;
+  }
+  const content = text.slice(contentStartIndex, closing);
+  if (content.length === 0 || isBlank(content[content.length - 1])) {
+    return null;
+  }
+  return {
+    tag: doubled ? "strong" : "em",
+    content,
+    length: delimiter.length * 2 + content.length
+  };
+}
+function matchCodeSpan(text, index) {
+  if (text[index] !== "`") {
+    return null;
+  }
+  const closing = text.indexOf("`", index + 1);
+  if (closing < 0) {
+    return null;
+  }
+  const content = text.slice(index + 1, closing);
+  if (content.length === 0 || content.includes("\n")) {
+    return null;
+  }
+  return { content, length: content.length + 2 };
+}
+function isBlank(character) {
+  return character === void 0 || character === " " || character === "	" || character === "\n";
 }
 function appendLinkifiedText(parent, text, newTabLabel) {
   const sourceDocument = parent.ownerDocument;
