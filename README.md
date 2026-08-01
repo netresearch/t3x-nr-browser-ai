@@ -11,6 +11,12 @@
 </p>
 
 <p align="center">
+  <a href="https://netresearch.github.io/t3x-nr-browser-ai/"><strong>Live demo</strong></a> —
+  runs the real bundle and answers from the demo page's own content.
+  Without a supported browser it shows the extension's fallback instead.
+</p>
+
+<p align="center">
   <a href="https://github.com/netresearch/t3x-nr-browser-ai/actions/workflows/ci.yml"><img src="https://github.com/netresearch/t3x-nr-browser-ai/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://codecov.io/gh/netresearch/t3x-nr-browser-ai"><img src="https://codecov.io/gh/netresearch/t3x-nr-browser-ai/graph/badge.svg" alt="Codecov"></a>
   <a href="https://phpstan.org/"><img src="https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg" alt="PHPStan level 10"></a>
