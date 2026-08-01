@@ -67,6 +67,8 @@ introduction, editor instruction, context selector and fallback.
   does not replace the administrator prompt.
 - The CSS selector defaults to `main` and selects content only from the
   currently open page. Scripts, forms and the assistant itself are excluded.
+- Answers use the language of the question, falling back to the page language
+  from `<html lang>` when the question is too short to identify.
 - Unsupported clients and permanent setup errors show the selected same-page
   fallback content element or no output, according to the plugin setting.
 - During setup, the initial page source is reduced when necessary to fit the

@@ -117,8 +117,27 @@ Override both values in the site's TypoScript constants:
        )
    }
 
-The final instruction order is administrator system prompt, editor supplement
-and the serialized current-page source. The source is data, not an authority.
+The final instruction order is administrator system prompt, answer-language
+instruction, editor supplement and the serialized current-page source. The
+source is data, not an authority.
+
+.. _configuration-answer-language:
+
+Answer language
+===============
+
+The extension asks the model to answer in the language of the question, and
+names the page language as the fallback when the question is too short or
+ambiguous to identify. The page language comes from the ``lang`` attribute of
+the ``html`` element and is used when it is one of the languages Chrome's
+Prompt API supports for output: German, English, Spanish, French or Japanese.
+Any other page language falls back to English for the capability declaration,
+while the question-language rule still applies.
+
+This instruction is required. The ``expectedOutputs`` capability passed to the
+Prompt API only tells Chrome which language assets to prepare; it does not ask
+the model for anything. Without the instruction the model answers in the
+language of the system prompt.
 
 .. _administration-context-scope:
 

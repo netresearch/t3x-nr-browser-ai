@@ -66,6 +66,7 @@ export class LanguageModelSession {
             systemPrompt: combineInstructions(
                 options.systemPrompt,
                 options.supplementalInstruction ?? '',
+                options.outputLanguages,
             ),
             inputLanguages: [...options.inputLanguages],
             outputLanguages: [...options.outputLanguages],
@@ -212,13 +213,42 @@ export class LanguageModelSession {
     }
 }
 
-function combineInstructions(systemPrompt: string, supplementalInstruction: string): string {
-    const administratorInstruction = systemPrompt.trim();
+/** Chrome's Prompt API output languages, named for use inside the instruction. */
+const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
+    de: 'German',
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    ja: 'Japanese',
+};
+
+function combineInstructions(
+    systemPrompt: string,
+    supplementalInstruction: string,
+    outputLanguages: readonly string[],
+): string {
+    const parts = [systemPrompt.trim(), languageInstruction(outputLanguages)]
+        .filter(part => part.length > 0);
     const editorInstruction = supplementalInstruction.trim();
-    if (editorInstruction.length === 0) {
-        return administratorInstruction;
+    if (editorInstruction.length > 0) {
+        parts.push(`Additional editor instruction:\n${editorInstruction}`);
     }
-    return `${administratorInstruction}\n\nAdditional editor instruction:\n${editorInstruction}`;
+
+    return parts.join('\n\n');
+}
+
+/**
+ * `expectedOutputs` only tells Chrome which language assets to have ready; it
+ * does not ask the model for anything. Without this the model answers in the
+ * language of the system prompt, which is English regardless of the page.
+ */
+function languageInstruction(outputLanguages: readonly string[]): string {
+    const pageLanguage = LANGUAGE_NAMES[outputLanguages[0] ?? ''];
+    if (pageLanguage === undefined) {
+        return 'Answer in the language of the question.';
+    }
+
+    return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage}.`;
 }
 
 function remainingContextBudget(session: ModelSession, usageLimit: number): number {

@@ -327,7 +327,8 @@ var LanguageModelSession = class {
     this.modelOptions = {
       systemPrompt: combineInstructions(
         options.systemPrompt,
-        options.supplementalInstruction ?? ""
+        options.supplementalInstruction ?? "",
+        options.outputLanguages
       ),
       inputLanguages: [...options.inputLanguages],
       outputLanguages: [...options.outputLanguages]
@@ -462,16 +463,28 @@ var LanguageModelSession = class {
     session?.destroy();
   }
 };
-function combineInstructions(systemPrompt, supplementalInstruction) {
-  const administratorInstruction = systemPrompt.trim();
+var LANGUAGE_NAMES = {
+  de: "German",
+  en: "English",
+  es: "Spanish",
+  fr: "French",
+  ja: "Japanese"
+};
+function combineInstructions(systemPrompt, supplementalInstruction, outputLanguages) {
+  const parts = [systemPrompt.trim(), languageInstruction(outputLanguages)].filter((part) => part.length > 0);
   const editorInstruction = supplementalInstruction.trim();
-  if (editorInstruction.length === 0) {
-    return administratorInstruction;
+  if (editorInstruction.length > 0) {
+    parts.push(`Additional editor instruction:
+${editorInstruction}`);
   }
-  return `${administratorInstruction}
-
-Additional editor instruction:
-${editorInstruction}`;
+  return parts.join("\n\n");
+}
+function languageInstruction(outputLanguages) {
+  const pageLanguage = LANGUAGE_NAMES[outputLanguages[0] ?? ""];
+  if (pageLanguage === void 0) {
+    return "Answer in the language of the question.";
+  }
+  return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage}.`;
 }
 function remainingContextBudget(session, usageLimit) {
   const maximumUsage = session.contextWindow * usageLimit;
