@@ -1,6 +1,6 @@
 {
     "name": "@netresearch/nr-browser-ai",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "private": true,
     "description": "Frontend toolchain for the nr_browser_ai TYPO3 extension",
     "type": "module",
