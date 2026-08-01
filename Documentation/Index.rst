@@ -43,6 +43,14 @@ The proof of concept has no application LLM endpoint, no chat persistence and
 no telemetry. A provider boundary is ready for later page-tree or whole-site
 context, but the implemented scope is deliberately the current page only.
 
+.. tip::
+
+   A running demo is available at `netresearch.github.io/t3x-nr-browser-ai
+   <https://netresearch.github.io/t3x-nr-browser-ai/>`__. It serves the
+   distributable bundle and answers from the demo page's own content. Browsers
+   without an on-device model see the fallback instead, which is the same path
+   a visitor takes on a production site.
+
 .. important::
 
    Browser built-in AI availability depends on Chrome, the desktop platform,
