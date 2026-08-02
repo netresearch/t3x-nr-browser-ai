@@ -1,0 +1,23 @@
+name: Publish to TER (manual)
+
+# Re-publishes the version currently in ext_emconf.php to TER without touching
+# the Git tag. TER accepts re-uploads of the same version number and overwrites
+# the upload comment, so this refreshes TER after the GitHub release notes were
+# edited, or repairs a comment produced by an older release workflow.
+#
+# Dispatch against a branch, not a tag: workflow_dispatch rejects a tag ref when
+# the workflow file does not exist at that tag, which is the case for every tag
+# published before this file was added.
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish-to-ter:
+    uses: netresearch/typo3-ci-workflows/.github/workflows/publish-to-ter.yml@main
+    permissions:
+      contents: read
+    secrets:
+      TYPO3_TER_ACCESS_TOKEN: ${{ secrets.TYPO3_TER_ACCESS_TOKEN }}
