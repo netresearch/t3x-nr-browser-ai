@@ -11,12 +11,19 @@ name: Publish to TER (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      force-republish:
+        description: Upload even if the version is already on TER, to repair its upload comment
+        type: boolean
+        default: false
 
 permissions: {}
 
 jobs:
   publish-to-ter:
     uses: netresearch/typo3-ci-workflows/.github/workflows/publish-to-ter.yml@main
+    with:
+      force-republish: ${{ inputs.force-republish }}
     permissions:
       contents: read
     secrets:
