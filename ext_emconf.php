@@ -9,7 +9,7 @@
 
 $EM_CONF['nr_browser_ai'] = [
     'title' => 'Netresearch Browser AI',
-    'description' => 'Frontend AI assistant answering from the current page, on-device via Chrome built-in AI - by Netresearch',
+    'description' => 'On-device AI assistant for TYPO3 that answers questions about the current page, powered by Chrome built-in AI - by Netresearch',
     'category' => 'plugin',
     'author' => 'Netresearch DTT GmbH',
     'author_email' => 'typo3@netresearch.de',
