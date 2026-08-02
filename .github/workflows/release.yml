@@ -21,5 +21,6 @@ jobs:
       archive-prefix: nr_browser_ai
       package-name: netresearch/nr-browser-ai
       extension-key: nr_browser_ai
+      derive-tags-from-composer: true
     secrets:
       TYPO3_TER_ACCESS_TOKEN: ${{ secrets.TYPO3_TER_ACCESS_TOKEN }}

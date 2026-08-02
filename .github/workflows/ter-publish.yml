@@ -24,6 +24,7 @@ jobs:
     uses: netresearch/typo3-ci-workflows/.github/workflows/publish-to-ter.yml@main
     with:
       force-republish: ${{ inputs.force-republish }}
+      derive-tags-from-composer: true
     permissions:
       contents: read
     secrets:
