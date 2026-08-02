@@ -29,7 +29,6 @@ jobs:
     with:
       force-republish: ${{ inputs.force-republish }}
       tags: ${{ inputs.tags }}
-      derive-tags-from-composer: true
     permissions:
       contents: read
     secrets:
