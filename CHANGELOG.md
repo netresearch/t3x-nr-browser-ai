@@ -5,6 +5,43 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-02
+
+### Added
+
+- Site set `netresearch/browser-ai`. A TYPO3 site assembled from site sets has
+  no `sys_template` record, so the static TypoScript include never runs and the
+  content element has no rendering definition; the set is how such a site loads
+  the extension's TypoScript. Add it to the `dependencies` of the site package's
+  set, or to the site's own `config.yaml`.
+- `contextSelector`, `contextUsageLimit` and `systemPrompt` as typed site
+  settings, editable per site under Site Management and settable in a site's
+  `settings.yaml`. The latter two previously had no interface at all.
+
+### Fixed
+
+- The system prompt reached the model as its first sentence only on sites
+  loading the extension through the set, dropping the instruction to state when
+  an answer is absent and the instruction to treat page content as untrusted
+  data. TYPO3 serialises site settings into TypoScript constants text as
+  `key = value` lines, so a value containing a newline loses everything after
+  the first. The shipped prompt is now one line, and the setting is declared
+  `string` rather than `text` so a multiline field does not invite an override
+  that would be truncated the same way.
+
+### Changed
+
+- The plugin's TypoScript now lives in the site set, and the static include
+  imports it, so both mechanisms are served from one statement of the
+  configuration. The reverse direction does not work: an `@import` inside a site
+  set applies the imported file's `page.*` assignments but delivers its
+  `tt_content.*` assignments without their object type.
+
+### Supported versions
+
+Unchanged from 0.2.0. TYPO3 12.4 keeps the static include and is unaffected by
+the set.
+
 ## [0.2.0] - 2026-08-01
 
 First published release. Version 0.1.0 was declared but never released, so
@@ -52,4 +89,5 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.3.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.3.0
 [0.2.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.2.0
