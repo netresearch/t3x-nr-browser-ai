@@ -194,9 +194,14 @@ if git -C "${repository_root}" ls-files --error-unmatch composer.lock >/dev/null
     exit 1
 fi
 
+# The content-element mapping lives in the site set and is imported from the
+# static include, not the other way round. See the header of the set's
+# setup.typoscript for why that direction is the one that works.
 grep -q '^tt_content\.nrbrowserai_assistant = COA$' \
+    "${repository_root}/Configuration/Sets/NrBrowserAi/setup.typoscript"
+grep -q 'EXTBASEPLUGIN' "${repository_root}/Configuration/Sets/NrBrowserAi/setup.typoscript"
+grep -q "^@import 'EXT:nr_browser_ai/Configuration/Sets/NrBrowserAi/setup.typoscript'$" \
     "${repository_root}/Configuration/TypoScript/setup.typoscript"
-grep -q 'EXTBASEPLUGIN' "${repository_root}/Configuration/TypoScript/setup.typoscript"
 if grep -q 'nrbrowserai_assistant\\|Configuration/TypoScript/setup.typoscript' \
     "${repository_root}/Tests/Functional/Fixtures/Frontend/setup.typoscript"; then
     echo "Frontend fixture must use the production content-element mapping from the functional test setup" >&2

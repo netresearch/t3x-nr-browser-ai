@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" datatype="plaintext" original="EXT:nr_browser_ai/Configuration/Sets/NrBrowserAi/labels.xlf" date="2026-08-02T00:00:00Z" product-name="nr_browser_ai">
+        <header/>
+        <body>
+            <trans-unit id="label">
+                <source>Netresearch Browser AI</source>
+            </trans-unit>
+            <trans-unit id="categories.browserAi">
+                <source>Browser AI assistant</source>
+            </trans-unit>
+            <trans-unit id="settings.plugin.tx_nrbrowserai_assistant.settings.contextSelector">
+                <source>Default context selector</source>
+            </trans-unit>
+            <trans-unit id="settings.description.plugin.tx_nrbrowserai_assistant.settings.contextSelector">
+                <source>CSS selector for the page area whose text is handed to the on-device model as the only source for answers. Each content element can override this in its own settings.</source>
+            </trans-unit>
+            <trans-unit id="settings.plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit">
+                <source>Context usage limit</source>
+            </trans-unit>
+            <trans-unit id="settings.description.plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit">
+                <source>Share of the model input quota the page text may occupy, between 0 and 1. The remainder is left for the system prompt, the question and the answer.</source>
+            </trans-unit>
+            <trans-unit id="settings.plugin.tx_nrbrowserai_assistant.settings.systemPrompt">
+                <source>System prompt</source>
+            </trans-unit>
+            <trans-unit id="settings.description.plugin.tx_nrbrowserai_assistant.settings.systemPrompt">
+                <source>Instruction sent to the model ahead of the page text. It confines answers to the supplied source and treats that source as untrusted data rather than as instructions.</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

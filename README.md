@@ -55,9 +55,17 @@ composer require netresearch/nr-browser-ai
 vendor/bin/typo3 extension:setup
 ```
 
-Include the extension's static TypoScript in the site root template. Add the
-content element **Netresearch Browser AI** on a page, then configure its title,
-introduction, editor instruction, context selector and fallback.
+Load the extension's TypoScript, by either route:
+
+- **Site sets** (TYPO3 13.4 and 14.3): add `netresearch/browser-ai` to the
+  `dependencies` of your site package's set, or to `config.yaml` of the site
+  itself. Its three settings are then editable per site under **Site
+  Management › Sites › Settings**.
+- **Static template** (TYPO3 12.4, and 13.4 sites still using `sys_template`):
+  include **Netresearch Browser AI** in the site root template.
+
+Then add the content element **Netresearch Browser AI** on a page and configure
+its title, introduction, editor instruction, context selector and fallback.
 
 ## Configuration model
 

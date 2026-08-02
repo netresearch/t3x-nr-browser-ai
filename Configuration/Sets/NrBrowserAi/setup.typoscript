@@ -1,0 +1,46 @@
+# This file, not Configuration/TypoScript/setup.typoscript, holds the plugin's
+# TypoScript. The static include registered in
+# Configuration/TCA/Overrides/sys_template.php — the mechanism TYPO3 12.4 and
+# 13.4 sites without site sets use — imports this file, so both paths are served
+# from one statement of the configuration.
+#
+# The direction matters and is not interchangeable: an @import placed in a site
+# set does apply the imported file's page.* assignments, but its tt_content.*
+# assignments arrive without their object type, leaving the content element with
+# children and no renderer. The reverse — a sys_template importing a set file —
+# applies everything. Covered by Tests/Functional/Configuration/SiteSetTest.php
+# and Tests/Functional/Controller/AssistantControllerTest.php respectively.
+#
+# The constants interpolated below resolve from settings.definitions.yaml in this
+# set, and from Configuration/TypoScript/constants.typoscript on the static
+# include path. Tests/Unit/Configuration/SetSettingsTest.php asserts that the two
+# state the same defaults.
+tt_content.nrbrowserai_assistant = COA
+tt_content.nrbrowserai_assistant {
+    20 = EXTBASEPLUGIN
+    20 {
+        extensionName = NrBrowserAi
+        pluginName = Assistant
+    }
+}
+
+page.includeJS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
+page.includeJS.nrBrowserAi {
+    type = module
+}
+
+page.includeCSS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/Css/Assistant.css
+
+plugin.tx_nrbrowserai_assistant {
+    view {
+        templateRootPaths {
+            10 = EXT:nr_browser_ai/Resources/Private/Templates/
+        }
+    }
+
+    settings {
+        contextSelector = {$plugin.tx_nrbrowserai_assistant.settings.contextSelector}
+        contextUsageLimit = {$plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit}
+        systemPrompt = {$plugin.tx_nrbrowserai_assistant.settings.systemPrompt}
+    }
+}
