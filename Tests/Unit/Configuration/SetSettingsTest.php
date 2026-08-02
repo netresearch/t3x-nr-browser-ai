@@ -19,7 +19,6 @@ use function is_scalar;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function sprintf;
 
@@ -98,13 +97,13 @@ final class SetSettingsTest extends TestCase
     {
         $parsed = Yaml::parse($this->read(self::SET_PATH));
         if (!is_array($parsed) || !is_array($parsed['settings'] ?? null)) {
-            throw new RuntimeException(sprintf('%s declares no settings', self::SET_PATH));
+            self::fail(sprintf('%s declares no settings', self::SET_PATH));
         }
 
         $defaults = [];
         foreach ($parsed['settings'] as $key => $definition) {
             if (!is_array($definition) || !is_scalar($definition['default'] ?? null)) {
-                throw new RuntimeException(sprintf('Setting "%s" declares no scalar default', (string) $key));
+                self::fail(sprintf('Setting "%s" declares no scalar default', (string) $key));
             }
 
             $defaults[(string) $key] = (string) $definition['default'];
@@ -117,12 +116,12 @@ final class SetSettingsTest extends TestCase
     {
         $absolutePath = dirname(__DIR__, 3) . '/' . $relativePath;
         if (!is_file($absolutePath)) {
-            throw new RuntimeException(sprintf('%s is missing', $relativePath));
+            self::fail(sprintf('%s is missing', $relativePath));
         }
 
         $contents = file_get_contents($absolutePath);
         if ($contents === false) {
-            throw new RuntimeException(sprintf('%s is unreadable', $relativePath));
+            self::fail(sprintf('%s is unreadable', $relativePath));
         }
 
         return $contents;
