@@ -22,6 +22,9 @@
                 <field index=""settings.supplementalInstruction"">
                     <value index=""vDEF"">&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</value>
                 </field>
+                <field index=""settings.showConfiguration"">
+                    <value index=""vDEF"">1</value>
+                </field>
                 <field index=""settings.fallbackMode"">
                     <value index=""vDEF"">contentElement</value>
                 </field>

@@ -287,6 +287,54 @@
     }
 }
 
+/* Configuration disclosure. Sits outside the assistant block, so it carries its
+   own padding rather than inheriting the assistant's. */
+.nr-browser-ai__configuration {
+    padding: clamp(1rem, 4vw, 3rem);
+    border-block-end: 0.0625rem solid var(--nr-border);
+}
+
+.nr-browser-ai__configuration:not([open]) {
+    border-block-end: 0;
+}
+
+.nr-browser-ai__configuration-summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.nr-browser-ai__configuration-lead,
+.nr-browser-ai__configuration-note {
+    margin-block: 0.75rem 0;
+    font-size: 0.875rem;
+}
+
+.nr-browser-ai__configuration-note {
+    color: var(--nr-primary-dark);
+}
+
+.nr-browser-ai__configuration-list {
+    margin-block: 1rem 0;
+}
+
+.nr-browser-ai__configuration-list dt {
+    margin-block-start: 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.nr-browser-ai__configuration-list dd {
+    margin-inline-start: 0;
+    overflow-wrap: anywhere;
+}
+
+.nr-browser-ai__configuration-list code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9375em;
+}
+
 @media (forced-colors: active) {
     .nr-browser-ai,
     .nr-browser-ai__status,

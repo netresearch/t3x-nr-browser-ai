@@ -35,6 +35,12 @@
             <trans-unit id="flexform.item.fallbackMode.contentElement" resname="flexform.item.fallbackMode.contentElement">
                 <source>Content element</source>
             </trans-unit>
+            <trans-unit id="flexform.field.showConfiguration" resname="flexform.field.showConfiguration">
+                <source>Show configuration</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.showConfiguration.description" resname="flexform.field.showConfiguration.description">
+                <source>Renders a collapsed block naming the system prompt, the editor instruction, the page area used as the source and the context limit. Visible whether or not the browser can run the model.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

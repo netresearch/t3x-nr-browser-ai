@@ -13,6 +13,8 @@
             <trans-unit id="flexform.field.fallbackContent" resname="flexform.field.fallbackContent"><source>Fallback content element</source><target>Fallback-Inhaltselement</target></trans-unit>
             <trans-unit id="flexform.item.fallbackMode.none" resname="flexform.item.fallbackMode.none"><source>None</source><target>Kein Fallback</target></trans-unit>
             <trans-unit id="flexform.item.fallbackMode.contentElement" resname="flexform.item.fallbackMode.contentElement"><source>Content element</source><target>Inhaltselement</target></trans-unit>
+            <trans-unit id="flexform.field.showConfiguration" resname="flexform.field.showConfiguration"><source>Show configuration</source><target>Konfiguration anzeigen</target></trans-unit>
+            <trans-unit id="flexform.field.showConfiguration.description" resname="flexform.field.showConfiguration.description"><source>Renders a collapsed block naming the system prompt, the editor instruction, the page area used as the source and the context limit. Visible whether or not the browser can run the model.</source><target>Gibt einen zugeklappten Block aus, der System-Prompt, Redaktionsanweisung, den als Quelle genutzten Seitenbereich und die Kontextgrenze benennt. Wird auch dann angezeigt, wenn der Browser das Modell nicht ausführen kann.</target></trans-unit>
         </body>
     </file>
 </xliff>

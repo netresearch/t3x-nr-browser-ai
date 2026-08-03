@@ -80,6 +80,22 @@ Plugin settings
    scripts, styles, forms, templates and hidden content are excluded. An
    invalid or missing selector causes the configured fallback to be shown.
 
+.. confval:: showConfiguration
+   :name: browser-ai-show-configuration
+   :type: boolean
+   :default: 0
+
+   Renders a collapsed block naming the system prompt, the editor instruction,
+   the page area used as the source and the context limit — the instructions
+   the model actually receives, read from the same values the assistant uses,
+   so it cannot drift from them.
+
+   It sits outside the block that stays hidden until the browser reports a
+   usable model, so a visitor can read what would be sent even in a browser
+   that cannot run the assistant. The disclosure names everything passed to the
+   model except the page text itself and the automatic answer-language
+   instruction, both of which it mentions in prose.
+
 .. confval:: fallbackMode
    :name: browser-ai-fallback-mode
    :type: string

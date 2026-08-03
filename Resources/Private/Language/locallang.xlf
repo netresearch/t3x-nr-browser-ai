@@ -20,6 +20,13 @@
             <trans-unit id="status.errorRetryable"><source>Browser AI could not be reached. You can retry.</source></trans-unit>
             <trans-unit id="status.unavailable"><source>Browser AI is unavailable in this browser.</source></trans-unit>
             <trans-unit id="link.newTab"><source>Opens in a new tab.</source></trans-unit>
+            <trans-unit id="configuration.summary"><source>How this assistant is configured</source></trans-unit>
+            <trans-unit id="configuration.lead"><source>These are the instructions and limits this assistant works under. Everything below runs in your browser; nothing is sent to a server.</source></trans-unit>
+            <trans-unit id="configuration.systemPrompt"><source>System prompt</source></trans-unit>
+            <trans-unit id="configuration.supplementalInstruction"><source>Editor instruction</source></trans-unit>
+            <trans-unit id="configuration.contextSelector"><source>Page area used as the source</source></trans-unit>
+            <trans-unit id="configuration.contextUsageLimit"><source>Share of the model input the page text may occupy</source></trans-unit>
+            <trans-unit id="configuration.note"><source>The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</source></trans-unit>
         </body>
     </file>
 </xliff>

@@ -12,9 +12,11 @@ declare(strict_types=1);
 namespace Netresearch\NrBrowserAi\Controller;
 
 use function in_array;
+use function is_bool;
 use function is_float;
 use function is_int;
 use function is_numeric;
+use function is_scalar;
 use function is_string;
 use function mb_strlen;
 
@@ -77,7 +79,8 @@ final class AssistantController extends ActionController
      *     fallbackMode: 'none'|'contentElement',
      *     fallbackContent: string,
      *     title: string,
-     *     introduction: string
+     *     introduction: string,
+     *     showConfiguration: bool
      * }
      */
     private function normalizedSettings(): array
@@ -109,7 +112,22 @@ final class AssistantController extends ActionController
             'fallbackContent'         => '',
             'title'                   => $this->stringSetting('title'),
             'introduction'            => $this->stringSetting('introduction'),
+            'showConfiguration'       => $this->booleanSetting('showConfiguration'),
         ];
+    }
+
+    /**
+     * A FlexForm checkbox arrives as the string '0' or '1', which is truthy either
+     * way, so the value is read rather than cast.
+     */
+    private function booleanSetting(string $name): bool
+    {
+        $value = $this->settings[$name] ?? null;
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return is_scalar($value) && in_array((string) $value, ['1', 'true', 'on'], true);
     }
 
     private function stringSetting(string $name, string $default = ''): string
