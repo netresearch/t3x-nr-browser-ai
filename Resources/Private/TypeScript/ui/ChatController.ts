@@ -276,20 +276,7 @@ export class ChatController {
                 signal,
             );
             if (this.isCurrent(operation)) {
-                const withheld = gate.flush();
-                if (gate.matched && this.elements.notFound !== undefined) {
-                    // The model says the page does not answer this. Show what the
-                    // editor prepared for that case instead of the bare token.
-                    output.remove();
-                    this.elements.notFound.hidden = false;
-                    this.announce(this.elements.notFound.textContent ?? '');
-                } else {
-                    if (withheld.length > 0) {
-                        renderer.appendChunk(withheld);
-                    }
-                    // Announced before the state change so the answer precedes "ready".
-                    this.announce(output.textContent ?? '');
-                }
+                this.completeAnswer(gate, output, renderer);
                 this.setState('ready');
                 this.focusQuestion();
             }
@@ -303,6 +290,35 @@ export class ChatController {
                 this.abortController = undefined;
             }
         }
+    }
+
+    /**
+     * Settles a finished reply: either the model signalled that the page does not
+     * answer the question, in which case the editor's prepared element takes the
+     * place of the reply, or the withheld start of a real answer is released and
+     * the whole thing announced.
+     */
+    private completeAnswer(
+        gate: NotFoundGate,
+        output: HTMLElement,
+        renderer: SafeResponseRenderer,
+    ): void {
+        const withheld = gate.flush();
+        const prepared = this.elements.notFound;
+
+        if (gate.matched && prepared !== undefined) {
+            output.remove();
+            prepared.hidden = false;
+            this.announce(prepared.textContent ?? '');
+            return;
+        }
+
+        if (withheld.length > 0) {
+            renderer.appendChunk(withheld);
+        }
+
+        // Announced before the state change so the answer precedes "ready".
+        this.announce(output.textContent ?? '');
     }
 
     private appendMessage(role: 'user' | 'assistant', content: string): HTMLElement {

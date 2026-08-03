@@ -1294,17 +1294,7 @@ var ChatController = class {
         signal
       );
       if (this.isCurrent(operation)) {
-        const withheld = gate.flush();
-        if (gate.matched && this.elements.notFound !== void 0) {
-          output.remove();
-          this.elements.notFound.hidden = false;
-          this.announce(this.elements.notFound.textContent ?? "");
-        } else {
-          if (withheld.length > 0) {
-            renderer.appendChunk(withheld);
-          }
-          this.announce(output.textContent ?? "");
-        }
+        this.completeAnswer(gate, output, renderer);
         this.setState("ready");
         this.focusQuestion();
       }
@@ -1318,6 +1308,26 @@ var ChatController = class {
         this.abortController = void 0;
       }
     }
+  }
+  /**
+   * Settles a finished reply: either the model signalled that the page does not
+   * answer the question, in which case the editor's prepared element takes the
+   * place of the reply, or the withheld start of a real answer is released and
+   * the whole thing announced.
+   */
+  completeAnswer(gate, output, renderer) {
+    const withheld = gate.flush();
+    const prepared = this.elements.notFound;
+    if (gate.matched && prepared !== void 0) {
+      output.remove();
+      prepared.hidden = false;
+      this.announce(prepared.textContent ?? "");
+      return;
+    }
+    if (withheld.length > 0) {
+      renderer.appendChunk(withheld);
+    }
+    this.announce(output.textContent ?? "");
   }
   appendMessage(role, content) {
     const message = this.root.ownerDocument.createElement("div");
