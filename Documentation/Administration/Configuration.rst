@@ -80,6 +80,48 @@ Plugin settings
    scripts, styles, forms, templates and hidden content are excluded. An
    invalid or missing selector causes the configured fallback to be shown.
 
+.. confval:: showConfiguration
+   :name: browser-ai-show-configuration
+   :type: boolean
+   :default: 0
+
+   Renders a collapsed block naming the system prompt, the editor instruction,
+   the page area used as the source and the context limit — the instructions
+   the model actually receives, read from the same values the assistant uses,
+   so it cannot drift from them.
+
+   It sits outside the block that stays hidden until the browser reports a
+   usable model, so a visitor can read what would be sent even in a browser
+   that cannot run the assistant. The disclosure names everything passed to the
+   model except the page text itself and the automatic answer-language
+   instruction, both of which it mentions in prose.
+
+.. confval:: notFoundMode
+   :name: browser-ai-not-found-mode
+   :type: string
+   :default: none
+
+   Choose ``contentElement`` to show a prepared content element in place of the
+   model's own refusal when the page does not answer the question. The model is
+   then instructed to reply with a marker instead of prose, and the interface
+   swaps in the selected element.
+
+   The instruction is only added when the selected element actually renders. A
+   mode set to ``contentElement`` with a missing, hidden or cyclic reference
+   leaves the prompt untouched, so a visitor never sees the bare marker.
+
+   The classification is the model's. When it answers instead of signalling, the
+   answer is shown as usual; when it signals, the editor's element is shown. A
+   model that forgets the marker degrades to the behaviour of ``none``.
+
+.. confval:: notFoundContent
+   :name: browser-ai-not-found-content
+   :type: tt_content relation
+   :default: empty
+
+   Selects one enabled content element from the same page, under the same rules
+   as :confval:`fallbackContent`.
+
 .. confval:: fallbackMode
    :name: browser-ai-fallback-mode
    :type: string

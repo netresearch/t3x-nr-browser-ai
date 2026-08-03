@@ -1,6 +1,7 @@
 import {LanguageModelSession, LanguageModelSessionError} from '../ai/LanguageModelSession';
 import {PageContextError} from '../context/DomPageContextProvider';
 import type {PageContext, PageContextProvider} from '../context/PageContextProvider';
+import {NotFoundGate} from './NotFoundGate';
 import {SafeResponseRenderer} from '../rendering/SafeResponseRenderer';
 import type {Availability, LanguageModelAdapter, ModelOptions} from '../types';
 
@@ -18,6 +19,13 @@ export interface ChatControllerOptions extends ModelOptions {
     contextSelector: string;
     contextUsageLimit: number;
     supplementalInstruction: string;
+    /**
+     * Token the model is asked to reply with when the page does not answer the
+     * question. Empty when the editor configured no content element for that
+     * case, in which case the model was never given the instruction either and
+     * its own wording is shown as before.
+     */
+    notFoundMarker?: string;
     labels: UiLabels;
 }
 
@@ -26,6 +34,7 @@ export type UiLabels = Record<UiState, string> & {newTab: string};
 interface Elements {
     assistant: HTMLElement;
     fallback: HTMLElement;
+    notFound?: HTMLElement;
     status: HTMLElement;
     setup: HTMLButtonElement;
     progress: HTMLProgressElement;
@@ -255,14 +264,19 @@ export class ChatController {
             const output = this.appendMessage('assistant', '');
             const renderer = new SafeResponseRenderer(output, this.options.labels.newTab);
             const signal = this.abortController?.signal;
+            const gate = new NotFoundGate(this.options.notFoundMarker);
             await this.session?.ask(
                 question,
-                chunk => renderer.appendChunk(chunk),
+                chunk => {
+                    const renderable = gate.accept(chunk);
+                    if (renderable.length > 0) {
+                        renderer.appendChunk(renderable);
+                    }
+                },
                 signal,
             );
             if (this.isCurrent(operation)) {
-                // Announced before the state change so the answer precedes "ready".
-                this.announce(output.textContent ?? '');
+                this.completeAnswer(gate, output, renderer);
                 this.setState('ready');
                 this.focusQuestion();
             }
@@ -276,6 +290,35 @@ export class ChatController {
                 this.abortController = undefined;
             }
         }
+    }
+
+    /**
+     * Settles a finished reply: either the model signalled that the page does not
+     * answer the question, in which case the editor's prepared element takes the
+     * place of the reply, or the withheld start of a real answer is released and
+     * the whole thing announced.
+     */
+    private completeAnswer(
+        gate: NotFoundGate,
+        output: HTMLElement,
+        renderer: SafeResponseRenderer,
+    ): void {
+        const withheld = gate.flush();
+        const prepared = this.elements.notFound;
+
+        if (gate.matched && prepared !== undefined) {
+            output.remove();
+            prepared.hidden = false;
+            this.announce(prepared.textContent ?? '');
+            return;
+        }
+
+        if (withheld.length > 0) {
+            renderer.appendChunk(withheld);
+        }
+
+        // Announced before the state change so the answer precedes "ready".
+        this.announce(output.textContent ?? '');
     }
 
     private appendMessage(role: 'user' | 'assistant', content: string): HTMLElement {
@@ -404,6 +447,9 @@ function collectElements(root: HTMLElement): Elements {
     return {
         assistant: required(root, '[data-nr-browser-ai-assistant]', HTMLElement),
         fallback: required(root, '[data-nr-browser-ai-fallback]', HTMLElement),
+        // Optional: present only when the editor picked a content element for the
+        // case where the page does not answer the question.
+        notFound: optional(root, '[data-nr-browser-ai-not-found]'),
         status: required(root, '[data-nr-browser-ai-status]', HTMLElement),
         setup: required(root, '[data-nr-browser-ai-setup]', HTMLButtonElement),
         progress: required(root, '[data-nr-browser-ai-progress]', HTMLProgressElement),
@@ -416,6 +462,11 @@ function collectElements(root: HTMLElement): Elements {
         reset: required(root, '[data-nr-browser-ai-reset]', HTMLButtonElement),
         retry: required(root, '[data-nr-browser-ai-retry]', HTMLButtonElement),
     };
+}
+
+function optional(root: HTMLElement, selector: string): HTMLElement | undefined {
+    const element = root.querySelector(selector);
+    return element instanceof HTMLElement ? element : undefined;
 }
 
 function required<T extends Element>(

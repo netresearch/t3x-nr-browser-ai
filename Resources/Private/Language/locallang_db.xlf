@@ -35,6 +35,27 @@
             <trans-unit id="flexform.item.fallbackMode.contentElement" resname="flexform.item.fallbackMode.contentElement">
                 <source>Content element</source>
             </trans-unit>
+            <trans-unit id="flexform.field.showConfiguration" resname="flexform.field.showConfiguration">
+                <source>Show configuration</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.showConfiguration.description" resname="flexform.field.showConfiguration.description">
+                <source>Renders a collapsed block naming the system prompt, the editor instruction, the page area used as the source and the context limit. Visible whether or not the browser can run the model.</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.notFoundMode" resname="flexform.field.notFoundMode">
+                <source>When the page does not answer</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.notFoundMode.description" resname="flexform.field.notFoundMode.description">
+                <source>Choose 'Content element' to show a prepared element instead of the model's refusal. The model is then instructed to signal an unanswerable question, and the interface replaces its reply with that element.</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.notFoundContent" resname="flexform.field.notFoundContent">
+                <source>Content element for an unanswerable question</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.notFoundMode.none" resname="flexform.item.notFoundMode.none">
+                <source>Show the model's own wording</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.notFoundMode.contentElement" resname="flexform.item.notFoundMode.contentElement">
+                <source>Content element</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

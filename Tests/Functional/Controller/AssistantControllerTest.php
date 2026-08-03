@@ -31,6 +31,7 @@ use ReflectionMethod;
 use ReflectionProperty;
 
 use function str_repeat;
+use function strpos;
 
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
@@ -44,6 +45,14 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {
+    /**
+     * The site fixture's base. Named rather than repeated, so a change to the
+     * fixture is one edit instead of a search across every request below.
+     */
+    private const BASE_URL = 'https://website.local/';
+
+    private const URL_NONE = self::BASE_URL . 'none';
+
     protected array $coreExtensionsToLoad = [
         'extbase',
         'fluid',
@@ -150,7 +159,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function frontendRequestDispatchesPluginAndRendersEscapedProgressiveRootContract(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/'))->withPageId(1),
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
         );
         $body = (string) $response->getBody();
 
@@ -178,8 +187,11 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertStringContainsString('/typo3conf/ext/nr_browser_ai/Resources/Public/Icons/Extension.svg', $body);
         self::assertStringContainsString('data-context-selector="main"', $body);
         self::assertStringContainsString('data-context-usage-limit="0.8"', $body);
+        // The editor's prompt, plus the instruction the not-found content element
+        // adds — asserted as composition rather than equality, so the two parts
+        // stay distinguishable when either changes.
         self::assertStringContainsString(
-            'data-system-prompt="&quot;Configured&quot; &amp; trusted"',
+            'data-system-prompt="&quot;Configured&quot; &amp; trusted If the answer is not present',
             $body,
         );
         self::assertStringContainsString(
@@ -210,7 +222,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function noneModeRendersAnEmptyFallbackThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/none'))->withPageId(2),
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
         );
         $body = (string) $response->getBody();
 
@@ -234,7 +246,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function theTypoScriptSystemPromptDefaultReachesTheMarkupInFull(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/none'))->withPageId(2),
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
         );
         $body = (string) $response->getBody();
 
@@ -250,11 +262,93 @@ final class AssistantControllerTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * The disclosure exists so a visitor can read what the assistant would send
+     * before deciding to use it, which is only useful if it is legible without a
+     * supported browser — so it sits outside the block that stays hidden until a
+     * model is available.
+     */
+    #[Test]
+    public function theConfigurationDisclosureNamesTheEffectiveSettings(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-nr-browser-ai-configuration', $body);
+        self::assertStringContainsString('<dd>&quot;Configured&quot; &amp; trusted If the answer is not present', $body);
+        self::assertStringContainsString('<dd>&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</dd>', $body);
+        self::assertStringContainsString('<dd>0.8</dd>', $body);
+        self::assertStringContainsString('<code>main</code>', $body);
+
+        // Outside the hidden assistant block: the disclosure opens before it.
+        $disclosure = strpos($body, 'data-nr-browser-ai-configuration');
+        $assistant  = strpos($body, 'data-nr-browser-ai-assistant');
+        self::assertIsInt($disclosure);
+        self::assertIsInt($assistant);
+        self::assertLessThan($assistant, $disclosure);
+    }
+
+    #[Test]
+    public function theConfigurationDisclosureIsAbsentUnlessTheEditorEnablesIt(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-nr-browser-ai-root', $body);
+        self::assertStringNotContainsString('data-nr-browser-ai-configuration', $body);
+    }
+
+    /**
+     * The instruction and the marker only appear when the editor actually picked
+     * a content element for the case: asking a model to answer with a token, then
+     * having nothing to put in its place, would leave the visitor with the token.
+     */
+    #[Test]
+    public function theNotFoundInstructionAndMarkerAppearOnlyWithPreparedContent(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-not-found-marker="NOT_IN_SOURCE"', $body);
+        self::assertStringContainsString(
+            'reply with exactly NOT_IN_SOURCE and nothing else.',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-not-found[^>]*hidden[^>]*>\s*'
+            . '<p data-not-found-output>Prepared guidance for an unanswerable question<\/p>\s*<\/div>/',
+            $body,
+        );
+    }
+
+    #[Test]
+    public function noNotFoundMarkerIsPromisedWithoutPreparedContent(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-not-found-marker=""', $body);
+        self::assertStringNotContainsString('NOT_IN_SOURCE', $body);
+        self::assertStringNotContainsString('data-nr-browser-ai-not-found', $body);
+    }
+
     #[Test]
     public function selfReferenceFailsClosedWithoutRenderingThePluginRecursively(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/self-reference'))->withPageId(3),
+            (new InternalRequest(self::BASE_URL . 'self-reference'))->withPageId(3),
         );
         $body = (string) $response->getBody();
 
@@ -270,7 +364,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function nonScalarUidExpressionIsRejectedThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/invalid-fallback'))->withPageId(4),
+            (new InternalRequest(self::BASE_URL . 'invalid-fallback'))->withPageId(4),
         );
         $body = (string) $response->getBody();
 
@@ -286,7 +380,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function indirectFallbackCycleIsBoundedThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/indirect-cycle'))->withPageId(5),
+            (new InternalRequest(self::BASE_URL . 'indirect-cycle'))->withPageId(5),
         );
         $body = (string) $response->getBody();
 
@@ -301,7 +395,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function visibleCrossPageContentElementIsRenderedAsFallback(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/cross-page'))->withPageId(6),
+            (new InternalRequest(self::BASE_URL . 'cross-page'))->withPageId(6),
         );
         $body = (string) $response->getBody();
 
@@ -318,7 +412,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     {
         foreach ([8 => 'hidden', 9 => 'deleted'] as $pageId => $marker) {
             $response = $this->executeFrontendSubRequest(
-                (new InternalRequest('https://website.local/' . $marker . '-fallback'))->withPageId($pageId),
+                (new InternalRequest(self::BASE_URL . $marker . '-fallback'))->withPageId($pageId),
             );
             $body = (string) $response->getBody();
 

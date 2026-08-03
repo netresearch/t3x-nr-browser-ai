@@ -573,6 +573,65 @@ function sessionError(code, cause) {
   return new LanguageModelSessionError(code, messages[code], cause === void 0 ? void 0 : { cause });
 }
 
+// Resources/Private/TypeScript/ui/NotFoundGate.ts
+var NotFoundGate = class {
+  constructor(marker) {
+    this.marker = marker;
+    this.decided = marker === void 0 || marker.length === 0;
+  }
+  marker;
+  buffer = "";
+  decided;
+  isMarker = false;
+  /**
+   * Returns the part of the chunk that may be rendered now, which is empty for
+   * as long as the reply could still be the marker.
+   */
+  accept(chunk) {
+    if (this.decided) {
+      return chunk;
+    }
+    this.buffer += chunk;
+    const candidate = this.buffer.trimStart();
+    if (candidate.length === 0) {
+      return "";
+    }
+    const marker = this.marker ?? "";
+    if (candidate.length < marker.length) {
+      if (marker.startsWith(candidate)) {
+        return "";
+      }
+      return this.release();
+    }
+    if (candidate.startsWith(marker)) {
+      this.decided = true;
+      this.isMarker = true;
+      this.buffer = "";
+      return "";
+    }
+    return this.release();
+  }
+  /**
+   * Whatever is still withheld once the stream ends — a reply that stopped
+   * mid-marker, for instance, which is not the marker and has to be shown.
+   */
+  flush() {
+    if (this.isMarker) {
+      return "";
+    }
+    return this.release();
+  }
+  get matched() {
+    return this.isMarker;
+  }
+  release() {
+    const held = this.buffer;
+    this.buffer = "";
+    this.decided = true;
+    return held;
+  }
+};
+
 // Resources/Private/TypeScript/rendering/SafeResponseRenderer.ts
 var WEB_PROTOCOLS = /* @__PURE__ */ new Set(["http:", "https:"]);
 var URL_CANDIDATE = /https?:\/\/[^\s<>"']+/giu;
@@ -1223,13 +1282,19 @@ var ChatController = class {
       const output = this.appendMessage("assistant", "");
       const renderer = new SafeResponseRenderer(output, this.options.labels.newTab);
       const signal = this.abortController?.signal;
+      const gate = new NotFoundGate(this.options.notFoundMarker);
       await this.session?.ask(
         question,
-        (chunk) => renderer.appendChunk(chunk),
+        (chunk) => {
+          const renderable = gate.accept(chunk);
+          if (renderable.length > 0) {
+            renderer.appendChunk(renderable);
+          }
+        },
         signal
       );
       if (this.isCurrent(operation)) {
-        this.announce(output.textContent ?? "");
+        this.completeAnswer(gate, output, renderer);
         this.setState("ready");
         this.focusQuestion();
       }
@@ -1243,6 +1308,26 @@ var ChatController = class {
         this.abortController = void 0;
       }
     }
+  }
+  /**
+   * Settles a finished reply: either the model signalled that the page does not
+   * answer the question, in which case the editor's prepared element takes the
+   * place of the reply, or the withheld start of a real answer is released and
+   * the whole thing announced.
+   */
+  completeAnswer(gate, output, renderer) {
+    const withheld = gate.flush();
+    const prepared = this.elements.notFound;
+    if (gate.matched && prepared !== void 0) {
+      output.remove();
+      prepared.hidden = false;
+      this.announce(prepared.textContent ?? "");
+      return;
+    }
+    if (withheld.length > 0) {
+      renderer.appendChunk(withheld);
+    }
+    this.announce(output.textContent ?? "");
   }
   appendMessage(role, content) {
     const message = this.root.ownerDocument.createElement("div");
@@ -1357,6 +1442,9 @@ function collectElements(root) {
   return {
     assistant: required(root, "[data-nr-browser-ai-assistant]", HTMLElement),
     fallback: required(root, "[data-nr-browser-ai-fallback]", HTMLElement),
+    // Optional: present only when the editor picked a content element for the
+    // case where the page does not answer the question.
+    notFound: optional(root, "[data-nr-browser-ai-not-found]"),
     status: required(root, "[data-nr-browser-ai-status]", HTMLElement),
     setup: required(root, "[data-nr-browser-ai-setup]", HTMLButtonElement),
     progress: required(root, "[data-nr-browser-ai-progress]", HTMLProgressElement),
@@ -1369,6 +1457,10 @@ function collectElements(root) {
     reset: required(root, "[data-nr-browser-ai-reset]", HTMLButtonElement),
     retry: required(root, "[data-nr-browser-ai-retry]", HTMLButtonElement)
   };
+}
+function optional(root, selector) {
+  const element = root.querySelector(selector);
+  return element instanceof HTMLElement ? element : void 0;
 }
 function required(root, selector, constructor) {
   const element = root.querySelector(selector);
@@ -1431,6 +1523,7 @@ function configuration(root, sourceDocument) {
   const contextSelector = root.dataset.contextSelector?.trim() ?? "";
   const systemPrompt = root.dataset.systemPrompt?.trim() ?? "";
   const supplementalInstruction = root.dataset.supplementalInstruction?.trim() ?? "";
+  const notFoundMarker = root.dataset.notFoundMarker?.trim() ?? "";
   const contextUsageLimit = Number(root.dataset.contextUsageLimit);
   if (contextSelector.length === 0) {
     throw new Error("Missing context selector.");
@@ -1454,6 +1547,7 @@ function configuration(root, sourceDocument) {
     contextUsageLimit,
     systemPrompt,
     supplementalInstruction,
+    notFoundMarker,
     inputLanguages,
     outputLanguages: [outputLanguage],
     labels: labels(root)

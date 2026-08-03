@@ -8,6 +8,7 @@ import {
     ELEMENT_HOOKS,
     ENGLISH_LABELS,
     LABEL_ATTRIBUTES,
+    SERVER_RENDERED_HOOKS,
 } from '../Fixtures/AssistantMarkup';
 import {ChatController} from '../../Resources/Private/TypeScript/ui/ChatController';
 import type {PageContextProvider} from '../../Resources/Private/TypeScript/context/PageContextProvider';
@@ -26,11 +27,12 @@ function attributesIn(source: string, pattern: RegExp): string[] {
 
 const HOOK_PATTERN = /data-nr-browser-ai-[a-z-]+/gu;
 const LABEL_PATTERN = /data-label-[a-z-]+/gu;
-const CONFIGURATION_PATTERN = /data-(?:context-selector|context-usage-limit|system-prompt|supplemental-instruction)/gu;
+const CONFIGURATION_PATTERN = /data-(?:context-selector|context-usage-limit|system-prompt|supplemental-instruction|not-found-marker)/gu;
 
 describe('assistant template contract', () => {
     it('exposes exactly the element hooks the shared fixture provides', () => {
-        expect(attributesIn(template, HOOK_PATTERN)).toEqual([...ELEMENT_HOOKS].sort());
+        expect(attributesIn(template, HOOK_PATTERN))
+            .toEqual([...ELEMENT_HOOKS, ...SERVER_RENDERED_HOOKS].sort());
     });
 
     it('exposes exactly the label attributes the shared fixture provides', () => {

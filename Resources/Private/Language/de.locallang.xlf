@@ -20,6 +20,13 @@
             <trans-unit id="status.errorRetryable"><source>Browser AI could not be reached. You can retry.</source><target>Browser-KI konnte nicht erreicht werden. Sie können es erneut versuchen.</target></trans-unit>
             <trans-unit id="status.unavailable"><source>Browser AI is unavailable in this browser.</source><target>Browser-KI ist in diesem Browser nicht verfügbar.</target></trans-unit>
             <trans-unit id="link.newTab"><source>Opens in a new tab.</source><target>Wird in einem neuen Tab geöffnet.</target></trans-unit>
+            <trans-unit id="configuration.summary"><source>How this assistant is configured</source><target>Wie dieser Assistent eingestellt ist</target></trans-unit>
+            <trans-unit id="configuration.lead"><source>These are the instructions and limits this assistant works under. Everything below runs in your browser; nothing is sent to a server.</source><target>Das sind die Anweisungen und Grenzen, unter denen dieser Assistent arbeitet. Alles davon läuft in Ihrem Browser; an einen Server geht nichts.</target></trans-unit>
+            <trans-unit id="configuration.systemPrompt"><source>System prompt</source><target>System-Prompt</target></trans-unit>
+            <trans-unit id="configuration.supplementalInstruction"><source>Editor instruction</source><target>Anweisung der Redaktion</target></trans-unit>
+            <trans-unit id="configuration.contextSelector"><source>Page area used as the source</source><target>Als Quelle genutzter Seitenbereich</target></trans-unit>
+            <trans-unit id="configuration.contextUsageLimit"><source>Share of the model input the page text may occupy</source><target>Anteil der Modell-Eingabe, den der Seitentext belegen darf</target></trans-unit>
+            <trans-unit id="configuration.note"><source>The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</source><target>Das Modell erhält zusätzlich die Anweisung, in der Sprache der Frage zu antworten, sowie den Text des gewählten Seitenbereichs. Mehr wird ihm nicht übergeben.</target></trans-unit>
         </body>
     </file>
 </xliff>
