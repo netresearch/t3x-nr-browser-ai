@@ -5,6 +5,31 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-03
+
+### Added
+
+- A per-content-element switch that discloses what the assistant sends: the
+  system prompt, the editor instruction, the page area used as the source and
+  the context limit, rendered from the values the assistant itself uses. It sits
+  outside the block that stays hidden until the browser reports a usable model,
+  so what would be sent is readable in a browser that cannot run the assistant —
+  which is most of them.
+- An answer for the questions the page cannot answer. `notFoundMode` set to
+  `contentElement` shows an editor-selected element in place of the model's
+  refusal, picked under the same rules as `fallbackContent`. The model is asked
+  to signal an unanswerable question with a marker, and the interface swaps in
+  the prepared element.
+
+  The instruction and the marker are added only when the selected element
+  actually renders, so a missing, hidden or cyclic reference can never leave a
+  visitor looking at the bare token. A model that ignores the marker answers as
+  before, so the failure mode is the previous behaviour.
+
+### Supported versions
+
+Unchanged from 0.3.0.
+
 ## [0.3.0] - 2026-08-02
 
 ### Added
@@ -89,5 +114,6 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.4.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.4.0
 [0.3.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.3.0
 [0.2.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.2.0
