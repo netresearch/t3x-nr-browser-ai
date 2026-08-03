@@ -77,6 +77,7 @@ function configuration(root: HTMLElement, sourceDocument: Document) {
     const contextSelector = root.dataset.contextSelector?.trim() ?? '';
     const systemPrompt = root.dataset.systemPrompt?.trim() ?? '';
     const supplementalInstruction = root.dataset.supplementalInstruction?.trim() ?? '';
+    const notFoundMarker = root.dataset.notFoundMarker?.trim() ?? '';
     const contextUsageLimit = Number(root.dataset.contextUsageLimit);
 
     if (contextSelector.length === 0) {
@@ -103,6 +104,7 @@ function configuration(root: HTMLElement, sourceDocument: Document) {
         contextUsageLimit,
         systemPrompt,
         supplementalInstruction,
+        notFoundMarker,
         inputLanguages,
         outputLanguages: [outputLanguage],
         labels: labels(root),

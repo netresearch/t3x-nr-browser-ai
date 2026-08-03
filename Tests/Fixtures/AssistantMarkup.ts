@@ -37,6 +37,7 @@ export const ELEMENT_HOOKS = [
  */
 export const SERVER_RENDERED_HOOKS = [
     'data-nr-browser-ai-configuration',
+    'data-nr-browser-ai-not-found',
 ] as const;
 
 /** Configuration attributes the bundle reads when bootstrapping an instance. */
@@ -45,6 +46,7 @@ export const CONFIGURATION_ATTRIBUTES = [
     'data-context-usage-limit',
     'data-system-prompt',
     'data-supplemental-instruction',
+    'data-not-found-marker',
 ] as const;
 
 /**
@@ -83,6 +85,7 @@ export interface AssistantConfiguration {
     contextUsageLimit: string;
     systemPrompt: string;
     supplementalInstruction: string;
+    notFoundMarker: string;
 }
 
 export interface AssistantMarkupOptions {
@@ -112,6 +115,7 @@ export function assistantSection(options: AssistantMarkupOptions = {}): string {
             'data-context-usage-limit': options.configuration.contextUsageLimit,
             'data-system-prompt': options.configuration.systemPrompt,
             'data-supplemental-instruction': options.configuration.supplementalInstruction,
+            'data-not-found-marker': options.configuration.notFoundMarker,
         })
             .filter((entry): entry is [string, string] => entry[1] !== undefined)
             .map(([attribute, value]) => ` ${attribute}="${escapeAttribute(value)}"`)

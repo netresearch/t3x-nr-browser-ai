@@ -79,6 +79,7 @@
         data-label-reset-required="The model context is full. Reset the conversation to continue."
         data-label-error-retryable="Browser AI could not be reached. You can retry."
         data-label-unavailable="Browser AI is unavailable in this browser."
+        data-not-found-marker="NOT_IN_SOURCE"
         data-label-new-tab="Opens in a new tab.">
         <div data-nr-browser-ai-fallback>
           <div class="fallback-note">
@@ -107,6 +108,17 @@
           </dl>
           <p class="nr-browser-ai__configuration-note">The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</p>
         </details>
+        <div class="nr-browser-ai__not-found" data-nr-browser-ai-not-found hidden>
+          <div class="fallback-note">
+            <h3>That is not on this page</h3>
+            <p>
+              The assistant answers from this page only. When the page does not
+              carry the answer, an editor can put something useful here instead of
+              a bare refusal — a link to the search, a contact address, a related
+              page. This box is that content element.
+            </p>
+          </div>
+        </div>
         <div data-nr-browser-ai-assistant hidden>
           <header class="nr-browser-ai__header">
             <a class="nr-browser-ai__brand-link" href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH">

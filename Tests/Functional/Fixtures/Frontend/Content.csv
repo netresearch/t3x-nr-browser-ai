@@ -25,6 +25,12 @@
                 <field index=""settings.showConfiguration"">
                     <value index=""vDEF"">1</value>
                 </field>
+                <field index=""settings.notFoundMode"">
+                    <value index=""vDEF"">contentElement</value>
+                </field>
+                <field index=""settings.notFoundContent"">
+                    <value index=""vDEF"">tt_content_20</value>
+                </field>
                 <field index=""settings.fallbackMode"">
                     <value index=""vDEF"">contentElement</value>
                 </field>
@@ -36,6 +42,7 @@
     </data>
 </T3FlexForms>"
 ,2,1,"text","Fallback","<p data-fallback-output>Rendered fallback content</p>",1,512,0,0,0,""
+,20,1,"text","Not found","<p data-not-found-output>Prepared guidance for an unanswerable question</p>",1,520,0,0,0,""
 ,3,2,"nrbrowserai_assistant","No fallback","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <T3FlexForms>
     <data>

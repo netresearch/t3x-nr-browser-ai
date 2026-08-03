@@ -27,7 +27,7 @@ function attributesIn(source: string, pattern: RegExp): string[] {
 
 const HOOK_PATTERN = /data-nr-browser-ai-[a-z-]+/gu;
 const LABEL_PATTERN = /data-label-[a-z-]+/gu;
-const CONFIGURATION_PATTERN = /data-(?:context-selector|context-usage-limit|system-prompt|supplemental-instruction)/gu;
+const CONFIGURATION_PATTERN = /data-(?:context-selector|context-usage-limit|system-prompt|supplemental-instruction|not-found-marker)/gu;
 
 describe('assistant template contract', () => {
     it('exposes exactly the element hooks the shared fixture provides', () => {

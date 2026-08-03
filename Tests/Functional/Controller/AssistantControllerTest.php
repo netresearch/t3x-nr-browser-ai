@@ -187,8 +187,11 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertStringContainsString('/typo3conf/ext/nr_browser_ai/Resources/Public/Icons/Extension.svg', $body);
         self::assertStringContainsString('data-context-selector="main"', $body);
         self::assertStringContainsString('data-context-usage-limit="0.8"', $body);
+        // The editor's prompt, plus the instruction the not-found content element
+        // adds — asserted as composition rather than equality, so the two parts
+        // stay distinguishable when either changes.
         self::assertStringContainsString(
-            'data-system-prompt="&quot;Configured&quot; &amp; trusted"',
+            'data-system-prompt="&quot;Configured&quot; &amp; trusted If the answer is not present',
             $body,
         );
         self::assertStringContainsString(
@@ -275,7 +278,7 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-configuration', $body);
-        self::assertStringContainsString('<dd>&quot;Configured&quot; &amp; trusted</dd>', $body);
+        self::assertStringContainsString('<dd>&quot;Configured&quot; &amp; trusted If the answer is not present', $body);
         self::assertStringContainsString('<dd>&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</dd>', $body);
         self::assertStringContainsString('<dd>0.8</dd>', $body);
         self::assertStringContainsString('<code>main</code>', $body);
@@ -299,6 +302,46 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-root', $body);
         self::assertStringNotContainsString('data-nr-browser-ai-configuration', $body);
+    }
+
+    /**
+     * The instruction and the marker only appear when the editor actually picked
+     * a content element for the case: asking a model to answer with a token, then
+     * having nothing to put in its place, would leave the visitor with the token.
+     */
+    #[Test]
+    public function theNotFoundInstructionAndMarkerAppearOnlyWithPreparedContent(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-not-found-marker="NOT_IN_SOURCE"', $body);
+        self::assertStringContainsString(
+            'reply with exactly NOT_IN_SOURCE and nothing else.',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<div[^>]+data-nr-browser-ai-not-found[^>]*hidden[^>]*>\s*'
+            . '<p data-not-found-output>Prepared guidance for an unanswerable question<\/p>\s*<\/div>/',
+            $body,
+        );
+    }
+
+    #[Test]
+    public function noNotFoundMarkerIsPromisedWithoutPreparedContent(): void
+    {
+        $response = $this->executeFrontendSubRequest(
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
+        );
+        $body = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('data-not-found-marker=""', $body);
+        self::assertStringNotContainsString('NOT_IN_SOURCE', $body);
+        self::assertStringNotContainsString('data-nr-browser-ai-not-found', $body);
     }
 
     #[Test]

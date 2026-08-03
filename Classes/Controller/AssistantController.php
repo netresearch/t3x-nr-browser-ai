@@ -39,6 +39,14 @@ final class AssistantController extends ActionController
 
     private const MAX_CONTEXT_SELECTOR_LENGTH = 256;
 
+    /**
+     * Emitted by the model when the page does not answer the question, and
+     * replaced by the editor's content element in the interface. The instruction
+     * that asks for it is only added when that content element exists, so a
+     * plugin without one keeps the prompt it had.
+     */
+    private const NOT_IN_SOURCE_MARKER = 'NOT_IN_SOURCE';
+
     private static int $renderSequence = 0;
 
     private ?FallbackContentRenderer $fallbackContentRenderer = null;
@@ -63,6 +71,27 @@ final class AssistantController extends ActionController
                 $currentContentUid,
                 $currentContentObject,
             );
+            $settings['notFoundContent'] = $this->fallbackContentRenderer->render(
+                $settings['notFoundMode'],
+                $this->normalizeContentUid($this->settings['notFoundContent'] ?? null),
+                $currentContentUid,
+                $currentContentObject,
+            );
+        }
+
+        // An unanswerable question is only worth intercepting when there is
+        // something to show instead, so the instruction and the marker follow the
+        // rendered content rather than the mode alone: a mode set to
+        // contentElement with a missing, hidden or cyclic reference renders
+        // nothing, and would otherwise leave the visitor with a bare marker.
+        if ($settings['notFoundContent'] !== '') {
+            $settings['notFoundMarker'] = self::NOT_IN_SOURCE_MARKER;
+            $settings['systemPrompt']   = trim(
+                $settings['systemPrompt']
+                . ' If the answer is not present in the source, reply with exactly '
+                . self::NOT_IN_SOURCE_MARKER
+                . ' and nothing else.',
+            );
         }
 
         $this->view->assignMultiple($settings);
@@ -78,6 +107,9 @@ final class AssistantController extends ActionController
      *     supplementalInstruction: string,
      *     fallbackMode: 'none'|'contentElement',
      *     fallbackContent: string,
+     *     notFoundMode: 'none'|'contentElement',
+     *     notFoundContent: string,
+     *     notFoundMarker: string,
      *     title: string,
      *     introduction: string,
      *     showConfiguration: bool
@@ -98,10 +130,8 @@ final class AssistantController extends ActionController
             $contextUsageLimit = self::DEFAULT_CONTEXT_USAGE_LIMIT;
         }
 
-        $fallbackMode = $this->stringSetting('fallbackMode', 'none');
-        if (!in_array($fallbackMode, ['none', 'contentElement'], true)) {
-            $fallbackMode = 'none';
-        }
+        $fallbackMode = $this->contentReferenceMode('fallbackMode');
+        $notFoundMode = $this->contentReferenceMode('notFoundMode');
 
         return [
             'contextSelector'         => $contextSelector,
@@ -110,10 +140,23 @@ final class AssistantController extends ActionController
             'supplementalInstruction' => $this->stringSetting('supplementalInstruction'),
             'fallbackMode'            => $fallbackMode,
             'fallbackContent'         => '',
+            'notFoundMode'            => $notFoundMode,
+            'notFoundContent'         => '',
+            'notFoundMarker'          => '',
             'title'                   => $this->stringSetting('title'),
             'introduction'            => $this->stringSetting('introduction'),
             'showConfiguration'       => $this->booleanSetting('showConfiguration'),
         ];
+    }
+
+    /**
+     * @return 'none'|'contentElement'
+     */
+    private function contentReferenceMode(string $name): string
+    {
+        $mode = $this->stringSetting($name, 'none');
+
+        return $mode === 'contentElement' ? 'contentElement' : 'none';
     }
 
     /**

@@ -335,6 +335,12 @@
     font-size: 0.9375em;
 }
 
+/* Shown in place of the model's reply when the page does not answer the
+   question. Same padding as the assistant block it replaces. */
+.nr-browser-ai__not-found {
+    padding: clamp(1rem, 4vw, 3rem);
+}
+
 @media (forced-colors: active) {
     .nr-browser-ai,
     .nr-browser-ai__status,
