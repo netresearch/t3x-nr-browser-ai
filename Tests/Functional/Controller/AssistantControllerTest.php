@@ -45,6 +45,14 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {
+    /**
+     * The site fixture's base. Named rather than repeated, so a change to the
+     * fixture is one edit instead of a search across every request below.
+     */
+    private const BASE_URL = 'https://website.local/';
+
+    private const URL_NONE = self::BASE_URL . 'none';
+
     protected array $coreExtensionsToLoad = [
         'extbase',
         'fluid',
@@ -151,7 +159,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function frontendRequestDispatchesPluginAndRendersEscapedProgressiveRootContract(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/'))->withPageId(1),
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
         );
         $body = (string) $response->getBody();
 
@@ -211,7 +219,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function noneModeRendersAnEmptyFallbackThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/none'))->withPageId(2),
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
         );
         $body = (string) $response->getBody();
 
@@ -235,7 +243,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function theTypoScriptSystemPromptDefaultReachesTheMarkupInFull(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/none'))->withPageId(2),
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
         );
         $body = (string) $response->getBody();
 
@@ -261,7 +269,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function theConfigurationDisclosureNamesTheEffectiveSettings(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/'))->withPageId(1),
+            (new InternalRequest(self::BASE_URL))->withPageId(1),
         );
         $body = (string) $response->getBody();
 
@@ -284,7 +292,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function theConfigurationDisclosureIsAbsentUnlessTheEditorEnablesIt(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/none'))->withPageId(2),
+            (new InternalRequest(self::URL_NONE))->withPageId(2),
         );
         $body = (string) $response->getBody();
 
@@ -297,7 +305,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function selfReferenceFailsClosedWithoutRenderingThePluginRecursively(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/self-reference'))->withPageId(3),
+            (new InternalRequest(self::BASE_URL . 'self-reference'))->withPageId(3),
         );
         $body = (string) $response->getBody();
 
@@ -313,7 +321,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function nonScalarUidExpressionIsRejectedThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/invalid-fallback'))->withPageId(4),
+            (new InternalRequest(self::BASE_URL . 'invalid-fallback'))->withPageId(4),
         );
         $body = (string) $response->getBody();
 
@@ -329,7 +337,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function indirectFallbackCycleIsBoundedThroughFrontendDispatch(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/indirect-cycle'))->withPageId(5),
+            (new InternalRequest(self::BASE_URL . 'indirect-cycle'))->withPageId(5),
         );
         $body = (string) $response->getBody();
 
@@ -344,7 +352,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     public function visibleCrossPageContentElementIsRenderedAsFallback(): void
     {
         $response = $this->executeFrontendSubRequest(
-            (new InternalRequest('https://website.local/cross-page'))->withPageId(6),
+            (new InternalRequest(self::BASE_URL . 'cross-page'))->withPageId(6),
         );
         $body = (string) $response->getBody();
 
@@ -361,7 +369,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     {
         foreach ([8 => 'hidden', 9 => 'deleted'] as $pageId => $marker) {
             $response = $this->executeFrontendSubRequest(
-                (new InternalRequest('https://website.local/' . $marker . '-fallback'))->withPageId($pageId),
+                (new InternalRequest(self::BASE_URL . $marker . '-fallback'))->withPageId($pageId),
             );
             $body = (string) $response->getBody();
 
