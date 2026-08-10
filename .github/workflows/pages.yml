@@ -50,11 +50,25 @@ jobs:
       - name: Verify committed assets are current
         run: git diff --exit-code -- Resources/Public
 
+      # Runs before the page is assembled: the render needs the origin and the
+      # base path to build canonical, hreflang and sitemap URLs.
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
       - name: Assemble the page
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: npm run build:demo
 
-      - name: Configure Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # Gates the artifact: an unresolved placeholder, a manifest that disagrees
+      # with ext_emconf.php, a version the manifest does not know, missing
+      # metadata, an untagged contact link, a third-party asset request, or a
+      # capability check that would start a model download all fail here.
+      - name: Verify the rendered page
+        run: npm run verify:demo
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

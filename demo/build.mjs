@@ -6,20 +6,25 @@
  * request — including for fonts.
  *
  * Run `npm run build && npm run build:css` first; this script copies the
- * committed output rather than rebuilding it.
+ * committed output rather than rebuilding it. The HTML itself is rendered from
+ * demo/content/<lang>.json and the derived project manifest — see render.mjs.
  */
 
 import {cp, mkdir, rm} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {render} from './render.mjs';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(root, 'public');
 
 /** @type {ReadonlyArray<readonly [string, string]>} */
 const FILES = [
-    ['demo/index.html', 'index.html'],
     ['demo/demo.css', 'assets/demo.css'],
+    ['demo/capability-check.js', 'assets/capability-check.js'],
+    ['demo/og-browser-ai-en.png', 'assets/og-browser-ai-en.png'],
+    ['demo/og-browser-ai-de.png', 'assets/og-browser-ai-de.png'],
     ['Resources/Public/JavaScript/Assistant.js', 'assets/Assistant.js'],
     ['Resources/Public/Css/Assistant.css', 'assets/Assistant.css'],
     ['Resources/Public/Icons/Extension.svg', 'assets/icon.svg'],
@@ -37,4 +42,10 @@ for (const [source, target] of FILES) {
     await cp(resolve(root, source), destination);
 }
 
-process.stdout.write(`Assembled ${FILES.length} files into ${output}\n`);
+const manifest = await render();
+
+process.stdout.write(
+    `Assembled ${FILES.length} files and rendered 2 pages into ${output}\n`
+    + `Manifest: ${manifest.name} ${manifest.stage}, main ${manifest.main_version}, `
+    + `release ${manifest.latest_release ?? 'unknown'}\n`,
+);
