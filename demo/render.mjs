@@ -45,6 +45,14 @@ function contactUrl(position) {
     return `${CONTACT_BASE}?${params}`;
 }
 
+/**
+ * A release tag from the API is network data. It ends up in the manifest, in the
+ * page and in a file path, so it is validated rather than trusted: anything that
+ * is not a plain semantic-version tag is treated as no release at all.
+ */
+const TAG_PATTERN = /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 const ESCAPES = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
 
 /** Escape for text and attribute contexts. */
@@ -86,8 +94,13 @@ async function buildManifest() {
         );
         if (response.ok) {
             const payload = await response.json();
-            latestRelease = payload.tag_name ?? null;
-            releaseDate = payload.published_at ? payload.published_at.slice(0, 10) : null;
+            const tag = String(payload.tag_name ?? '');
+            const published = String(payload.published_at ?? '').slice(0, 10);
+            latestRelease = TAG_PATTERN.test(tag) ? tag : null;
+            releaseDate = latestRelease && DATE_PATTERN.test(published) ? published : null;
+            if (tag && !latestRelease) {
+                process.stderr.write(`render: ignoring release tag that is not a version: ${JSON.stringify(tag)}\n`);
+            }
         }
     } catch (error) {
         // A build without network access still produces a manifest — it says the
@@ -133,8 +146,16 @@ const logo = `<svg class="brand__logo" viewBox="-75 -75 440 440" xmlns="http://w
         </g>
       </svg>`;
 
-/** The real extension widget, with its labels taken from the content file. */
-function assistant(c, base) {
+/**
+ * The real extension widget, with its labels taken from the content file.
+ *
+ * Exported so Tests/JavaScript/TemplateContract.test.ts can compare the hooks,
+ * labels and configuration attributes this page renders against the Fluid
+ * template the extension ships — without building the site first. A demo that
+ * drifts from the template advertises a component the extension no longer
+ * renders, which is exactly what that test exists to catch.
+ */
+export function assistantMarkup(c) {
     const a = c.assistant;
     return `<section
         id="nr-browser-ai-demo"
@@ -394,7 +415,7 @@ function page(c, manifest, lang) {
       </ul>
       <p class="note">${e(c.demo.questionsNote)}</p>
 
-      ${assistant(c, base)}
+      ${assistantMarkup(c)}
     </div>
   </section>
 
