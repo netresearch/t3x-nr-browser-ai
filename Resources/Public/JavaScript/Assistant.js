@@ -2395,6 +2395,7 @@ var FormAssistantController = class _FormAssistantController {
     }
   }
   setStatus(status, detail) {
+    this.root.dataset["state"] = status;
     const element = this.element("status");
     const label = this.label(LABEL_KEYS[status]);
     element.textContent = detail === void 0 || detail === "" ? label : `${label} (${detail})`;

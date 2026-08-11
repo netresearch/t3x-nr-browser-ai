@@ -314,6 +314,11 @@ export class FormAssistantController implements ToolObserver {
     }
 
     private setStatus(status: Status, detail?: string): void {
+        // Mirrors the page assistant: the state is on the root as an attribute
+        // so styling and the end-to-end suite can both see it without reading
+        // the wording of a localised message.
+        this.root.dataset['state'] = status;
+
         const element = this.element('status');
         const label = this.label(LABEL_KEYS[status]);
         element.textContent = detail === undefined || detail === '' ? label : `${label} (${detail})`;
