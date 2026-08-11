@@ -60,12 +60,42 @@ test('published demo page requests nothing from a third party', async ({page}) =
     expect(loadedFonts).toBeGreaterThanOrEqual(4);
 });
 
-test('published demo page has no accessibility violations', async ({page}) => {
-    await page.goto('/');
+// Both languages and both colour schemes. A light-only audit of one page says
+// nothing about the other three combinations: a dark palette is a separate set
+// of colour pairs, and the German page is a separate render. The same audit run
+// across the sibling Netresearch sites found 243 contrast failures that their
+// markup-level gates had passed.
+for (const route of ['/', '/de/']) {
+    for (const colorScheme of ['light', 'dark'] as const) {
+        test(`published demo page ${route} has no accessibility violations in ${colorScheme} mode`,
+            async ({page}) => {
+                await page.emulateMedia({colorScheme});
+                await page.goto(route);
 
-    const results = await new AxeBuilder({page})
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-        .analyze();
+                const results = await new AxeBuilder({page})
+                    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                    .analyze();
 
-    expect(results.violations).toEqual([]);
-});
+                expect(results.violations).toEqual([]);
+            });
+    }
+}
+
+// An axe run on a page whose stylesheet 404ed finds no contrast failures at all
+// and passes for the wrong reason, so a silent asset error has to fail on its
+// own. The third-party test above watches what the page reaches for; this one
+// watches whether it got it.
+for (const route of ['/', '/de/']) {
+    test(`published demo page ${route} serves every asset it requests`, async ({page}) => {
+        const broken: string[] = [];
+        page.on('response', response => {
+            if (response.status() >= 400) {
+                broken.push(`${response.status()} ${response.url()}`);
+            }
+        });
+
+        await page.goto(route, {waitUntil: 'networkidle'});
+
+        expect(broken).toEqual([]);
+    });
+}
