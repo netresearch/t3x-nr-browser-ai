@@ -87,7 +87,7 @@ $expectedScripts = [
     "test:js" => "vitest run",
     "test:js:coverage" => "vitest run --coverage",
     "test:e2e" => "playwright test -c Tests/E2E/playwright.config.ts",
-    "ci" => "npm run build && npm run build:css && npm run test:js",
+    "ci" => "npm run typecheck && npm run build && npm run build:css && npm run test:js",
     "typecheck" => "tsc --noEmit",
 ];
 $expectedDevDependencies = [
