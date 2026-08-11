@@ -587,3 +587,62 @@
     border-block-start: 0.0625rem solid var(--nr-border);
     font-size: 0.875rem;
 }
+
+/*
+ * A readable default for the controls EXT:form renders, and nothing more.
+ *
+ * Every selector below sits in :where(), so it contributes no specificity at
+ * all and any rule a site package states — Bootstrap's own, or a theme's —
+ * wins without needing to be more specific. That is what makes it safe to
+ * state a default here: on a styled site these rules simply lose, and on a
+ * site with no form styling the plugin is still readable instead of a run of
+ * inline labels, inputs and descriptions.
+ *
+ * Deliberately absent: borders, backgrounds and colours on the controls
+ * themselves. Setting those is what produces the doubled frames around
+ * composite controls that a theme has already styled.
+ */
+.nr-browser-ai-form :where(.form-element) {
+    margin-block-end: 1rem;
+}
+
+.nr-browser-ai-form :where(.form-label) {
+    display: block;
+    margin-block-end: 0.25rem;
+    font-weight: 600;
+}
+
+.nr-browser-ai-form :where(.form-text) {
+    display: block;
+    margin-block-start: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.nr-browser-ai-form :where(.form-control, .form-select) {
+    max-inline-size: 100%;
+}
+
+.nr-browser-ai-form :where(fieldset) {
+    margin-block-end: 1.5rem;
+    padding: 1rem;
+    border: 0.0625rem solid var(--nr-border);
+    border-radius: 0.25rem;
+}
+
+.nr-browser-ai-form :where(legend) {
+    padding-inline: 0.5rem;
+    font-weight: 600;
+}
+
+/*
+ * Forty-four checkboxes in one column is a scroll, not a choice. Columns keep
+ * the DOM order, so tab order and screen-reader order are unaffected.
+ */
+.nr-browser-ai-form :where(fieldset .form-check) {
+    break-inside: avoid;
+}
+
+.nr-browser-ai-form :where(fieldset > [role="group"], fieldset > [role="radiogroup"]) {
+    columns: 16rem auto;
+    column-gap: 2rem;
+}

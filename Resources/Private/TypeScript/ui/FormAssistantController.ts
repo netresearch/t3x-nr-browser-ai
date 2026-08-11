@@ -1,5 +1,6 @@
 import {readFormSchema} from '../form/FormSchemaSource';
 import {FormFiller} from '../form/FormFiller';
+import {correctCheckboxGroupRoles} from '../form/GroupRoles';
 import type {FormSchema, FormValues} from '../form/FormSchema';
 import type {ActionOutcome, FormAction} from '../query/FormAction';
 import {OpenMeteoQuery} from '../query/OpenMeteoQuery';
@@ -154,6 +155,7 @@ export class FormAssistantController implements ToolObserver {
     }
 
     private start(): void {
+        correctCheckboxGroupRoles(this.form);
         bindModelContext(this.tool, this.lifetime.signal);
 
         this.form.addEventListener('submit', event => {

@@ -1674,6 +1674,19 @@ function notify(control) {
   control.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+// Resources/Private/TypeScript/form/GroupRoles.ts
+function correctCheckboxGroupRoles(form) {
+  let corrected = 0;
+  for (const group of form.querySelectorAll('[role="radiogroup"]')) {
+    if (group.querySelector('input[type="checkbox"]') === null) {
+      continue;
+    }
+    group.setAttribute("role", "group");
+    corrected++;
+  }
+  return corrected;
+}
+
 // Resources/Private/TypeScript/query/OpenMeteoQuery.ts
 var GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 var FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
@@ -2263,6 +2276,7 @@ var FormAssistantController = class _FormAssistantController {
     }
   }
   start() {
+    correctCheckboxGroupRoles(this.form);
     bindModelContext(this.tool, this.lifetime.signal);
     this.form.addEventListener("submit", (event) => {
       event.preventDefault();
