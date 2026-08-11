@@ -56,6 +56,27 @@
             <trans-unit id="flexform.item.notFoundMode.contentElement" resname="flexform.item.notFoundMode.contentElement">
                 <source>Content element</source>
             </trans-unit>
+            <trans-unit id="plugin.formAssistant.title" resname="plugin.formAssistant.title">
+                <source>Browser AI form assistant</source>
+            </trans-unit>
+            <trans-unit id="plugin.formAssistant.description" resname="plugin.formAssistant.description">
+                <source>On-device assistant that fills a parameter-rich form from one sentence and runs it</source>
+            </trans-unit>
+            <trans-unit id="flexform.sheet.formAssistant" resname="flexform.sheet.formAssistant">
+                <source>Form assistant</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.formIdentifier" resname="flexform.field.formIdentifier">
+                <source>Form</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.formIdentifier.description" resname="flexform.field.formIdentifier.description">
+                <source>The form this plugin renders and offers as a tool. Its definition is also what the input schema is derived from, so the controls and the schema always describe the same form.</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.formIdentifier.weatherQuery" resname="flexform.item.formIdentifier.weatherQuery">
+                <source>Weather query</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.showConfiguration.formAssistant.description" resname="flexform.field.showConfiguration.formAssistant.description">
+                <source>Renders a collapsed block naming the tool, its description, the system prompt, the input schema and the arguments of the last call. Visible whether or not the browser can run the model.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -6,3 +6,12 @@ services:
 
   Netresearch\NrBrowserAi\:
     resource: '../Classes/*'
+
+  # EXT:form's rendering view helper resolves a factory by class name straight
+  # from the container, so this one has to be public. Its second argument is
+  # named explicitly because FormFactoryInterface has more than one
+  # implementation and autowiring cannot choose between them.
+  Netresearch\NrBrowserAi\Domain\Form\FormAssistantFormFactory:
+    public: true
+    arguments:
+      $arrayFormFactory: '@TYPO3\CMS\Form\Domain\Factory\ArrayFormFactory'

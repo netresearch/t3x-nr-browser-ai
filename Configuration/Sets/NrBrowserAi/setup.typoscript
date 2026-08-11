@@ -24,6 +24,15 @@ tt_content.nrbrowserai_assistant {
     }
 }
 
+tt_content.nrbrowserai_formassistant = COA
+tt_content.nrbrowserai_formassistant {
+    20 = EXTBASEPLUGIN
+    20 {
+        extensionName = NrBrowserAi
+        pluginName = FormAssistant
+    }
+}
+
 page.includeJS.nrBrowserAi = EXT:nr_browser_ai/Resources/Public/JavaScript/Assistant.js
 page.includeJS.nrBrowserAi {
     type = module
@@ -42,5 +51,17 @@ plugin.tx_nrbrowserai_assistant {
         contextSelector = {$plugin.tx_nrbrowserai_assistant.settings.contextSelector}
         contextUsageLimit = {$plugin.tx_nrbrowserai_assistant.settings.contextUsageLimit}
         systemPrompt = {$plugin.tx_nrbrowserai_assistant.settings.systemPrompt}
+    }
+}
+
+plugin.tx_nrbrowserai_formassistant {
+    view {
+        templateRootPaths {
+            10 = EXT:nr_browser_ai/Resources/Private/Templates/
+        }
+    }
+
+    settings {
+        systemPrompt = {$plugin.tx_nrbrowserai_formassistant.settings.systemPrompt}
     }
 }

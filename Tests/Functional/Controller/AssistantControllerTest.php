@@ -56,6 +56,7 @@ final class AssistantControllerTest extends FunctionalTestCase
     protected array $coreExtensionsToLoad = [
         'extbase',
         'fluid',
+        'form',
         'frontend',
     ];
 

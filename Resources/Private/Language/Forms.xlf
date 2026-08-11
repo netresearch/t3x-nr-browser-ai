@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2026-08-11T00:00:00Z">
+        <body>
+            <trans-unit id="weatherQuery.element.weatherQuery.renderingOptions.submitButtonLabel"><source>Run query</source></trans-unit>
+            <trans-unit id="weatherQuery.element.place.properties.label"><source>Place</source></trans-unit>
+            <trans-unit id="weatherQuery.element.place.properties.elementDescription"><source>Name of the place the forecast is for, for example "Leipzig" or "Leipzig, Germany". It is resolved to coordinates before the forecast is requested.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.forecastDays.properties.label"><source>Forecast days</source></trans-unit>
+            <trans-unit id="weatherQuery.element.forecastDays.properties.elementDescription"><source>How many days ahead to forecast, counted from today. 0 requests no future days, 16 is the maximum the source provides.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.pastDays.properties.label"><source>Past days</source></trans-unit>
+            <trans-unit id="weatherQuery.element.pastDays.properties.elementDescription"><source>How many days of measured past weather to include before today. Use it when the question compares with recent weather; 92 is the maximum.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.hourlyVariables.properties.label"><source>Hourly variables</source></trans-unit>
+            <trans-unit id="weatherQuery.element.hourlyVariables.properties.elementDescription"><source>Variables reported for every hour. Pick the ones the question actually asks about; each one adds a column to the result.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.dailyVariables.properties.label"><source>Daily variables</source></trans-unit>
+            <trans-unit id="weatherQuery.element.dailyVariables.properties.elementDescription"><source>Variables aggregated per day. Prefer these over hourly ones when the question is about a day as a whole, such as a maximum, a total or a sunrise.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.currentVariables.properties.label"><source>Current conditions</source></trans-unit>
+            <trans-unit id="weatherQuery.element.currentVariables.properties.elementDescription"><source>Variables for the present moment. Pick these when the question is about right now rather than about a forecast.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.weatherModel.properties.label"><source>Weather model</source></trans-unit>
+            <trans-unit id="weatherQuery.element.weatherModel.properties.elementDescription"><source>Which numerical weather model to ask. Leave it at the automatic choice unless the question names a model or a national weather service.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.temperatureUnit.properties.label"><source>Temperature unit</source></trans-unit>
+            <trans-unit id="weatherQuery.element.temperatureUnit.properties.elementDescription"><source>Unit for every temperature in the result.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.windSpeedUnit.properties.label"><source>Wind speed unit</source></trans-unit>
+            <trans-unit id="weatherQuery.element.windSpeedUnit.properties.elementDescription"><source>Unit for every wind speed in the result.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.precipitationUnit.properties.label"><source>Precipitation unit</source></trans-unit>
+            <trans-unit id="weatherQuery.element.precipitationUnit.properties.elementDescription"><source>Unit for every precipitation amount in the result.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.timezone.properties.label"><source>Time zone</source></trans-unit>
+            <trans-unit id="weatherQuery.element.timezone.properties.elementDescription"><source>Time zone the reported times are in. The automatic choice uses the time zone of the place itself, which is almost always what a question means.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.cellSelection.properties.label"><source>Grid cell</source></trans-unit>
+            <trans-unit id="weatherQuery.element.cellSelection.properties.elementDescription"><source>Which grid cell to read when the place sits near a coast. Land is the usual choice; sea answers questions about water, nearest ignores the distinction.</source></trans-unit>
+        </body>
+    </file>
+</xliff>
