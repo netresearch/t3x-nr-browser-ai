@@ -646,3 +646,43 @@
     columns: 16rem auto;
     column-gap: 2rem;
 }
+
+/*
+ * The answer in words, directly under the request that produced it. It sits
+ * inside the assistant block, so it inherits that block's background and needs
+ * only the separation from the input row above it.
+ */
+.nr-browser-ai-form__prose:not(:empty) {
+    margin-block-start: 1.25rem;
+    padding-block-start: 1rem;
+    border-block-start: 0.0625rem solid var(--nr-border);
+    font-size: 1.0625rem;
+}
+
+.nr-browser-ai-form__prose > :first-child {
+    margin-block-start: 0;
+}
+
+.nr-browser-ai-form__prose > :last-child {
+    margin-block-end: 0;
+}
+
+/*
+ * The form after a run: present, one keystroke away, and no longer the first
+ * thing between the question and its answer.
+ */
+.nr-browser-ai-form__form {
+    margin-block: 1.5rem;
+    padding: 1rem;
+    border: 0.0625rem solid var(--nr-border);
+    border-radius: 0.25rem;
+}
+
+.nr-browser-ai-form__form-summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nr-browser-ai-form__form[open] .nr-browser-ai-form__form-summary {
+    margin-block-end: 1rem;
+}

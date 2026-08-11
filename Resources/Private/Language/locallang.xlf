@@ -34,7 +34,9 @@
             <trans-unit id="formStatus.ready"><source>Describe what you want and the form will be filled with it.</source></trans-unit>
             <trans-unit id="formStatus.deriving"><source>Deriving the parameters…</source></trans-unit>
             <trans-unit id="formStatus.querying"><source>Running the query…</source></trans-unit>
-            <trans-unit id="formStatus.filled"><source>Form filled and query answered. Adjust anything and run it again.</source></trans-unit>
+            <trans-unit id="formStatus.phrasing"><source>Putting the result into words…</source></trans-unit>
+            <trans-unit id="formDisclosure.summary"><source>Show the form these values were put into</source></trans-unit>
+            <trans-unit id="formStatus.filled"><source>Answered. Open the form below to see or correct the values it used.</source></trans-unit>
             <trans-unit id="formStatus.rejected"><source>The derived parameters did not fit the form, so nothing was changed. Try describing it differently.</source></trans-unit>
             <trans-unit id="formStatus.unresolvedPlace"><source>That place could not be found. Try a larger nearby place or add the country.</source></trans-unit>
             <trans-unit id="formStatus.queryFailed"><source>The data source could not be reached. The form keeps its values, so you can run it again.</source></trans-unit>

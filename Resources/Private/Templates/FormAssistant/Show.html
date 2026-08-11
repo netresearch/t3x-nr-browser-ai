@@ -17,6 +17,8 @@
     data-label-ready="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.ready')}"
     data-label-deriving="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.deriving')}"
     data-label-querying="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.querying')}"
+    data-label-phrasing="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.phrasing')}"
+    data-label-new-tab="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:link.newTab')}"
     data-label-filled="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.filled')}"
     data-label-rejected="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.rejected')}"
     data-label-unresolved-place="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.unresolvedPlace')}"
@@ -54,12 +56,25 @@
                 <button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-submit><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.derive" /></button>
             </div>
         </div>
+        <f:comment>
+            The answer in words, directly under the request that asked for it.
+            Rendered from untrusted model output through the same safe DOM
+            construction the page assistant uses — never innerHTML.
+        </f:comment>
+        <div class="nr-browser-ai-form__prose" data-nr-browser-ai-form-prose></div>
         <p class="nr-browser-ai-form__visually-hidden" data-nr-browser-ai-form-announcement aria-live="polite" aria-atomic="true"></p>
     </div>
 
-    <div class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields>
+    <f:comment>
+        Open until a run fills it. Collapsing afterwards puts the answer next to
+        the question instead of below seventy controls, and the disclosure keeps
+        the derived parameters one keystroke away — which is the whole point of
+        writing them into the visible form rather than querying behind its back.
+    </f:comment>
+    <details class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields open>
+        <summary class="nr-browser-ai-form__form-summary"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formDisclosure.summary" /></summary>
         <formvh:render factoryClass="Netresearch\NrBrowserAi\Domain\Form\FormAssistantFormFactory" overrideConfiguration="{formIdentifier: formIdentifier}" />
-    </div>
+    </details>
 
     <div class="nr-browser-ai-form__result" data-nr-browser-ai-form-result hidden></div>
 

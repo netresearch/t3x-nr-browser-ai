@@ -15,6 +15,8 @@ export interface ResultLabels {
  * ever assembled from it.
  */
 export class ResultRenderer {
+    private rendered = 0;
+
     public constructor(
         private readonly output: HTMLElement,
         private readonly labels: ResultLabels,
@@ -23,25 +25,42 @@ export class ResultRenderer {
     public clear(): void {
         this.output.replaceChildren();
         this.output.hidden = true;
+        this.rendered = 0;
+    }
+
+    /**
+     * Start a run. One request may produce several queries — a comparison
+     * names two places — and each of them adds its own section rather than
+     * replacing the one before it.
+     */
+    public begin(): void {
+        this.clear();
     }
 
     public render(outcome: ActionOutcome): void {
-        this.output.replaceChildren();
+        this.clear();
+        this.add(outcome);
+    }
 
+    public add(outcome: ActionOutcome): void {
         if (!outcome.ok || outcome.blocks.length === 0) {
-            this.output.hidden = true;
+            this.output.hidden = this.rendered === 0;
 
             return;
         }
 
-        const heading = document.createElement('h3');
-        heading.className = 'nr-browser-ai-form__result-title';
-        heading.textContent = this.labels.caption;
-        this.output.append(heading);
+        if (this.rendered === 0) {
+            const heading = document.createElement('h3');
+            heading.className = 'nr-browser-ai-form__result-title';
+            heading.textContent = this.labels.caption;
+            this.output.append(heading);
+        }
+        this.rendered++;
 
         if (outcome.place !== undefined) {
             const place = document.createElement('p');
             place.className = 'nr-browser-ai-form__result-place';
+            place.setAttribute('data-nr-browser-ai-form-result-place', '');
             const where = outcome.place.country === ''
                 ? outcome.place.name
                 : `${outcome.place.name}, ${outcome.place.country}`;
