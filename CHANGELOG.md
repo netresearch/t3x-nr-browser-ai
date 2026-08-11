@@ -5,6 +5,42 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-08-11
+
+### Added
+
+- The form assistant answers in prose. After the query runs, the on-device
+  model is asked a second time — unconstrained this time — what the result
+  means for the question that was asked, and that sentence appears directly
+  under the request. The phrasing happens on the page's own path and never
+  inside the tool: an agent reaching the tool through the browser's model
+  context receives the result text and phrases it in its own voice.
+
+  A phrasing call that fails leaves the tables in place and says nothing
+  rather than guessing, and it is skipped entirely when no query produced
+  anything worth phrasing.
+- One request may now imply several queries. The derivation is constrained to
+  a list of argument sets rather than a single one, so "compare the rainfall
+  of the past week in Tokyo and in Leipzig" is two runs and one answer, with
+  each result in its own section and every call listed in the disclosure.
+  Capped at four queries per request.
+
+### Changed
+
+- After a run the form collapses behind a disclosure, so the answer sits next
+  to the question rather than below seventy controls. It stays in the document
+  and one keystroke away — correcting a derived value is the other half of the
+  point — and a browser without an on-device model is never handed a closed
+  form, because it never runs anything.
+- The `pastDays` field no longer claims to deliver *measured* past weather.
+  The data source's documentation states only that earlier days are returned
+  and keeps the archive as a separate API, so the claim was stronger than its
+  source.
+
+### Supported versions
+
+Unchanged from 0.5.0.
+
 ## [0.5.0] - 2026-08-11
 
 ### Added
@@ -164,6 +200,7 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.6.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.6.0
 [0.5.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.5.0
 [0.4.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.4.0
 [0.3.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.3.0
