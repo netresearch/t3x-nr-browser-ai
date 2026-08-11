@@ -14,7 +14,8 @@
     "test:e2e": "playwright test -c Tests/E2E/playwright.config.ts",
     "ci": "npm run build && npm run build:css && npm run test:js",
     "verify:demo": "node demo/verify.mjs",
-    "build:og": "uv run demo/render_og.py"
+    "build:og": "uv run demo/render_og.py",
+    "axe": "node demo/axe-audit.mjs"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
@@ -27,6 +28,7 @@
     "@types/dom-chromium-ai": "^0.0.17",
     "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^4.1.10",
+    "axe-core": "^4.13.0",
     "esbuild": "^0.28.1",
     "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
