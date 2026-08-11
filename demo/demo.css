@@ -268,12 +268,18 @@ pre:not(.nr-browser-ai *) code { background: none; padding: 0; font-size: 1em; }
     background: var(--nr-bg);
 }
 .btn:hover { border-color: var(--nr-primary); color: var(--nr-primary-text); }
+/*
+ * The dark brand tone, not the primary one: white on #2F99A4 reaches 3.37:1,
+ * below the 4.5:1 WCAG 2 AA asks of normal text, and both call-to-action links
+ * on this page are normal text. The hover tone darkens further so the state
+ * stays distinguishable.
+ */
 .btn--primary {
-    background: var(--nr-primary);
-    border-color: var(--nr-primary);
+    background: var(--nr-primary-dark);
+    border-color: var(--nr-primary-dark);
     color: #fff;
 }
-.btn--primary:hover { background: var(--nr-primary-dark); border-color: var(--nr-primary-dark); color: #fff; }
+.btn--primary:hover { background: #0E3C40; border-color: #0E3C40; color: #fff; }
 
 .hero__cta { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
 
