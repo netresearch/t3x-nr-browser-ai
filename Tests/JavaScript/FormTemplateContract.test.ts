@@ -5,6 +5,7 @@ import {describe, expect, it} from 'vitest';
 import {
     CONFIGURATION_ATTRIBUTES,
     ELEMENT_HOOKS,
+    formAssistantSection,
     LABEL_ATTRIBUTES,
     SERVER_RENDERED_HOOKS,
 } from '../Fixtures/FormAssistantMarkup';
@@ -13,6 +14,7 @@ const template = readFileSync(
     resolve(process.cwd(), 'Resources/Private/Templates/FormAssistant/Show.html'),
     'utf8',
 );
+const fixture = formAssistantSection();
 
 function attributesIn(source: string, pattern: RegExp): string[] {
     return [...new Set([...source.matchAll(pattern)].map(match => match[0]))].sort();
@@ -56,6 +58,19 @@ describe('form assistant template contract', () => {
         expect(template).toMatch(
             /data-nr-browser-ai-form-announcement[^>]*aria-live="polite"[^>]*aria-atomic="true"/u,
         );
+    });
+
+    /**
+     * The end-to-end accessibility check styles the fixture with the shipped
+     * stylesheet, so a class the fixture omits is a rule that check never sees.
+     * That is how a contrast failure on the primary button survived a passing
+     * axe run: the fixture's buttons carried no modifier at all.
+     */
+    it('carries the same styling modifiers as the fixture', () => {
+        for (const modifier of ['nr-browser-ai-form__button--primary']) {
+            expect(template).toContain(modifier);
+            expect(fixture).toContain(modifier);
+        }
     });
 
     it('escapes every value it transports', () => {

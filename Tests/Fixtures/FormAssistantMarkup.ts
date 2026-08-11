@@ -136,9 +136,9 @@ export function formAssistantSection(options: FormAssistantMarkupOptions = {}): 
  data-supplemental-instruction=""${labels}>
  <div class="nr-browser-ai-form__assistant" data-nr-browser-ai-form-assistant hidden>
   <p id="${id}-status" class="nr-browser-ai-form__status" data-nr-browser-ai-form-status role="status" aria-atomic="true" tabindex="-1"></p>
-  <button class="nr-browser-ai-form__button" type="button" data-nr-browser-ai-form-setup>Set up browser AI</button>
+  <button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-setup>Set up browser AI</button>
   <progress class="nr-browser-ai-form__progress" data-nr-browser-ai-form-progress max="1" value="0"></progress>
-  <div class="nr-browser-ai-form__request"><label class="nr-browser-ai-form__label" for="${id}-request">What do you want to know?</label><div class="nr-browser-ai-form__input-row"><input class="nr-browser-ai-form__input" id="${id}-request" type="text" data-nr-browser-ai-form-request autocomplete="off" aria-describedby="${id}-status"><button class="nr-browser-ai-form__button" type="button" data-nr-browser-ai-form-submit>Fill and run</button></div></div>
+  <div class="nr-browser-ai-form__request"><label class="nr-browser-ai-form__label" for="${id}-request">What do you want to know?</label><div class="nr-browser-ai-form__input-row"><input class="nr-browser-ai-form__input" id="${id}-request" type="text" data-nr-browser-ai-form-request autocomplete="off" aria-describedby="${id}-status"><button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-submit>Fill and run</button></div></div>
   <p class="nr-browser-ai-form__visually-hidden" data-nr-browser-ai-form-announcement aria-live="polite" aria-atomic="true"></p>
  </div>
  <div class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields>

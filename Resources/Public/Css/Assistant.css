@@ -476,13 +476,18 @@
     cursor: pointer;
 }
 
+/*
+ * The dark brand tone, not the primary one: white on #2F99A4 reaches 3.37:1,
+ * below the 4.5:1 that WCAG 2 AA asks of normal text. The page assistant's
+ * buttons have always used the dark tone for the same reason.
+ */
 .nr-browser-ai-form__button--primary {
-    background: var(--nr-primary);
-    color: #fff;
+    background: var(--nr-primary-dark);
+    color: var(--nr-bg);
 }
 
 .nr-browser-ai-form__button--primary:hover {
-    background: var(--nr-primary-dark);
+    background: #0E3C40;
 }
 
 .nr-browser-ai-form__progress {
