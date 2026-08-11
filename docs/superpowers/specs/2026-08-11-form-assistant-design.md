@@ -55,9 +55,11 @@ boolean properties.
 
 ### Server
 
-`FormDefinitionLoader` wraps `FormPersistenceManagerInterface` and returns the
-form definition as an array. The persistence signature differs between the
-supported TYPO3 majors, so every version difference lives in this one class.
+`FormDefinitionLoader` reads a shipped form definition from its YAML file.
+EXT:form's persistence manager is not used: an extension path has to be
+allow-listed before it will load, and the registration for that was deprecated
+in TYPO3 14.2 in favour of a directory convention 12.4 and 13.4 do not know.
+Reading the file keeps one code path for all three.
 
 `FormSchemaFactory` walks that array and produces JSON Schema. The mapping:
 
@@ -82,13 +84,22 @@ becomes `description`. That description is the only thing telling the model what
 `shortwave_radiation_sum` means, so the shipped form fills it in for every
 element.
 
-`FormFieldMap` maps each schema property to the name EXT:form renders for it —
-`tx_form_formframework[<form>][<element>]`, with `[]` appended for multi-value
-elements. Schema and map are delivered together; neither is useful alone.
+The rendered field names are deliberately not derived on the server. EXT:form
+builds them from the form identifier and the surrounding plugin namespace, and
+both have moved between TYPO3 versions; the trailing element identifier has
+not. The client therefore resolves a control by the identifier its name ends
+with, and a functional test asserts every schema property can be found that way
+among the controls EXT:form actually rendered.
 
-`FormAssistantController` renders the form through EXT:form's own view helper
-and puts schema, field map and action identifier on the plugin root as `data-`
-attributes, the same transport the assistant already uses for its settings.
+`FormAssistantController` renders the form through EXT:form's own view helper —
+with a `factoryClass` rather than a persistence identifier, so no extension path
+has to be allow-listed through a mechanism that differs per TYPO3 major — and
+puts schema, tool name, description and action identifier on the plugin root as
+`data-` attributes, the same transport the assistant already uses.
+
+The rendered form is translated; the schema is not. A tool's identity should not
+change with the language of the page, or an agent would discover a different
+contract per language.
 
 ### Client
 
@@ -97,15 +108,15 @@ site set keeps including a single file.
 
 - `form/FormSchemaSource` reads and validates the delivered schema.
 - `form/FormFiller` writes values into the rendered controls, including
-  checkbox groups and multiple selects.
+  checkbox groups and multiple selects, and reads them back.
 - `form/ArgumentValidator` checks the model's output against the schema before
   anything touches the DOM. `responseConstraint` is a constraint, not a
   guarantee, and model output is untrusted by house rule.
 - `query/OpenMeteoQuery` is the only module that knows the data source: it
   resolves the place name through the geocoding endpoint, builds the request,
   calls `fetch` and normalises the response.
-- `tools/ToolRegistry` holds `{name, description, inputSchema, execute}` and
-  runs it.
+- `tools/FormTool` holds `{name, description, inputSchema, execute}` and runs
+  the whole chain: check, fill, read back, run, report.
 - `tools/ModelContextBinding` registers with `document.modelContext`, falling
   back to `navigator.modelContext`, and unregisters through an `AbortSignal`.
   Where neither exists only this registration is skipped.
@@ -121,14 +132,17 @@ the existing adapter.
 
 ### Flow
 
-1. An editor creates or picks an EXT:form form and selects it in the plugin.
-2. The page delivers form, schema and field map.
-3. The tool is registered, named after the form.
+1. An editor adds the plugin and picks the form it renders.
+2. The page delivers the form and, on the plugin root, the schema, the tool's
+   name and description and the action identifier.
+3. The tool is registered with the browser's model context where there is one.
 4. A call arrives — from the plugin's own input row, or from an agent.
 5. `execute` validates the arguments, writes them into the form so they are
-   visible, runs the query, renders the result, and returns a text rendering of
-   it to the caller.
-6. On the local path the model turns that text into its reply.
+   visible, reads the form back in full, runs the query, renders the result and
+   returns a text rendering of it to the caller.
+6. There is no second model call. The rendered tables are the answer; asking an
+   on-device model to restate them would spend the context the forty-variable
+   schema already needs.
 
 The parameters are on screen before the request goes out; what the single-tool
 cut leaves out is a confirmation step, not the visibility. The configuration
@@ -137,9 +151,8 @@ its arguments, so the mapping from sentence to parameters stays inspectable.
 
 ## The seam to phase 2
 
-`ToolRegistry` talks to an action through a two-method interface: describe
-itself, and run with validated arguments. `OpenMeteoQuery` is its only
-implementation. Phase 2 adds an implementation that submits the form normally,
+`FormTool` talks to an action through `FormAction`: run with validated values
+and report an outcome. `OpenMeteoQuery` is its only implementation. Phase 2 adds an implementation that submits the form normally,
 and generalises `FormSchemaFactory` from the shipped form to any form. Schema
 generation, filling, validation and registration are untouched by that step.
 
@@ -183,9 +196,9 @@ extension already has: server-rendered content elements.
 ## Delivery
 
 The extension ships the demonstration form as
-`Resources/Private/Forms/WeatherQuery.form.yaml`, registered through
-`plugin.tx_form.settings.yamlConfigurations`, so the demonstration is
-reproducible on any installation rather than being a property of one page.
+`Resources/Private/Forms/weatherQuery.form.yaml` and renders it through a form
+factory, so the demonstration is reproducible on any installation rather than
+being a property of one page.
 
 `typo3/cms-form` moves into `require`: the plugin cannot work without it, and a
 guarded optional registration would buy nothing on an extension whose second

@@ -15,7 +15,8 @@ Classes/
   Controller/FormAssistantController.php
   Domain/Form/FormDefinitionLoader.php
   Domain/Form/FormSchemaFactory.php
-  Domain/Form/FormFieldMap.php
+  Domain/Form/FormSchema.php
+  Domain/Form/FormAssistantFormFactory.php
 Configuration/
   FlexForms/FormAssistant.xml
   Sets/NrBrowserAi/setup.typoscript          (extend)
@@ -23,16 +24,17 @@ Configuration/
   TypoScript/constants.typoscript            (extend)
   TCA/Overrides/tt_content.php               (extend)
 Resources/
-  Private/Forms/WeatherQuery.form.yaml
+  Private/Forms/weatherQuery.form.yaml
   Private/Templates/FormAssistant/Show.html
   Private/TypeScript/Assistant.ts            (extend: bootstrap both roots)
   Private/TypeScript/types.ts                (extend: prompt with responseConstraint)
   Private/TypeScript/form/FormSchemaSource.ts
   Private/TypeScript/form/ArgumentValidator.ts
   Private/TypeScript/form/FormFiller.ts
+  Private/TypeScript/form/FormSchema.ts
   Private/TypeScript/query/FormAction.ts
   Private/TypeScript/query/OpenMeteoQuery.ts
-  Private/TypeScript/tools/ToolRegistry.ts
+  Private/TypeScript/tools/FormTool.ts
   Private/TypeScript/tools/ModelContextBinding.ts
   Private/TypeScript/tools/LocalToolLoop.ts
   Private/TypeScript/result/ResultRenderer.ts
@@ -40,7 +42,6 @@ Resources/
   Private/Language/*.xlf                     (extend)
 Tests/
   Unit/Domain/Form/FormSchemaFactoryTest.php
-  Unit/Domain/Form/FormFieldMapTest.php
   Functional/Controller/FormAssistantControllerTest.php
   JavaScript/form/*.test.ts
   JavaScript/query/OpenMeteoQuery.test.ts
@@ -66,26 +67,26 @@ Documentation/
 
 ## Task 2 — Schema generation
 
-- [ ] `FormDefinitionLoader`: read the persistence API of the installed TYPO3 major from vendor source before writing the call; keep every version branch here.
+- [ ] `FormDefinitionLoader`: read the shipped YAML file directly. EXT:form's persistence manager needs extension paths allow-listed first, and the registration for that was deprecated in TYPO3 14.2 in favour of a directory convention 12.4 and 13.4 do not know.
 - [ ] `FormSchemaFactory`: element and validator mapping per the design's tables; unknown element types are skipped and reported, never guessed.
-- [ ] `FormFieldMap`: rendered field names including the `[]` suffix for multi-value elements.
+- [ ] No server-side field-name derivation. EXT:form builds names from the form identifier and the surrounding plugin namespace, both of which have moved between versions; the client resolves a control by the element identifier its name ends with instead.
 
-**Verify:** unit tests per element type and validator; a functional test asserts the derived names match what EXT:form actually renders.
+**Verify:** unit tests per element type and validator; a functional test asserts every schema property can be found that way among the controls EXT:form actually rendered.
 
 ## Task 3 — Demonstration form
 
-- [ ] `Resources/Private/Forms/WeatherQuery.form.yaml` covering place, date range, hourly variables, daily variables, model, four unit groups, timezone.
+- [ ] `Resources/Private/Forms/weatherQuery.form.yaml` covering place, date range, hourly variables, daily variables, model, four unit groups, timezone.
 - [ ] Every element carries an `elementDescription` — that text is what the model reads.
-- [ ] Register the folder through `plugin.tx_form.settings.yamlConfigurations`.
+- [ ] Render it through `formvh:render` with a `factoryClass`, so no persistence identifier and no allow-listing are involved.
 
-**Verify:** functional test loads the form through the persistence manager and asserts the generated schema property count and enum sizes.
+**Verify:** unit test asserts the generated property list and enum sizes against the shipped file; functional test asserts the form renders.
 
 ## Task 4 — Client tool layer
 
 - [ ] Extend `ModelSession`/`BrowserLanguageModelAdapter` with `prompt(input, {responseConstraint})`.
 - [ ] `FormSchemaSource`, `ArgumentValidator`, `FormFiller`.
 - [ ] `FormAction` interface; `OpenMeteoQuery` as its only implementation, geocoding included.
-- [ ] `ToolRegistry`, `ModelContextBinding` with `document`/`navigator` fallback and `AbortSignal` teardown, `LocalToolLoop`.
+- [ ] `FormTool`, `ModelContextBinding` with `document`/`navigator` fallback and `AbortSignal` teardown, `LocalToolLoop`.
 - [ ] `ResultRenderer` with safe DOM construction only.
 - [ ] `ui/FormAssistantController` wiring status, input row and disclosure, reusing the existing status vocabulary.
 
@@ -103,7 +104,7 @@ Documentation/
 - [ ] `Documentation/User/FormAssistant.rst`, linked from the user index.
 - [ ] `Documentation/Administration/Configuration.rst` extended with the new settings.
 - [ ] README section describing both plugins, kept in step with the manual.
-- [ ] CHANGELOG entry, `ext_emconf.php` and `composer.json` consistent.
+- [ ] No CHANGELOG entry and no version bump: both belong to the separate release flow.
 
 **Verify:** `bash Tests/Repository/metadata.sh`, `bash Tests/Repository/documentation.sh`.
 

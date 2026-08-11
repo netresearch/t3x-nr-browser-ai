@@ -27,9 +27,11 @@
 
 ---
 
-This frontend plugin answers questions from the content of the currently open
-page. Chrome's Prompt API runs Gemini Nano locally; there is no application
-API key, server-side LLM proxy, chat persistence or telemetry.
+This extension provides two frontend plugins. The first answers questions from
+the content of the currently open page. The second fills a parameter-rich form
+from one sentence and runs it. Chrome's Prompt API runs Gemini Nano locally;
+there is no application API key, server-side LLM proxy, chat persistence or
+telemetry.
 
 This is a proof of concept. It deliberately grounds answers in one selected
 DOM area on the current page. The provider boundary permits future page-tree
@@ -65,7 +67,9 @@ Load the extension's TypoScript, by either route:
   include **Netresearch Browser AI** in the site root template.
 
 Then add the content element **Netresearch Browser AI** on a page and configure
-its title, introduction, editor instruction, context selector and fallback.
+its title, introduction, editor instruction, context selector and fallback. The
+second content element, **Netresearch Browser AI form assistant**, is described
+below.
 
 ## Configuration model
 
@@ -86,6 +90,30 @@ its title, introduction, editor instruction, context selector and fallback.
 
 Detailed settings are in the
 [administrator reference](Documentation/Administration/Configuration.rst).
+
+## Form assistant
+
+A second content element, **Netresearch Browser AI form assistant**, turns a
+sentence into a filled form and a real result. The chain is intent, structured
+output, tool call, action: the request goes to the on-device model constrained
+by the form's own JSON Schema, the arguments that come back are checked, written
+into the visible controls and run, and the result is rendered as tables.
+
+The schema is generated from the EXT:form definition rather than written by
+hand, because that definition already carries the option values, the bounds,
+whether an entry is mandatory and a sentence per element saying what it means.
+Generating it is also what makes a large form affordable for an on-device model:
+a multi-value element becomes one array property carrying its options as an
+enum, not one boolean property per option.
+
+The same tool is registered with the browser's model context where the browser
+has one, so an agent outside the page can call it with the identical schema and
+receive the same result. Where neither a model nor a model context exists, the
+form stays a fully usable form.
+
+The demonstration form ships with the extension and queries the open Open-Meteo
+service. That query leaves the browser and goes straight to the data source; the
+model does not. See the [form assistant guide](Documentation/User/FormAssistant.rst).
 
 ## Privacy and security
 
