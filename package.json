@@ -1,33 +1,35 @@
 {
-    "name": "@netresearch/nr-browser-ai",
-    "version": "0.4.0",
-    "private": true,
-    "description": "Frontend toolchain for the nr_browser_ai TYPO3 extension",
-    "type": "module",
-    "scripts": {
-        "build": "esbuild Resources/Private/TypeScript/Assistant.ts --bundle --format=esm --target=chrome148 --outfile=Resources/Public/JavaScript/Assistant.js",
-        "build:css": "cp Resources/Private/Styles/Assistant.css Resources/Public/Css/Assistant.css",
-        "build:demo": "node demo/build.mjs",
-        "typecheck": "tsc --noEmit",
-        "test:js": "vitest run",
-        "test:js:coverage": "vitest run --coverage",
-        "test:e2e": "playwright test -c Tests/E2E/playwright.config.ts",
-        "ci": "npm run build && npm run build:css && npm run test:js"
-    },
-    "engines": {
-        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
-    },
-    "devDependencies": {
-        "@axe-core/playwright": "^4.12.1",
-        "@fontsource/open-sans": "^5.3.0",
-        "@fontsource/raleway": "^5.3.0",
-        "@playwright/test": "^1.62.1",
-        "@types/dom-chromium-ai": "^0.0.17",
-        "@types/node": "^26.1.2",
-        "@vitest/coverage-v8": "^4.1.10",
-        "esbuild": "^0.28.1",
-        "jsdom": "^30.0.1",
-        "typescript": "^7.0.2",
-        "vitest": "^4.1.10"
-    }
+  "name": "@netresearch/nr-browser-ai",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Frontend toolchain for the nr_browser_ai TYPO3 extension",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild Resources/Private/TypeScript/Assistant.ts --bundle --format=esm --target=chrome148 --outfile=Resources/Public/JavaScript/Assistant.js",
+    "build:css": "cp Resources/Private/Styles/Assistant.css Resources/Public/Css/Assistant.css",
+    "build:demo": "node demo/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:js": "vitest run",
+    "test:js:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test -c Tests/E2E/playwright.config.ts",
+    "ci": "npm run build && npm run build:css && npm run test:js",
+    "verify:demo": "node demo/verify.mjs",
+    "build:og": "uv run demo/render_og.py"
+  },
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@fontsource/open-sans": "^5.3.0",
+    "@fontsource/raleway": "^5.3.0",
+    "@playwright/test": "^1.62.1",
+    "@types/dom-chromium-ai": "^0.0.17",
+    "@types/node": "^26.1.2",
+    "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
 }

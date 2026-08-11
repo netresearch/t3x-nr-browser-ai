@@ -1,0 +1,128 @@
+{
+  "_comment": [
+    "Editorial half of the project manifest. The mechanical half — main_version,",
+    "latest_release, supported TYPO3 and PHP versions — is derived by",
+    "demo/build.mjs from ext_emconf.php and composer.json and must not be written",
+    "here. The page previously carried a hand-typed '0.2.0' while the extension",
+    "was at 0.4.0; that is the failure mode this split removes.",
+    "",
+    "The build publishes the merged result at <site>/project-manifest.json, which",
+    "the portfolio site aggregates into https://netresearch.github.io/projects.json."
+  ],
+  "stage": "beta",
+  "owner": "Netresearch DTT GmbH — nr-browser-ai maintainers",
+  "last_verified": "2026-08-11",
+  "license": "GPL-2.0-or-later",
+  "repository": "https://github.com/netresearch/t3x-nr-browser-ai",
+  "documentation": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Index.rst",
+  "demo": "https://netresearch.github.io/t3x-nr-browser-ai/",
+  "support": "https://www.netresearch.de/kontakt/",
+  "providers": [
+    "Chrome's built-in Prompt API (Gemini Nano), running on the visitor's device"
+  ],
+  "capabilities": [
+    {
+      "id": "page-scoped-answers",
+      "label": "Answers scoped to the current page",
+      "detail": "A configurable region of the page is the only source; the model is instructed to say so when an answer is not in it.",
+      "state": "implemented",
+      "evidence": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Index.rst"
+    },
+    {
+      "id": "no-endpoint",
+      "label": "No chat endpoint of its own",
+      "detail": "No server route, no database table, no cookie, no local storage, no telemetry.",
+      "state": "implemented",
+      "evidence": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst"
+    },
+    {
+      "id": "editor-fallback",
+      "label": "Editor-chosen fallback content",
+      "detail": "Visitors whose browser cannot run the model see a content element the editor picked, not an error.",
+      "state": "implemented",
+      "evidence": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Index.rst"
+    },
+    {
+      "id": "safe-rendering",
+      "label": "Model output cannot inject markup",
+      "detail": "Answers are built with DOM APIs only; a restricted Markdown subset becomes elements, everything else stays literal text.",
+      "state": "implemented",
+      "evidence": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Resources/Public/JavaScript/Assistant.js"
+    }
+  ],
+  "security_controls": [
+    {
+      "id": "two-prompt-layers",
+      "label": "Administrator and editor prompt layers are separate",
+      "detail": "An editor may add a supplemental instruction but cannot replace the administrator's system prompt.",
+      "state": "implemented"
+    },
+    {
+      "id": "untrusted-page-content",
+      "label": "Page content is treated as untrusted",
+      "detail": "The default system prompt instructs the model not to follow instructions found in the page. This reduces prompt-injection risk; it does not eliminate it.",
+      "state": "implemented"
+    },
+    {
+      "id": "no-html-parsing",
+      "label": "No HTML parsing of model output",
+      "detail": "No markup string is assembled; links are limited to validated HTTP and HTTPS URLs opened with rel=\"noopener noreferrer\".",
+      "state": "implemented"
+    },
+    {
+      "id": "explicit-setup",
+      "label": "The model download needs an explicit user action",
+      "detail": "The extension never triggers a multi-gigabyte download silently.",
+      "state": "implemented"
+    }
+  ],
+  "cost_controls": [
+    {
+      "id": "no-inference-cost",
+      "label": "No per-request inference cost for supported visitors",
+      "detail": "Inference runs on the visitor's device, so a supported visitor generates no provider call and no token spend. Unsupported visitors generate none either — they get the fallback.",
+      "state": "implemented"
+    }
+  ],
+  "evidence": [
+    { "type": "code", "label": "Source", "url": "https://github.com/netresearch/t3x-nr-browser-ai" },
+    { "type": "docs", "label": "Privacy and trust boundaries", "url": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst" },
+    { "type": "release", "label": "Releases", "url": "https://github.com/netresearch/t3x-nr-browser-ai/releases" }
+  ],
+  "ai": {
+    "intended_purpose": "Answering a visitor's question about the page they are currently reading, using the browser's own language model, with the page text as the only source.",
+    "excluded_uses": [
+      "Site-wide knowledge search. The assistant sees one page.",
+      "Anything needing current external information. It has no network access of its own.",
+      "Transactions, or any action with a consequence. It answers; it does not act.",
+      "A guaranteed channel. Most visitors' browsers cannot run it, and they get the fallback instead.",
+      "Authorisation, legal, medical or financial decisions without independent controls."
+    ],
+    "models": [
+      "Whatever model Chrome ships and manages. The extension neither chooses nor downloads it."
+    ],
+    "data": [
+      "The visitor's question and the text of the configured page region.",
+      "Nothing else. No identifiers, no history, no analytics."
+    ],
+    "processing_location": ["browser"],
+    "human_oversight": "The visitor asks, reads and judges. The assistant performs no action and changes nothing.",
+    "permissions": "Editors configure a plugin instance; administrators set the system prompt and the context selector in TypoScript. Visitors need no account.",
+    "logging": "None. The extension writes no log, no database row and no storage entry.",
+    "retention": "Dialogue state lives in browser memory and is destroyed on reset or navigation.",
+    "cost_control": "No inference cost arises: the model belongs to the browser.",
+    "security_controls": [
+      "Separate administrator and editor prompt layers",
+      "Page content treated as untrusted input",
+      "DOM-only answer rendering, no HTML parsing",
+      "Model download only on an explicit user action"
+    ],
+    "known_limitations": [
+      "Only supported desktop Chrome versions with sufficient storage can run it. Everyone else sees the fallback — plan for that being the majority.",
+      "The model belongs to the browser vendor. Its behaviour, updates and availability are outside this extension's control.",
+      "Prompt injection through page content is reduced, not eliminated. Do not put secrets in publicly rendered content.",
+      "The model can be wrong or invent an answer. Scoping it to one page narrows the surface; it does not make it correct.",
+      "Answer quality depends on how well the page is written. A vague page produces vague answers."
+    ]
+  }
+}

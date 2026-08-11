@@ -10,6 +10,7 @@ import {
     LABEL_ATTRIBUTES,
     SERVER_RENDERED_HOOKS,
 } from '../Fixtures/AssistantMarkup';
+import {assistantMarkup} from '../../demo/render.mjs';
 import {ChatController} from '../../Resources/Private/TypeScript/ui/ChatController';
 import type {PageContextProvider} from '../../Resources/Private/TypeScript/context/PageContextProvider';
 import type {LanguageModelAdapter} from '../../Resources/Private/TypeScript/types';
@@ -19,7 +20,13 @@ const template = readFileSync(
     resolve(process.cwd(), 'Resources/Private/Templates/Assistant/Show.html'),
     'utf8',
 );
-const demoPage = readFileSync(resolve(process.cwd(), 'demo/index.html'), 'utf8');
+// The demo page is rendered from demo/content/<lang>.json rather than kept as a
+// hand-written file, so this contract is checked against the markup the renderer
+// produces — no build step, no network.
+const demoContent = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'demo/content/en.json'), 'utf8'),
+);
+const demoPage = assistantMarkup(demoContent);
 
 function attributesIn(source: string, pattern: RegExp): string[] {
     return [...new Set([...source.matchAll(pattern)].map(match => match[0]))].sort();
