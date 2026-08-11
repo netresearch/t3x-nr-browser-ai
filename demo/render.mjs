@@ -441,10 +441,10 @@ function page(c, manifest, lang) {
 
   <section id="fallback" class="section">
     <div class="wrap">
-      <h2>${e(c.fallback.heading)}</h2>
+      <h2 id="fallback-heading">${e(c.fallback.heading)}</h2>
       <p class="section__lead">${e(c.fallback.lead)}</p>
       <div class="table-scroll" tabindex="0">
-        <table class="data-table">
+        <table class="data-table" aria-labelledby="fallback-heading">
           <thead><tr><th scope="col">${e(c.fallback.columns.situation)}</th><th scope="col">${e(c.fallback.columns.behaviour)}</th></tr></thead>
           <tbody>
           ${c.fallback.rows.map((row) => `<tr><th scope="row">${e(row.situation)}</th><td>${e(row.behaviour)}</td></tr>`).join('\n          ')}
