@@ -146,6 +146,7 @@ final class FormSchemaFactory
             if ($identifier === '') {
                 continue;
             }
+
             if (in_array($type, self::VALUELESS_TYPES, true)) {
                 continue;
             }
@@ -318,6 +319,7 @@ final class FormSchemaFactory
             if (!is_array($validator)) {
                 continue;
             }
+
             if (!is_string($validator['identifier'] ?? null)) {
                 continue;
             }

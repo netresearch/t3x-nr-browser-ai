@@ -87,6 +87,6 @@ form. A tool's identity should not change with the language of the page, or an
 agent would discover a different contract per language. The controls a visitor
 reads are translated; the contract an agent reads is not.
 
-Turn on :confval:`showConfiguration <form-assistant-showconfiguration>` to see
-all of it on the page: the tool's name, its description, the schema and the
-arguments of the last call.
+Turn on :confval:`form-assistant-showconfiguration` to see all of it on the
+page: the tool's name, its description, the schema and the arguments of the
+last call.

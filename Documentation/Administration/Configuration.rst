@@ -231,7 +231,7 @@ Form assistant plugin
 
 A second content element, **Netresearch Browser AI form assistant**, renders a
 parameter-rich form and offers it as a tool the on-device model can fill and
-run. It needs :composer:`typo3/cms-form`, which the extension requires, and it
+run. It needs ``typo3/cms-form``, which the extension requires, and it
 loads through the same site set or static template as the first plugin.
 
 The demonstration form ships with the extension as
