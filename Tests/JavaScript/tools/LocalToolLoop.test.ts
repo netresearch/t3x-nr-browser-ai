@@ -1,7 +1,9 @@
+import type {Mock} from 'vitest';
 import {describe, expect, it, vi} from 'vitest';
 
 import type {FormSchema} from '../../../Resources/Private/TypeScript/form/FormSchema';
 import type {ToolDefinition} from '../../../Resources/Private/TypeScript/tools/FormTool';
+import type {ConstrainedSession} from '../../../Resources/Private/TypeScript/tools/LocalToolLoop';
 import {LocalToolLoop, LocalToolLoopError} from '../../../Resources/Private/TypeScript/tools/LocalToolLoop';
 
 const schema: FormSchema = {type: 'object', properties: {place: {type: 'string'}}};
@@ -15,14 +17,23 @@ function tool(): ToolDefinition {
     };
 }
 
-/** Answers the derivation call with the given payload, then the phrasing call. */
+/**
+ * Answers the derivation call with the given payload, then the phrasing call.
+ *
+ * The parameters are typed rather than inferred: an untyped `vi.fn` produces a
+ * mock signature that does not satisfy `ConstrainedSession`, which the test
+ * runner does not care about and `tsc` rightly does.
+ */
 function session(derivation: string, prose = 'It will be warm.'): {
-    prompt: ReturnType<typeof vi.fn>;
+    prompt: Mock<ConstrainedSession['prompt']>;
 } {
     let call = 0;
 
     return {
-        prompt: vi.fn(async () => {
+        prompt: vi.fn(async (
+            _input: string,
+            _options?: {responseConstraint?: unknown; signal?: AbortSignal},
+        ) => {
             call++;
 
             return call === 1 ? derivation : prose;
@@ -118,7 +129,7 @@ describe('LocalToolLoop', () => {
      */
     it('keeps the results when the phrasing call fails', async () => {
         let call = 0;
-        const fake = {
+        const fake: ConstrainedSession = {
             prompt: vi.fn(async () => {
                 call++;
                 if (call === 2) {
