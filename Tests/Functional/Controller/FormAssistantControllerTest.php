@@ -153,6 +153,34 @@ final class FormAssistantControllerTest extends FunctionalTestCase
         self::assertGreaterThanOrEqual(40, $boxes?->length ?? 0);
     }
 
+    /**
+     * After a run the answer belongs next to the question rather than below
+     * seventy controls, so the form ships inside a disclosure. It starts open —
+     * a browser without a model never runs anything and must not be handed a
+     * closed form — and the bundle collapses it once there is an answer.
+     */
+    #[Test]
+    public function theFormShipsInsideADisclosureThatStartsOpen(): void
+    {
+        $xpath = new DOMXPath($this->render());
+
+        $fields = $xpath->query('//details[@data-nr-browser-ai-form-fields]')?->item(0);
+        self::assertInstanceOf(DOMElement::class, $fields);
+        self::assertTrue($fields->hasAttribute('open'));
+        self::assertGreaterThan(0, $xpath->query('.//summary', $fields)?->length ?? 0);
+        self::assertGreaterThan(0, $xpath->query('.//form', $fields)?->length ?? 0);
+    }
+
+    #[Test]
+    public function theProseRegionIsDeliveredEmpty(): void
+    {
+        $xpath = new DOMXPath($this->render());
+        $prose = $xpath->query('//*[@data-nr-browser-ai-form-prose]')?->item(0);
+
+        self::assertInstanceOf(DOMElement::class, $prose);
+        self::assertSame('', trim($prose->textContent));
+    }
+
     #[Test]
     public function theDisclosureNamesTheToolAndTheSchema(): void
     {

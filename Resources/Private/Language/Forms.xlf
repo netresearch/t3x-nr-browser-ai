@@ -8,7 +8,7 @@
             <trans-unit id="weatherQuery.element.forecastDays.properties.label"><source>Forecast days</source></trans-unit>
             <trans-unit id="weatherQuery.element.forecastDays.properties.elementDescription"><source>How many days ahead to forecast, counted from today. 0 requests no future days, 16 is the maximum the source provides.</source></trans-unit>
             <trans-unit id="weatherQuery.element.pastDays.properties.label"><source>Past days</source></trans-unit>
-            <trans-unit id="weatherQuery.element.pastDays.properties.elementDescription"><source>How many days of measured past weather to include before today. Use it when the question compares with recent weather; 92 is the maximum.</source></trans-unit>
+            <trans-unit id="weatherQuery.element.pastDays.properties.elementDescription"><source>How many days before today to include as well. Use it when the question is about recent weather rather than a forecast; 92 is the maximum.</source></trans-unit>
             <trans-unit id="weatherQuery.element.hourlyVariables.properties.label"><source>Hourly variables</source></trans-unit>
             <trans-unit id="weatherQuery.element.hourlyVariables.properties.elementDescription"><source>Variables reported for every hour. Pick the ones the question actually asks about; each one adds a column to the result.</source></trans-unit>
             <trans-unit id="weatherQuery.element.dailyVariables.properties.label"><source>Daily variables</source></trans-unit>

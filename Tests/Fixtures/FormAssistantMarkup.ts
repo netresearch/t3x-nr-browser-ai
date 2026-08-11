@@ -18,6 +18,8 @@ export const ELEMENT_HOOKS = [
     'data-nr-browser-ai-form-request',
     'data-nr-browser-ai-form-submit',
     'data-nr-browser-ai-form-announcement',
+    'data-nr-browser-ai-form-prose',
+    'data-nr-browser-ai-form-fields',
     'data-nr-browser-ai-form-result',
 ] as const;
 
@@ -26,7 +28,6 @@ export const ELEMENT_HOOKS = [
  * editor turned the disclosure on. Their absence is not an error.
  */
 export const SERVER_RENDERED_HOOKS = [
-    'data-nr-browser-ai-form-fields',
     'data-nr-browser-ai-form-configuration',
     'data-nr-browser-ai-form-schema-display',
     'data-nr-browser-ai-form-call',
@@ -50,6 +51,8 @@ export const LABEL_ATTRIBUTES = [
     'data-label-ready',
     'data-label-deriving',
     'data-label-querying',
+    'data-label-phrasing',
+    'data-label-new-tab',
     'data-label-filled',
     'data-label-rejected',
     'data-label-unresolved-place',
@@ -69,7 +72,9 @@ export const ENGLISH_LABELS: Readonly<Record<(typeof LABEL_ATTRIBUTES)[number], 
     'data-label-ready': 'Describe what you want and the form will be filled with it.',
     'data-label-deriving': 'Deriving the parameters…',
     'data-label-querying': 'Running the query…',
-    'data-label-filled': 'Form filled and query answered. Adjust anything and run it again.',
+    'data-label-phrasing': 'Putting the result into words…',
+    'data-label-new-tab': 'Opens in a new tab.',
+    'data-label-filled': 'Answered. Open the form below to see or correct the values it used.',
     'data-label-rejected': 'The derived parameters did not fit the form, so nothing was changed. '
         + 'Try describing it differently.',
     'data-label-unresolved-place': 'That place could not be found. '
@@ -139,9 +144,11 @@ export function formAssistantSection(options: FormAssistantMarkupOptions = {}): 
   <button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-setup>Set up browser AI</button>
   <progress class="nr-browser-ai-form__progress" data-nr-browser-ai-form-progress max="1" value="0"></progress>
   <div class="nr-browser-ai-form__request"><label class="nr-browser-ai-form__label" for="${id}-request">What do you want to know?</label><div class="nr-browser-ai-form__input-row"><input class="nr-browser-ai-form__input" id="${id}-request" type="text" data-nr-browser-ai-form-request autocomplete="off" aria-describedby="${id}-status"><button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-submit>Fill and run</button></div></div>
+  <div class="nr-browser-ai-form__prose" data-nr-browser-ai-form-prose></div>
   <p class="nr-browser-ai-form__visually-hidden" data-nr-browser-ai-form-announcement aria-live="polite" aria-atomic="true"></p>
  </div>
- <div class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields>
+ <details class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields open>
+  <summary class="nr-browser-ai-form__form-summary">Show the form these values were put into</summary>
   <form>
    <input type="hidden" name="${FIELD_PREFIX}[__state]" value="x">
    <label for="${id}-place">Place</label><input id="${id}-place" type="text" name="${FIELD_PREFIX}[place]">
@@ -149,7 +156,7 @@ export function formAssistantSection(options: FormAssistantMarkupOptions = {}): 
    <fieldset><legend>Daily variables</legend>${boxes}</fieldset>
    <button type="submit">Run query</button>
   </form>
- </div>
+ </details>
  <div class="nr-browser-ai-form__result" data-nr-browser-ai-form-result hidden></div>
  <details class="nr-browser-ai-form__configuration" data-nr-browser-ai-form-configuration>
   <summary>What this form exposes to an assistant</summary>

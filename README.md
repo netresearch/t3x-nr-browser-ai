@@ -95,9 +95,17 @@ Detailed settings are in the
 
 A second content element, **Netresearch Browser AI form assistant**, turns a
 sentence into a filled form and a real result. The chain is intent, structured
-output, tool call, action: the request goes to the on-device model constrained
-by the form's own JSON Schema, the arguments that come back are checked, written
-into the visible controls and run, and the result is rendered as tables.
+output, tool call, action, answer: the request goes to the on-device model
+constrained by the form's own JSON Schema, the arguments that come back are
+checked, written into the visible controls and run, the result is rendered as
+tables, and the model is asked once more — unconstrained this time — what those
+results mean for the question. That sentence appears under the request and the
+form collapses behind a disclosure, so the answer sits next to the question
+while the derived values stay one keystroke away.
+
+One request may imply more than one query. "Compare the rainfall of the past
+week in Tokyo and in Leipzig" is two sets of arguments, two runs and one
+answer.
 
 The schema is generated from the EXT:form definition rather than written by
 hand, because that definition already carries the option values, the bounds,

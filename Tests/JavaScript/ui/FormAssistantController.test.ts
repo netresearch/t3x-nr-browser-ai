@@ -28,6 +28,7 @@ interface Fixture {
 function fixture(options: {
     availability?: Availability;
     modelOutput?: string;
+    prose?: string;
     outcome?: ActionOutcome;
     markup?: Parameters<typeof formAssistantSection>[0];
 } = {}): Fixture {
@@ -37,7 +38,15 @@ function fixture(options: {
         throw new Error('fixture has no plugin root');
     }
 
-    const prompt = vi.fn(async () => options.modelOutput ?? '{"place":"Leipzig","forecastDays":3}');
+    let call = 0;
+    const prompt = vi.fn(async () => {
+        call++;
+        if (call === 1) {
+            return options.modelOutput ?? '{"queries":[{"place":"Leipzig","forecastDays":3}]}';
+        }
+
+        return options.prose ?? 'Es bleibt trocken und warm.';
+    });
     const session = {
         contextUsage: 0,
         contextWindow: 1_000,
@@ -70,12 +79,16 @@ function start(fixed: Fixture): FormAssistantController | undefined {
     return controller;
 }
 
-/** Lets the availability check and any pending promise settle. */
+/**
+ * Lets the availability check and any pending promise settle. The chain is
+ * deliberately generous: a run is two model calls with the tool between them,
+ * so counting ticks exactly would make the tests fragile against a refactor
+ * that only moves an await.
+ */
 async function settle(): Promise<void> {
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+    for (let tick = 0; tick < 20; tick++) {
+        await Promise.resolve();
+    }
 }
 
 function element(name: string): HTMLElement {
@@ -113,7 +126,8 @@ describe('FormAssistantController', () => {
         element('submit').click();
         await settle();
 
-        expect(fixed.prompt).toHaveBeenCalledWith(
+        expect(fixed.prompt).toHaveBeenNthCalledWith(
+            1,
             'weather in Leipzig for three days',
             expect.objectContaining({responseConstraint: expect.objectContaining({type: 'object'})}),
         );
@@ -124,7 +138,122 @@ describe('FormAssistantController', () => {
         );
         expect(element('result').hidden).toBe(false);
         expect(element('result').textContent).toContain('Leipzig, Germany');
-        expect(element('status').textContent).toContain('Form filled');
+        expect(element('status').textContent).toContain('Answered');
+    });
+
+    /**
+     * The answer in words, next to the question that asked for it. The tables
+     * carry the numbers; this is what makes them read like an answer.
+     */
+    it('renders the prose answer under the request', async () => {
+        const fixed = fixture({prose: 'Am Samstag bleibt es trocken bei 34 Grad.'});
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'Taugt das Wochenende zum Grillen?';
+        }
+        element('submit').click();
+        await settle();
+
+        expect(element('prose').textContent).toContain('Am Samstag bleibt es trocken');
+        expect(document.querySelector('[data-nr-browser-ai-form-announcement]')?.textContent)
+            .toContain('Am Samstag bleibt es trocken');
+    });
+
+    /** The prose comes from the model, so it is built, never parsed as markup. */
+    it('never turns the prose into markup', async () => {
+        const fixed = fixture({prose: '<img src=x onerror=alert(1)> nice weather'});
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'weather';
+        }
+        element('submit').click();
+        await settle();
+
+        expect(element('prose').querySelectorAll('img')).toHaveLength(0);
+        expect(element('prose').textContent).toContain('<img src=x onerror=alert(1)>');
+    });
+
+    it('collapses the form once the answer is there, without removing it', async () => {
+        const fixed = fixture();
+        start(fixed);
+        await settle();
+
+        const fields = document.querySelector<HTMLDetailsElement>('[data-nr-browser-ai-form-fields]');
+        expect(fields?.open).toBe(true);
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'weather';
+        }
+        element('submit').click();
+        await settle();
+
+        expect(fields?.open).toBe(false);
+        expect(document.querySelector('input[name$="[place]"]')).not.toBeNull();
+    });
+
+    it('leaves the form open when the query failed', async () => {
+        const fixed = fixture({outcome: {ok: false, failure: 'failed', summary: 'No.', blocks: []}});
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'weather';
+        }
+        element('submit').click();
+        await settle();
+
+        expect(document.querySelector<HTMLDetailsElement>('[data-nr-browser-ai-form-fields]')?.open)
+            .toBe(true);
+        expect(element('prose').textContent).toBe('');
+    });
+
+    /** Two places, one sentence, one answer. */
+    it('runs every query a comparison needs and shows both results', async () => {
+        const fixed = fixture({
+            modelOutput: '{"queries":[{"place":"Tokyo"},{"place":"Leipzig"}]}',
+        });
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'Vergleiche Tokio und Leipzig';
+        }
+        element('submit').click();
+        await settle();
+
+        expect(fixed.run).toHaveBeenCalledTimes(2);
+        expect(element('result').querySelectorAll('[data-nr-browser-ai-form-result-place]'))
+            .toHaveLength(2);
+    });
+
+    it('discards the previous answer when a new request is made', async () => {
+        const fixed = fixture({prose: 'First answer.'});
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'weather';
+        }
+        element('submit').click();
+        await settle();
+        expect(element('prose').textContent).toContain('First answer');
+
+        document.querySelector('form')?.dispatchEvent(
+            new Event('submit', {bubbles: true, cancelable: true}),
+        );
+        await settle();
+
+        expect(element('prose').textContent).toBe('');
     });
 
     /** The point of the disclosure: the derivation stays inspectable. */
@@ -144,7 +273,7 @@ describe('FormAssistantController', () => {
     });
 
     it('says nothing was changed when the derived parameters do not fit', async () => {
-        const fixed = fixture({modelOutput: '{"unknown":1}'});
+        const fixed = fixture({modelOutput: '{"queries":[{"unknown":1}]}'});
         start(fixed);
         await settle();
 
@@ -242,7 +371,9 @@ describe('FormAssistantController', () => {
         element('submit').click();
         await settle();
 
-        expect(fixed.prompt).toHaveBeenCalledTimes(1);
+        const derivations = fixed.prompt.mock.calls
+            .filter(call => call[1]?.responseConstraint !== undefined);
+        expect(derivations).toHaveLength(1);
         expect(fixed.create).toHaveBeenCalledTimes(1);
     });
 

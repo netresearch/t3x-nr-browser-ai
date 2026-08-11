@@ -4,6 +4,7 @@ import {correctCheckboxGroupRoles} from '../form/GroupRoles';
 import type {FormSchema, FormValues} from '../form/FormSchema';
 import type {ActionOutcome, FormAction} from '../query/FormAction';
 import {OpenMeteoQuery} from '../query/OpenMeteoQuery';
+import {SafeResponseRenderer} from '../rendering/SafeResponseRenderer';
 import {ResultRenderer} from '../result/ResultRenderer';
 import {FormTool} from '../tools/FormTool';
 import type {ToolObserver} from '../tools/FormTool';
@@ -18,6 +19,7 @@ type Status =
     | 'ready'
     | 'deriving'
     | 'querying'
+    | 'phrasing'
     | 'filled'
     | 'rejected'
     | 'unresolvedPlace'
@@ -33,6 +35,7 @@ const LABEL_KEYS: Record<Status, string> = {
     ready: 'labelReady',
     deriving: 'labelDeriving',
     querying: 'labelQuerying',
+    phrasing: 'labelPhrasing',
     filled: 'labelFilled',
     rejected: 'labelRejected',
     unresolvedPlace: 'labelUnresolvedPlace',
@@ -60,11 +63,18 @@ const defaultActionFactory: ActionFactory = (action, language) => (
 export class FormAssistantController implements ToolObserver {
     private readonly lifetime = new AbortController();
     private readonly renderer: ResultRenderer;
+    private readonly prose: SafeResponseRenderer;
     private readonly filler: FormFiller;
     private readonly tool: FormTool;
     private readonly schema: FormSchema;
     private session?: ModelSession;
     private running = false;
+    /**
+     * Whether the last query of a run succeeded. A run ends in the status its
+     * outcome earned: settling on 'filled' regardless would paper over a
+     * refused query with the wording of a successful one.
+     */
+    private lastOutcomeOk = false;
 
     private constructor(
         private readonly root: HTMLElement,
@@ -80,6 +90,7 @@ export class FormAssistantController implements ToolObserver {
             place: this.label('labelResultPlace'),
             time: this.label('labelResultTime'),
         });
+        this.prose = new SafeResponseRenderer(this.element('prose'), this.label('labelNewTab'));
         this.tool = new FormTool(
             root.dataset['toolName'] ?? '',
             root.dataset['toolDescription'] ?? '',
@@ -116,6 +127,7 @@ export class FormAssistantController implements ToolObserver {
     }
 
     public destroy(): void {
+        this.prose.clear();
         this.lifetime.abort();
         this.session?.destroy();
         this.session = undefined;
@@ -137,14 +149,15 @@ export class FormAssistantController implements ToolObserver {
     }
 
     public onOutcome(outcome: ActionOutcome): void {
+        this.lastOutcomeOk = outcome.ok;
+
         if (outcome.ok) {
-            this.renderer.render(outcome);
+            this.renderer.add(outcome);
             this.setStatus('filled');
 
             return;
         }
 
-        this.renderer.clear();
         if (outcome.failure === 'unresolved-place') {
             this.setStatus('unresolvedPlace', outcome.summary);
         } else if (outcome.failure === 'rate-limited') {
@@ -257,7 +270,34 @@ export class FormAssistantController implements ToolObserver {
             }
 
             this.setStatus('deriving');
-            await new LocalToolLoop(session, this.tool).run(request, this.lifetime.signal);
+            this.renderer.begin();
+            this.prose.clear();
+            this.lastOutcomeOk = false;
+
+            const outcome = await new LocalToolLoop(session, this.tool).run(
+                request,
+                this.lifetime.signal,
+                {
+                    language: languageName(pageLanguage()),
+                    onQuery: () => this.setStatus('querying'),
+                    shouldPhrase: () => this.lastOutcomeOk,
+                    onPhrasing: () => this.setStatus('phrasing'),
+                },
+            );
+
+            if (!this.lastOutcomeOk) {
+                return;
+            }
+
+            this.collapseForm();
+            this.setStatus('filled');
+
+            // After the status, not before: setStatus() announces its own
+            // wording, and the answer has to be the last thing said.
+            if (outcome.prose !== '') {
+                this.prose.appendChunk(outcome.prose);
+                this.announce(outcome.prose);
+            }
         } catch (error: unknown) {
             this.setStatus(
                 error instanceof LocalToolLoopError ? 'rejected' : 'errorRetryable',
@@ -275,6 +315,8 @@ export class FormAssistantController implements ToolObserver {
         }
         this.running = true;
         try {
+            this.renderer.begin();
+            this.prose.clear();
             await this.tool.rerun(this.lifetime.signal);
         } finally {
             this.running = false;
@@ -331,6 +373,30 @@ export class FormAssistantController implements ToolObserver {
         }
     }
 
+    /**
+     * After a run the answer belongs next to the question, not below seventy
+     * controls. The form stays in the document and one keystroke away, so the
+     * derived parameters remain inspectable and correctable — collapsing hides
+     * them, it does not take them back.
+     */
+    private collapseForm(): void {
+        const fields = this.root.querySelector<HTMLDetailsElement>('[data-nr-browser-ai-form-fields]');
+        if (fields instanceof HTMLDetailsElement) {
+            fields.open = false;
+        }
+    }
+
+    /**
+     * The prose is the answer, so it is what assistive technology should hear
+     * once a run settles — not the status line that merely says a run settled.
+     */
+    private announce(text: string): void {
+        const announcement = this.root.querySelector<HTMLElement>('[data-nr-browser-ai-form-announcement]');
+        if (announcement !== null) {
+            announcement.textContent = text;
+        }
+    }
+
     private requestField(): HTMLInputElement {
         const field = this.root.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
         if (field === null) {
@@ -361,6 +427,23 @@ export class FormAssistantController implements ToolObserver {
  * what the page assistant already limits itself to.
  */
 const SUPPORTED_LANGUAGES = new Set(['de', 'en', 'es', 'fr', 'ja']);
+
+/**
+ * The phrasing call is instructed in English but has to answer in the page's
+ * language, and a two-letter tag is not an instruction a model acts on
+ * reliably. The set is the one Chrome's Prompt API declares for output.
+ */
+const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
+    de: 'German',
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    ja: 'Japanese',
+};
+
+function languageName(tag: string): string {
+    return LANGUAGE_NAMES[tag] ?? 'English';
+}
 
 function pageLanguage(): string {
     const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0] ?? '';

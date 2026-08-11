@@ -61,6 +61,31 @@ test('the whole chain runs and leaves the derivation on screen', async ({page}) 
     await expect(result.locator('thead th').nth(1)).toHaveText('temperature_2m_max (°C)');
 
     await expect(root.locator('[data-nr-browser-ai-form-call]')).toContainText('"place": "Leipzig"');
+
+    // The answer in words, and the form out of the way but still reachable.
+    await expect(root.locator('[data-nr-browser-ai-form-prose]')).toContainText('Am Samstag bleibt es trocken');
+    await expect(root.locator('[data-nr-browser-ai-form-fields]')).not.toHaveAttribute('open', /.*/u);
+    await expect(root.locator('input[name$="[place]"]')).toHaveCount(1);
+});
+
+/** Two places, one sentence, one answer. */
+test('one request can run several queries and answer about all of them', async ({page}) => {
+    await page.setContent(formAssistantDocument());
+    await page.evaluate(() => {
+        (globalThis as unknown as {queryCount?: number}).queryCount = 2;
+    });
+    await installLanguageModel(page, 'available');
+    await installDataSource(page);
+    await page.addStyleTag({path: assistantStyles});
+    await page.addScriptTag({path: assistantScript, type: 'module'});
+
+    const root = page.locator('[data-nr-browser-ai-form-root]');
+    await root.locator('[data-nr-browser-ai-form-request]').fill('Vergleiche Leipzig und Tokio');
+    await root.locator('[data-nr-browser-ai-form-submit]').click();
+
+    await expect(root).toHaveAttribute('data-state', 'filled');
+    await expect(root.locator('[data-nr-browser-ai-form-result-place]')).toHaveCount(2);
+    await expect(root.locator('[data-nr-browser-ai-form-prose]')).not.toBeEmpty();
 });
 
 test('the form is operable by keyboard and free of accessibility violations', async ({page}) => {
@@ -163,13 +188,21 @@ async function installLanguageModel(page: Page, availability: 'available' | 'una
                     measureContextUsage: async () => 10,
                     append: async () => undefined,
                     promptStreaming: () => new ReadableStream(),
-                    // Stands in for a constrained model: the arguments it
-                    // returns are the ones the schema allows.
-                    prompt: async () => JSON.stringify({
-                        place: 'Leipzig',
-                        forecastDays: 2,
-                        dailyVariables: ['temperature_2m_max', 'precipitation_sum'],
-                    }),
+                    // Stands in for a constrained model on the first call and
+                    // an unconstrained one on the second: arguments, then the
+                    // sentence about what came back.
+                    prompt: async (_input: string, settings?: {responseConstraint?: unknown}) => (
+                        settings?.responseConstraint === undefined
+                            ? 'Am Samstag bleibt es trocken bei 26 Grad.'
+                            : JSON.stringify({
+                                queries: (globalThis as unknown as {queryCount?: number}).queryCount === 2
+                                    ? [
+                                        {place: 'Leipzig', forecastDays: 2, dailyVariables: ['temperature_2m_max', 'precipitation_sum']},
+                                        {place: 'Tokyo', forecastDays: 2, dailyVariables: ['temperature_2m_max', 'precipitation_sum']},
+                                    ]
+                                    : [{place: 'Leipzig', forecastDays: 2, dailyVariables: ['temperature_2m_max', 'precipitation_sum']}],
+                            })
+                    ),
                     destroy: () => undefined,
                 }),
             },

@@ -1905,23 +1905,40 @@ var ResultRenderer = class {
   }
   output;
   labels;
+  rendered = 0;
   clear() {
     this.output.replaceChildren();
     this.output.hidden = true;
+    this.rendered = 0;
+  }
+  /**
+   * Start a run. One request may produce several queries — a comparison
+   * names two places — and each of them adds its own section rather than
+   * replacing the one before it.
+   */
+  begin() {
+    this.clear();
   }
   render(outcome) {
-    this.output.replaceChildren();
+    this.clear();
+    this.add(outcome);
+  }
+  add(outcome) {
     if (!outcome.ok || outcome.blocks.length === 0) {
-      this.output.hidden = true;
+      this.output.hidden = this.rendered === 0;
       return;
     }
-    const heading = document.createElement("h3");
-    heading.className = "nr-browser-ai-form__result-title";
-    heading.textContent = this.labels.caption;
-    this.output.append(heading);
+    if (this.rendered === 0) {
+      const heading = document.createElement("h3");
+      heading.className = "nr-browser-ai-form__result-title";
+      heading.textContent = this.labels.caption;
+      this.output.append(heading);
+    }
+    this.rendered++;
     if (outcome.place !== void 0) {
       const place = document.createElement("p");
       place.className = "nr-browser-ai-form__result-place";
+      place.setAttribute("data-nr-browser-ai-form-result-place", "");
       const where = outcome.place.country === "" ? outcome.place.name : `${outcome.place.name}, ${outcome.place.country}`;
       place.textContent = `${this.labels.place}: ${where}`;
       this.output.append(place);
@@ -2113,6 +2130,8 @@ var LocalToolLoopError = class extends Error {
   }
   code;
 };
+var PROSE_INPUT_LIMIT = 2400;
+var DEFAULT_MAXIMUM_QUERIES = 4;
 var LocalToolLoop = class {
   constructor(session, tool) {
     this.session = session;
@@ -2120,15 +2139,35 @@ var LocalToolLoop = class {
   }
   session;
   tool;
-  async run(request, signal) {
+  async run(request, signal, options) {
     const trimmed = request.trim();
     if (trimmed.length === 0) {
       throw new LocalToolLoopError("empty-request", "Enter a request.");
     }
+    const maximum = options?.maximumQueries ?? DEFAULT_MAXIMUM_QUERIES;
     const output = await this.session.prompt(trimmed, {
-      responseConstraint: this.tool.inputSchema,
+      responseConstraint: batchSchema(this.tool.inputSchema, maximum),
       signal
     });
+    const queries = this.readQueries(output, maximum);
+    const results = [];
+    for (const [index, query] of queries.entries()) {
+      options?.onQuery?.(index, queries.length);
+      results.push(await this.tool.execute(query, signal));
+    }
+    if (options === void 0) {
+      return { results, prose: "" };
+    }
+    return { results, prose: await this.phrase(trimmed, results, options, signal) };
+  }
+  /**
+   * The constraint asks for a list, but a model that answers with a bare
+   * argument object has still understood the request — that shape is accepted
+   * as a list of one rather than thrown away.
+   *
+   * @return at least one entry
+   */
+  readQueries(output, maximum) {
     let parsed;
     try {
       parsed = JSON.parse(output);
@@ -2138,9 +2177,68 @@ var LocalToolLoop = class {
         "The model did not return arguments that could be read."
       );
     }
-    return this.tool.execute(parsed, signal);
+    if (typeof parsed !== "object" || parsed === null) {
+      throw new LocalToolLoopError("unusable-output", "The model returned no arguments.");
+    }
+    const queries = parsed.queries;
+    if (Array.isArray(queries)) {
+      const usable = queries.filter((entry) => typeof entry === "object" && entry !== null);
+      if (usable.length === 0) {
+        throw new LocalToolLoopError("unusable-output", "The model returned no arguments.");
+      }
+      return usable.slice(0, maximum);
+    }
+    return [parsed];
+  }
+  async phrase(request, results, options, signal) {
+    if (options.shouldPhrase?.() === false) {
+      return "";
+    }
+    options.onPhrasing?.();
+    try {
+      const answer = await this.session.prompt(
+        phrasingPrompt(request, results, options.language),
+        { signal }
+      );
+      return answer.trim();
+    } catch {
+      return "";
+    }
   }
 };
+function batchSchema(inputSchema, maximum) {
+  return {
+    type: "object",
+    properties: {
+      queries: {
+        type: "array",
+        minItems: 1,
+        maxItems: maximum,
+        description: "One entry per query the request needs. A comparison between two places is two entries that differ only in the place.",
+        items: inputSchema
+      }
+    },
+    required: ["queries"],
+    additionalProperties: false
+  };
+}
+function phrasingPrompt(request, results, language) {
+  const budget = Math.max(400, Math.floor(PROSE_INPUT_LIMIT / results.length));
+  const data = results.map((result) => result.length > budget ? `${result.slice(0, budget)}
+(truncated; the full result is shown on the page)` : result).join("\n\n");
+  return [
+    `Answer this request in ${language}, in at most four sentences: "${request}"`,
+    "",
+    "Use only the query results below. Name the values that answer the request and",
+    "nothing else \u2014 do not list every row, and never state a number the results do",
+    "not contain. When there is more than one result, compare them. If the results",
+    "do not answer the request, say so plainly.",
+    "",
+    "<query-results>",
+    data,
+    "</query-results>"
+  ].join("\n");
+}
 
 // Resources/Private/TypeScript/tools/ModelContextBinding.ts
 function bindModelContext(tool, signal, hosts = [
@@ -2185,6 +2283,7 @@ var LABEL_KEYS = {
   ready: "labelReady",
   deriving: "labelDeriving",
   querying: "labelQuerying",
+  phrasing: "labelPhrasing",
   filled: "labelFilled",
   rejected: "labelRejected",
   unresolvedPlace: "labelUnresolvedPlace",
@@ -2206,6 +2305,7 @@ var FormAssistantController = class _FormAssistantController {
       place: this.label("labelResultPlace"),
       time: this.label("labelResultTime")
     });
+    this.prose = new SafeResponseRenderer(this.element("prose"), this.label("labelNewTab"));
     this.tool = new FormTool(
       root.dataset["toolName"] ?? "",
       root.dataset["toolDescription"] ?? "",
@@ -2220,11 +2320,18 @@ var FormAssistantController = class _FormAssistantController {
   adapter;
   lifetime = new AbortController();
   renderer;
+  prose;
   filler;
   tool;
   schema;
   session;
   running = false;
+  /**
+   * Whether the last query of a run succeeded. A run ends in the status its
+   * outcome earned: settling on 'filled' regardless would paper over a
+   * refused query with the wording of a successful one.
+   */
+  lastOutcomeOk = false;
   /**
    * @return undefined when this root carries no usable schema or no known
    *         action, in which case the plugin stays a plain form
@@ -2244,6 +2351,7 @@ var FormAssistantController = class _FormAssistantController {
     return controller;
   }
   destroy() {
+    this.prose.clear();
     this.lifetime.abort();
     this.session?.destroy();
     this.session = void 0;
@@ -2261,12 +2369,12 @@ var FormAssistantController = class _FormAssistantController {
     this.setStatus("querying");
   }
   onOutcome(outcome) {
+    this.lastOutcomeOk = outcome.ok;
     if (outcome.ok) {
-      this.renderer.render(outcome);
+      this.renderer.add(outcome);
       this.setStatus("filled");
       return;
     }
-    this.renderer.clear();
     if (outcome.failure === "unresolved-place") {
       this.setStatus("unresolvedPlace", outcome.summary);
     } else if (outcome.failure === "rate-limited") {
@@ -2357,7 +2465,28 @@ var FormAssistantController = class _FormAssistantController {
         return;
       }
       this.setStatus("deriving");
-      await new LocalToolLoop(session, this.tool).run(request, this.lifetime.signal);
+      this.renderer.begin();
+      this.prose.clear();
+      this.lastOutcomeOk = false;
+      const outcome = await new LocalToolLoop(session, this.tool).run(
+        request,
+        this.lifetime.signal,
+        {
+          language: languageName(pageLanguage()),
+          onQuery: () => this.setStatus("querying"),
+          shouldPhrase: () => this.lastOutcomeOk,
+          onPhrasing: () => this.setStatus("phrasing")
+        }
+      );
+      if (!this.lastOutcomeOk) {
+        return;
+      }
+      this.collapseForm();
+      this.setStatus("filled");
+      if (outcome.prose !== "") {
+        this.prose.appendChunk(outcome.prose);
+        this.announce(outcome.prose);
+      }
     } catch (error) {
       this.setStatus(
         error instanceof LocalToolLoopError ? "rejected" : "errorRetryable",
@@ -2374,6 +2503,8 @@ var FormAssistantController = class _FormAssistantController {
     }
     this.running = true;
     try {
+      this.renderer.begin();
+      this.prose.clear();
       await this.tool.rerun(this.lifetime.signal);
     } finally {
       this.running = false;
@@ -2415,6 +2546,28 @@ var FormAssistantController = class _FormAssistantController {
       announcement.textContent = element.textContent;
     }
   }
+  /**
+   * After a run the answer belongs next to the question, not below seventy
+   * controls. The form stays in the document and one keystroke away, so the
+   * derived parameters remain inspectable and correctable — collapsing hides
+   * them, it does not take them back.
+   */
+  collapseForm() {
+    const fields = this.root.querySelector("[data-nr-browser-ai-form-fields]");
+    if (fields instanceof HTMLDetailsElement) {
+      fields.open = false;
+    }
+  }
+  /**
+   * The prose is the answer, so it is what assistive technology should hear
+   * once a run settles — not the status line that merely says a run settled.
+   */
+  announce(text) {
+    const announcement = this.root.querySelector("[data-nr-browser-ai-form-announcement]");
+    if (announcement !== null) {
+      announcement.textContent = text;
+    }
+  }
   requestField() {
     const field = this.root.querySelector("[data-nr-browser-ai-form-request]");
     if (field === null) {
@@ -2434,6 +2587,16 @@ var FormAssistantController = class _FormAssistantController {
   }
 };
 var SUPPORTED_LANGUAGES = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
+var LANGUAGE_NAMES2 = {
+  de: "German",
+  en: "English",
+  es: "Spanish",
+  fr: "French",
+  ja: "Japanese"
+};
+function languageName(tag) {
+  return LANGUAGE_NAMES2[tag] ?? "English";
+}
 function pageLanguage() {
   const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0] ?? "";
   return SUPPORTED_LANGUAGES.has(tag) ? tag : "en";

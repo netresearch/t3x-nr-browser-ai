@@ -66,7 +66,7 @@ renderables:
         label: 'Past days'
         defaultValue: '0'
         properties:
-          elementDescription: 'How many days of measured past weather to include before today. Use it when the question compares with recent weather; 92 is the maximum.'
+          elementDescription: 'How many days before today to include as well. Use it when the question is about recent weather rather than a forecast; 92 is the maximum.'
         validators:
           -
             identifier: NumberRange
