@@ -2346,20 +2346,17 @@ var FormAssistantController = class _FormAssistantController {
     return this.session;
   }
   async derive() {
-    if (this.running) {
-      return;
-    }
     const request = this.requestField().value;
-    if (request.trim().length === 0) {
-      return;
-    }
-    const session = await this.prepareModel();
-    if (session === void 0) {
+    if (this.running || request.trim().length === 0) {
       return;
     }
     this.running = true;
-    this.setStatus("deriving");
     try {
+      const session = await this.prepareModel();
+      if (session === void 0) {
+        return;
+      }
+      this.setStatus("deriving");
       await new LocalToolLoop(session, this.tool).run(request, this.lifetime.signal);
     } catch (error) {
       this.setStatus(
@@ -2436,13 +2433,14 @@ var FormAssistantController = class _FormAssistantController {
     return this.root.dataset[key] ?? "";
   }
 };
+var SUPPORTED_LANGUAGES = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
 function pageLanguage() {
-  const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0];
-  return tag === void 0 || tag === "" ? "en" : tag;
+  const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0] ?? "";
+  return SUPPORTED_LANGUAGES.has(tag) ? tag : "en";
 }
 
 // Resources/Private/TypeScript/Assistant.ts
-var SUPPORTED_LANGUAGES = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
+var SUPPORTED_LANGUAGES2 = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
 function bootstrapAssistants(sourceDocument = document, adapterFactory = () => new BrowserLanguageModelAdapter(), providerFactory = () => new DomPageContextProvider(sourceDocument)) {
   const controllers = [];
   for (const root of sourceDocument.querySelectorAll("[data-nr-browser-ai-root]")) {
@@ -2565,7 +2563,7 @@ function requiredLabel(root, key) {
 }
 function normalizeLanguage(languageTag) {
   const primary = languageTag.trim().toLowerCase().split(/[-_]/u)[0];
-  return primary !== void 0 && SUPPORTED_LANGUAGES.has(primary) ? primary : void 0;
+  return primary !== void 0 && SUPPORTED_LANGUAGES2.has(primary) ? primary : void 0;
 }
 if (document.querySelector("[data-nr-browser-ai-root], [data-nr-browser-ai-form-root]") !== null) {
   installAssistantLifecycle();

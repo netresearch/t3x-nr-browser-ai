@@ -225,6 +225,27 @@ describe('FormAssistantController', () => {
         expect(fixed.run).toHaveBeenCalledWith(expect.objectContaining({place: 'Dresden'}), expect.anything());
     });
 
+    /**
+     * Preparing the model is asynchronous, so a second click during it used to
+     * pass the guard and start a second derivation against the same form.
+     */
+    it('starts one derivation however fast the button is clicked twice', async () => {
+        const fixed = fixture({availability: 'downloadable'});
+        start(fixed);
+        await settle();
+
+        const request = document.querySelector<HTMLInputElement>('[data-nr-browser-ai-form-request]');
+        if (request !== null) {
+            request.value = 'weather';
+        }
+        element('submit').click();
+        element('submit').click();
+        await settle();
+
+        expect(fixed.prompt).toHaveBeenCalledTimes(1);
+        expect(fixed.create).toHaveBeenCalledTimes(1);
+    });
+
     it('does nothing on an empty request', async () => {
         const fixed = fixture();
         start(fixed);

@@ -127,6 +127,51 @@ final class FormSchemaFactoryTest extends TestCase
         ];
     }
 
+    /**
+     * A YAML default is a string even for a number element. A number property
+     * declaring default: "7" is a schema that contradicts itself, and a model
+     * asked to honour it has to guess which half to believe.
+     */
+    #[Test]
+    public function aDefaultIsStatedInThePropertysOwnType(): void
+    {
+        $schema = (new FormSchemaFactory())->create($this->form([
+            ['type' => 'Number', 'identifier' => 'days', 'defaultValue' => '7'],
+            ['type' => 'Checkbox', 'identifier' => 'detailed', 'defaultValue' => '1'],
+            ['type' => 'Text', 'identifier' => 'place', 'defaultValue' => 'Leipzig'],
+        ]));
+        $properties = $schema->schema['properties'];
+
+        self::assertIsArray($properties);
+        self::assertSame(7, $properties['days']['default'] ?? null);
+        self::assertTrue($properties['detailed']['default'] ?? null);
+        self::assertSame('Leipzig', $properties['place']['default'] ?? null);
+    }
+
+    #[Test]
+    public function anEmptyDefaultIsNoDefault(): void
+    {
+        $schema = (new FormSchemaFactory())->create($this->form([
+            ['type' => 'Text', 'identifier' => 'place', 'defaultValue' => ''],
+        ]));
+        $properties = $schema->schema['properties'];
+
+        self::assertIsArray($properties);
+        self::assertArrayNotHasKey('default', $properties['place']);
+    }
+
+    #[Test]
+    public function theShippedNumberDefaultsAreNumbers(): void
+    {
+        $schema     = (new FormSchemaFactory())->create($this->shippedForm());
+        $properties = $schema->schema['properties'];
+
+        self::assertIsArray($properties);
+        self::assertIsInt($properties['forecastDays']['default'] ?? null);
+        self::assertIsInt($properties['pastDays']['default'] ?? null);
+        self::assertIsArray($properties['hourlyVariables']['default'] ?? null);
+    }
+
     #[Test]
     public function notEmptyMakesThePropertyRequired(): void
     {

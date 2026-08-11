@@ -182,12 +182,41 @@ final class FormSchemaFactory
             $property['description'] = $description;
         }
 
-        $default = $element['definition']['defaultValue'] ?? null;
-        if (is_scalar($default) || (is_array($default) && array_is_list($default))) {
+        // A YAML default arrives as a string even for a number element, and a
+        // number property declaring default: "7" is a schema that contradicts
+        // itself. The default is stated in the property's own type or not at
+        // all.
+        $default = $this->defaultValue($element['definition']['defaultValue'] ?? null, $property['type'] ?? null);
+        if ($default !== null) {
             $property['default'] = $default;
         }
 
         return $property + $this->constraints($element['definition']);
+    }
+
+    private function defaultValue(mixed $default, mixed $type): mixed
+    {
+        if ($default === null || $default === '') {
+            return null;
+        }
+
+        if ($type === 'number') {
+            return $this->number($default);
+        }
+
+        if ($type === 'boolean') {
+            if (is_bool($default)) {
+                return $default;
+            }
+
+            return is_scalar($default) && in_array((string) $default, ['1', 'true', 'on'], true);
+        }
+
+        if ($type === 'array') {
+            return is_array($default) && array_is_list($default) ? $default : null;
+        }
+
+        return is_scalar($default) ? (string) $default : null;
     }
 
     /**

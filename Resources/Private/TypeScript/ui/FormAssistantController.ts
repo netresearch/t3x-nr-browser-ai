@@ -241,22 +241,22 @@ export class FormAssistantController implements ToolObserver {
     }
 
     private async derive(): Promise<void> {
-        if (this.running) {
-            return;
-        }
         const request = this.requestField().value;
-        if (request.trim().length === 0) {
+        if (this.running || request.trim().length === 0) {
             return;
         }
 
-        const session = await this.prepareModel();
-        if (session === undefined) {
-            return;
-        }
-
+        // Claimed before the first await. Preparing the model is asynchronous,
+        // and a second click during it would otherwise pass the guard and start
+        // a second derivation against the same form.
         this.running = true;
-        this.setStatus('deriving');
         try {
+            const session = await this.prepareModel();
+            if (session === undefined) {
+                return;
+            }
+
+            this.setStatus('deriving');
             await new LocalToolLoop(session, this.tool).run(request, this.lifetime.signal);
         } catch (error: unknown) {
             this.setStatus(
@@ -354,8 +354,16 @@ export class FormAssistantController implements ToolObserver {
     }
 }
 
-function pageLanguage(): string {
-    const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0];
+/**
+ * The geocoding endpoint accepts a fixed set of languages, so an unrecognised
+ * page language falls back to English rather than being passed on untested.
+ * The set is the one Chrome's Prompt API declares for output, which is also
+ * what the page assistant already limits itself to.
+ */
+const SUPPORTED_LANGUAGES = new Set(['de', 'en', 'es', 'fr', 'ja']);
 
-    return tag === undefined || tag === '' ? 'en' : tag;
+function pageLanguage(): string {
+    const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0] ?? '';
+
+    return SUPPORTED_LANGUAGES.has(tag) ? tag : 'en';
 }
