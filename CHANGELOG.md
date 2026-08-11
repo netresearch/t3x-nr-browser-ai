@@ -5,6 +5,56 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-11
+
+### Added
+
+- A second plugin, **Netresearch Browser AI form assistant**, that turns one
+  sentence into a filled parameter-rich form and a real result. The chain is
+  intent, structured output, tool call, action: the request goes to the
+  on-device model constrained by the form's own JSON Schema, the arguments that
+  come back are checked, written into the visible controls and run, and the
+  result is rendered as tables.
+
+  The schema is generated from the EXT:form definition rather than written by
+  hand, because that definition already carries the option values, the bounds,
+  whether an entry is mandatory and a sentence per element saying what it
+  means. Generating it is also what makes a large form affordable for an
+  on-device model: a multi-value element becomes one array property carrying
+  its options as an enum, not one boolean property per option.
+- The same tool is registered with the browser's model context where the
+  browser provides one — `document.modelContext`, falling back to the
+  deprecated `navigator.modelContext` — so an agent outside the page can call
+  it with the identical schema and receive the same result. Where neither
+  exists, only that registration is skipped.
+- A demonstration form shipped with the extension,
+  `Resources/Private/Forms/weatherQuery.form.yaml`, querying the open
+  Open-Meteo service across its full parameter surface: forty-four hourly
+  variables, twenty-two daily ones, current conditions, a model choice, four
+  unit groups, a time range and a grid-cell preference.
+- A per-content-element disclosure for the new plugin, naming the tool, its
+  description, the system prompt, the input schema and the arguments of the
+  last call.
+
+### Changed
+
+- `typo3/cms-form` is now a requirement. The second plugin is built on it.
+- The repository's own metadata and documentation assertions run in CI. They
+  were listed in `AGENTS.md` as commands that have to pass, and nothing invoked
+  them; the metadata assertion had contradicted `composer.json` for four
+  commits without anyone noticing.
+
+### Fixed
+
+- The published demonstration page's call-to-action links rendered white on the
+  primary brand tone, which reaches 3.37:1 — below the 4.5:1 WCAG 2 AA asks of
+  normal text.
+
+### Supported versions
+
+Unchanged from 0.4.0. The form assistant additionally requires `typo3/cms-form`,
+which ships with every supported TYPO3 version.
+
 ## [0.4.0] - 2026-08-03
 
 ### Added
@@ -114,6 +164,7 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.5.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.5.0
 [0.4.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.4.0
 [0.3.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.3.0
 [0.2.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.2.0
