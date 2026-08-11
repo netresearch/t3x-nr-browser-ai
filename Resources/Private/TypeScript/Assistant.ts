@@ -4,6 +4,7 @@ import type {PageContextProvider} from './context/PageContextProvider';
 import type {LanguageModelAdapter} from './types';
 import {ChatController, showPermanentFallback} from './ui/ChatController';
 import type {UiLabels, UiState} from './ui/ChatController';
+import {FormAssistantController} from './ui/FormAssistantController';
 
 const SUPPORTED_LANGUAGES = new Set(['de', 'en', 'es', 'fr', 'ja']);
 
@@ -36,18 +37,42 @@ export function bootstrapAssistants(
     return controllers;
 }
 
+/**
+ * The form assistant plugin shares this bundle rather than shipping a second
+ * one, so a site set that includes one file keeps including one file. A page
+ * without the plugin finds no root and pays for nothing but the query.
+ */
+export function bootstrapFormAssistants(
+    sourceDocument: Document = document,
+    adapterFactory: AdapterFactory = () => new BrowserLanguageModelAdapter(),
+): FormAssistantController[] {
+    const controllers: FormAssistantController[] = [];
+
+    for (const root of sourceDocument.querySelectorAll<HTMLElement>('[data-nr-browser-ai-form-root]')) {
+        const controller = FormAssistantController.create(root, adapterFactory(root));
+        if (controller !== undefined) {
+            controllers.push(controller);
+        }
+    }
+
+    return controllers;
+}
+
 export function installAssistantLifecycle(
     sourceDocument: Document = document,
     adapterFactory: AdapterFactory = () => new BrowserLanguageModelAdapter(),
     providerFactory: ProviderFactory = () => new DomPageContextProvider(sourceDocument),
 ): () => void {
     let controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+    let formControllers = bootstrapFormAssistants(sourceDocument, adapterFactory);
     const WindowAbortController = sourceDocument.defaultView?.AbortController ?? AbortController;
     const lifecycleEvents = new WindowAbortController();
 
     const destroyControllers = (): void => {
         controllers.forEach(controller => controller.destroy());
         controllers = [];
+        formControllers.forEach(controller => controller.destroy());
+        formControllers = [];
     };
 
     sourceDocument.defaultView?.addEventListener('pagehide', event => {
@@ -60,6 +85,7 @@ export function installAssistantLifecycle(
         if (isPersistedPageTransition(event)) {
             destroyControllers();
             controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+            formControllers = bootstrapFormAssistants(sourceDocument, adapterFactory);
         }
     }, {signal: lifecycleEvents.signal});
 
@@ -144,6 +170,6 @@ function normalizeLanguage(languageTag: string): string | undefined {
     return primary !== undefined && SUPPORTED_LANGUAGES.has(primary) ? primary : undefined;
 }
 
-if (document.querySelector('[data-nr-browser-ai-root]') !== null) {
+if (document.querySelector('[data-nr-browser-ai-root], [data-nr-browser-ai-form-root]') !== null) {
     installAssistantLifecycle();
 }

@@ -57,6 +57,7 @@ function fixture(availability: Availability = 'available', stream = streamOf('Sa
         measureContextUsage: vi.fn(async (_input: ModelPrompt) => 20),
         append: vi.fn(async (_input: ModelPrompt) => undefined),
         promptStreaming: vi.fn(() => stream),
+        prompt: vi.fn(async () => '{}'),
         destroy: browserDestroy,
     };
     const create = vi.fn<LanguageModelAdapter['create']>(async () => browserSession);
