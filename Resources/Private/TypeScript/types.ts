@@ -19,6 +19,18 @@ export interface ModelSession {
     measureContextUsage(input: ModelPrompt): Promise<number>;
     append(input: ModelPrompt): Promise<void>;
     promptStreaming(input: string, options?: {signal?: AbortSignal}): ReadableStream<string>;
+
+    /**
+     * The complete reply rather than a stream. `responseConstraint` is what
+     * turns the model into a producer of structured output: it is handed a JSON
+     * Schema and answers with JSON that fits it. Used by the form assistant,
+     * where a partial answer would be worthless — arguments are applied whole
+     * or not at all.
+     */
+    prompt(
+        input: string,
+        options?: {responseConstraint?: unknown; signal?: AbortSignal},
+    ): Promise<string>;
     destroy(): void;
 }
 

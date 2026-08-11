@@ -1,0 +1,97 @@
+{namespace formvh=TYPO3\CMS\Form\ViewHelpers}
+<section
+    id="{instanceId}"
+    class="nr-browser-ai-form"
+    aria-label="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formAssistant.region')}"
+    data-nr-browser-ai-form-root
+    data-form-identifier="{formIdentifier -> f:format.htmlspecialchars()}"
+    data-form-schema="{formSchema -> f:format.htmlspecialchars()}"
+    data-tool-name="{toolName -> f:format.htmlspecialchars()}"
+    data-tool-description="{toolDescription -> f:format.htmlspecialchars()}"
+    data-action="{action -> f:format.htmlspecialchars()}"
+    data-system-prompt="{systemPrompt -> f:format.htmlspecialchars()}"
+    data-supplemental-instruction="{supplementalInstruction -> f:format.htmlspecialchars()}"
+    data-label-checking="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.checking')}"
+    data-label-downloadable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.downloadable')}"
+    data-label-downloading="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.downloading')}"
+    data-label-ready="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.ready')}"
+    data-label-deriving="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.deriving')}"
+    data-label-querying="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.querying')}"
+    data-label-filled="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.filled')}"
+    data-label-rejected="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.rejected')}"
+    data-label-unresolved-place="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.unresolvedPlace')}"
+    data-label-query-failed="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.queryFailed')}"
+    data-label-rate-limited="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.rateLimited')}"
+    data-label-error-retryable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:status.errorRetryable')}"
+    data-label-unavailable="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formStatus.unavailable')}"
+    data-label-result-caption="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formResult.caption')}"
+    data-label-result-place="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formResult.place')}"
+    data-label-result-time="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formResult.time')}"
+>
+    <header class="nr-browser-ai-form__header">
+        <a class="nr-browser-ai-form__brand-link" href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH">
+            <img class="nr-browser-ai-form__symbol" src="{f:uri.resource(path: 'Icons/Extension.svg', extensionName: 'NrBrowserAi')}" alt="" width="48" height="48" />
+        </a>
+        <h2 id="{instanceId}-title" class="nr-browser-ai-form__title">
+            <f:if condition="{title}"><f:then>{title}</f:then><f:else><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formAssistant.title" /></f:else></f:if>
+        </h2>
+    </header>
+    <f:if condition="{introduction}"><p class="nr-browser-ai-form__introduction">{introduction}</p></f:if>
+
+    <f:comment>
+        The request row stays hidden until the bundle reports a usable model. The
+        form below it does not: it is the plugin's actual content and has to be
+        operable by hand on every browser, with or without an assistant.
+    </f:comment>
+    <div class="nr-browser-ai-form__assistant" data-nr-browser-ai-form-assistant hidden>
+        <p id="{instanceId}-status" class="nr-browser-ai-form__status" data-nr-browser-ai-form-status role="status" aria-atomic="true" tabindex="-1"></p>
+        <button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-setup><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.setup" /></button>
+        <progress class="nr-browser-ai-form__progress" data-nr-browser-ai-form-progress max="1" value="0" aria-label="{f:translate(key: 'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:progress.download')}"></progress>
+        <div class="nr-browser-ai-form__request">
+            <label class="nr-browser-ai-form__label" for="{instanceId}-request"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:field.request" /></label>
+            <div class="nr-browser-ai-form__input-row">
+                <input class="nr-browser-ai-form__input" id="{instanceId}-request" type="text" data-nr-browser-ai-form-request autocomplete="off" aria-describedby="{instanceId}-status" />
+                <button class="nr-browser-ai-form__button nr-browser-ai-form__button--primary" type="button" data-nr-browser-ai-form-submit><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:action.derive" /></button>
+            </div>
+        </div>
+        <p class="nr-browser-ai-form__visually-hidden" data-nr-browser-ai-form-announcement aria-live="polite" aria-atomic="true"></p>
+    </div>
+
+    <div class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields>
+        <formvh:render factoryClass="Netresearch\NrBrowserAi\Domain\Form\FormAssistantFormFactory" overrideConfiguration="{formIdentifier: formIdentifier}" />
+    </div>
+
+    <div class="nr-browser-ai-form__result" data-nr-browser-ai-form-result hidden></div>
+
+    <f:comment>
+        Deliberately outside the assistant block: what the tool exposes and what
+        the model is told is worth reading whether or not this browser can run a
+        model. Every value is escaped by Fluid.
+    </f:comment>
+    <f:if condition="{showConfiguration}">
+        <details class="nr-browser-ai-form__configuration" data-nr-browser-ai-form-configuration>
+            <summary class="nr-browser-ai-form__configuration-summary"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.summary" /></summary>
+            <p class="nr-browser-ai-form__configuration-lead"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.lead" /></p>
+            <dl class="nr-browser-ai-form__configuration-list">
+                <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.toolName" /></dt>
+                <dd><code>{toolName}</code></dd>
+                <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.toolDescription" /></dt>
+                <dd>{toolDescription}</dd>
+                <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.systemPrompt" /></dt>
+                <dd>{systemPrompt}</dd>
+                <f:if condition="{supplementalInstruction}">
+                    <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:configuration.supplementalInstruction" /></dt>
+                    <dd>{supplementalInstruction}</dd>
+                </f:if>
+                <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.schema" /></dt>
+                <dd><pre class="nr-browser-ai-form__schema" data-nr-browser-ai-form-schema-display>{formSchema}</pre></dd>
+                <dt><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.lastCall" /></dt>
+                <dd><pre class="nr-browser-ai-form__call" data-nr-browser-ai-form-call><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.noCallYet" /></pre></dd>
+            </dl>
+            <p class="nr-browser-ai-form__configuration-note"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formConfiguration.note" /></p>
+        </details>
+    </f:if>
+    <footer class="nr-browser-ai-form__footer">
+        <a href="https://www.netresearch.de/">Netresearch DTT GmbH</a>
+    </footer>
+</section>

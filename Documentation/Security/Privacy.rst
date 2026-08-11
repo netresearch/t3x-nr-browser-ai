@@ -26,6 +26,27 @@ Chrome itself manages model download, updates, storage and eviction. Site
 operators must evaluate Chrome deployment and browser governance separately
 from the extension.
 
+.. _security-form-assistant-flow:
+
+The form assistant's outbound query
+===================================
+
+The form assistant plugin is the one place where a request does leave the
+browser, and it has to be described as such rather than covered by the sentence
+above. Deriving the parameters stays on the device; running the form does not.
+The query goes from the visitor's browser directly to the configured data
+source, which therefore sees the visitor's IP address, the parameters of the
+query and — for the shipped demonstration form — the place name being resolved.
+
+It goes there directly and not through the site, so the site never sees it
+either. Nothing is stored anywhere: the result exists in browser memory and is
+replaced by the next query.
+
+The tool is also offered to the browser's model context where the browser
+provides one. An agent that accepts the offer can then run the query, and the
+result it receives is content this page does not vouch for; the registration
+says so through its ``untrustedContentHint`` annotation.
+
 .. _security-prompts:
 
 Prompt and content boundaries
@@ -90,6 +111,10 @@ Before public use:
 - Confirm that selected page content may be processed on visitor devices.
 - Explain the feature and Chrome dependency in the site's privacy information
   where required by the applicable policy or law.
+- Name the data source of every form assistant plugin in that same privacy
+  information: the query reaches it directly from the visitor's browser, so it
+  is a third-party recipient of the visitor's address regardless of what the
+  site itself stores.
 - Choose a fallback that remains useful without exposing restricted content.
 - Maintain TYPO3, the extension, Chrome and operating systems with security
   updates.

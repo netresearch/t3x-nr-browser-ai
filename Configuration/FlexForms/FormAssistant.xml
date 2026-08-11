@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<T3DataStructure>
+    <sheets>
+        <sDEF>
+            <ROOT>
+                <sheetTitle>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.sheet.formAssistant</sheetTitle>
+                <type>array</type>
+                <el>
+                    <settings.formIdentifier>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.formIdentifier</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.formIdentifier.description</description>
+                        <config>
+                            <type>select</type>
+                            <renderType>selectSingle</renderType>
+                            <items>
+                                <numIndex index="0">
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.formIdentifier.weatherQuery</label>
+                                    <value>weatherQuery</value>
+                                </numIndex>
+                            </items>
+                            <default>weatherQuery</default>
+                        </config>
+                    </settings.formIdentifier>
+                    <settings.title>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.title</label>
+                        <config>
+                            <type>input</type>
+                        </config>
+                    </settings.title>
+                    <settings.introduction>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.introduction</label>
+                        <config>
+                            <type>text</type>
+                            <rows>3</rows>
+                        </config>
+                    </settings.introduction>
+                    <settings.supplementalInstruction>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.supplementalInstruction</label>
+                        <config>
+                            <type>text</type>
+                            <rows>5</rows>
+                        </config>
+                    </settings.supplementalInstruction>
+                    <settings.showConfiguration>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.showConfiguration</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.showConfiguration.formAssistant.description</description>
+                        <config>
+                            <type>check</type>
+                            <renderType>checkboxToggle</renderType>
+                            <default>0</default>
+                        </config>
+                    </settings.showConfiguration>
+                </el>
+            </ROOT>
+        </sDEF>
+    </sheets>
+</T3DataStructure>

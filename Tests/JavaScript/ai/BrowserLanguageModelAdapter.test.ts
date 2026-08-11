@@ -15,6 +15,7 @@ const fakeSession: ModelSession = {
     measureContextUsage: vi.fn(async () => 0),
     append: vi.fn(async () => undefined),
     promptStreaming: vi.fn(() => new ReadableStream<string>()),
+    prompt: vi.fn(async () => '{}'),
     destroy: vi.fn(),
 };
 

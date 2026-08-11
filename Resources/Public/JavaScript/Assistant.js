@@ -480,11 +480,11 @@ ${editorInstruction}`);
   return parts.join("\n\n");
 }
 function languageInstruction(outputLanguages) {
-  const pageLanguage = LANGUAGE_NAMES[outputLanguages[0] ?? ""];
-  if (pageLanguage === void 0) {
+  const pageLanguage2 = LANGUAGE_NAMES[outputLanguages[0] ?? ""];
+  if (pageLanguage2 === void 0) {
     return "Answer in the language of the question.";
   }
-  return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage}.`;
+  return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage2}.`;
 }
 function remainingContextBudget(session, usageLimit) {
   const maximumUsage = session.contextWindow * usageLimit;
@@ -1470,8 +1470,977 @@ function required(root, selector, constructor) {
   return element;
 }
 
-// Resources/Private/TypeScript/Assistant.ts
+// Resources/Private/TypeScript/form/FormSchemaSource.ts
+var SUPPORTED_TYPES = /* @__PURE__ */ new Set(["string", "number", "boolean", "array"]);
+function readFormSchema(serialized) {
+  if (serialized.trim().length === 0) {
+    return void 0;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(serialized);
+  } catch {
+    return void 0;
+  }
+  if (!isRecord(parsed) || parsed["type"] !== "object" || !isRecord(parsed["properties"])) {
+    return void 0;
+  }
+  const properties = {};
+  for (const [name, property] of Object.entries(parsed["properties"])) {
+    const checked = readProperty(property);
+    if (checked === void 0) {
+      return void 0;
+    }
+    properties[name] = checked;
+  }
+  if (Object.keys(properties).length === 0) {
+    return void 0;
+  }
+  const required2 = parsed["required"];
+  return {
+    type: "object",
+    properties,
+    required: isStringArray(required2) ? required2 : [],
+    additionalProperties: parsed["additionalProperties"] === true
+  };
+}
+function readProperty(property) {
+  if (!isRecord(property) || typeof property["type"] !== "string") {
+    return void 0;
+  }
+  if (!SUPPORTED_TYPES.has(property["type"])) {
+    return void 0;
+  }
+  if (property["type"] === "array" && !isStringItems(property["items"])) {
+    return void 0;
+  }
+  return property;
+}
+function isStringItems(items) {
+  return isRecord(items) && items["type"] === "string";
+}
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
+}
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Resources/Private/TypeScript/form/FormFiller.ts
+var FormFiller = class {
+  constructor(form) {
+    this.form = form;
+  }
+  form;
+  /**
+   * @return the identifiers that had no control to write into
+   */
+  fill(schema, values) {
+    const missing = [];
+    for (const [name, value] of Object.entries(values)) {
+      const property = schema.properties[name];
+      const controls = this.controlsFor(name);
+      if (property === void 0 || controls.length === 0) {
+        missing.push(name);
+        continue;
+      }
+      if (property.type === "array") {
+        this.setGroup(controls, Array.isArray(value) ? value : []);
+      } else if (property.type === "boolean") {
+        this.setBoolean(controls, value === true);
+      } else {
+        this.setSingle(controls, String(value));
+      }
+    }
+    return missing;
+  }
+  read(schema) {
+    const values = {};
+    for (const [name, property] of Object.entries(schema.properties)) {
+      const controls = this.controlsFor(name);
+      if (controls.length === 0) {
+        continue;
+      }
+      const value = this.readValue(property.type, controls);
+      if (value !== void 0) {
+        values[name] = value;
+      }
+    }
+    return values;
+  }
+  readValue(type, controls) {
+    if (type === "array") {
+      return this.readGroup(controls);
+    }
+    if (type === "boolean") {
+      return controls.some((control) => isCheckbox(control) && control.checked);
+    }
+    const first = controls[0];
+    if (first === void 0) {
+      return void 0;
+    }
+    if (isSelect(first)) {
+      return first.value;
+    }
+    if (type === "number") {
+      const value = Number(first.value);
+      return Number.isFinite(value) ? value : void 0;
+    }
+    return first.value;
+  }
+  readGroup(controls) {
+    const values = [];
+    for (const control of controls) {
+      if (isCheckbox(control) && control.checked) {
+        values.push(control.value);
+      } else if (isSelect(control)) {
+        for (const option of Array.from(control.selectedOptions)) {
+          values.push(option.value);
+        }
+      }
+    }
+    return values;
+  }
+  setGroup(controls, values) {
+    const wanted = new Set(values.map((value) => String(value)));
+    for (const control of controls) {
+      if (isCheckbox(control)) {
+        control.checked = wanted.has(control.value);
+        notify(control);
+      } else if (isSelect(control)) {
+        for (const option of Array.from(control.options)) {
+          option.selected = wanted.has(option.value);
+        }
+        notify(control);
+      }
+    }
+  }
+  setBoolean(controls, checked) {
+    for (const control of controls) {
+      if (isCheckbox(control)) {
+        control.checked = checked;
+        notify(control);
+      }
+    }
+  }
+  setSingle(controls, value) {
+    const control = controls[0];
+    if (control === void 0) {
+      return;
+    }
+    if (isSelect(control) && !Array.from(control.options).some((option) => option.value === value)) {
+      return;
+    }
+    control.value = value;
+    notify(control);
+  }
+  controlsFor(identifier) {
+    const controls = [];
+    for (const element of Array.from(this.form.elements)) {
+      if (!isControl(element) || element.type === "hidden") {
+        continue;
+      }
+      if (identifierOf(element.name) === identifier) {
+        controls.push(element);
+      }
+    }
+    return controls;
+  }
+};
+function identifierOf(name) {
+  const trimmed = name.endsWith("[]") ? name.slice(0, -2) : name;
+  const end = trimmed.lastIndexOf("]");
+  if (end < 0) {
+    return void 0;
+  }
+  const start = trimmed.lastIndexOf("[", end);
+  if (start < 0) {
+    return void 0;
+  }
+  const identifier = trimmed.slice(start + 1, end);
+  return identifier.length > 0 ? identifier : void 0;
+}
+function isControl(element) {
+  return element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement;
+}
+function isCheckbox(control) {
+  return control instanceof HTMLInputElement && control.type === "checkbox";
+}
+function isSelect(control) {
+  return control instanceof HTMLSelectElement;
+}
+function notify(control) {
+  control.dispatchEvent(new Event("input", { bubbles: true }));
+  control.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+// Resources/Private/TypeScript/form/GroupRoles.ts
+function correctCheckboxGroupRoles(form) {
+  let corrected = 0;
+  for (const group of form.querySelectorAll('[role="radiogroup"]')) {
+    if (group.querySelector('input[type="checkbox"]') === null) {
+      continue;
+    }
+    group.setAttribute("role", "group");
+    corrected++;
+  }
+  return corrected;
+}
+
+// Resources/Private/TypeScript/query/OpenMeteoQuery.ts
+var GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
+var FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
+var SUMMARY_ROW_LIMIT = 24;
+var BLOCKS = [
+  ["current", "currentVariables"],
+  ["daily", "dailyVariables"],
+  ["hourly", "hourlyVariables"]
+];
+var SCALAR_PARAMETERS = [
+  ["models", "weatherModel"],
+  ["temperature_unit", "temperatureUnit"],
+  ["wind_speed_unit", "windSpeedUnit"],
+  ["precipitation_unit", "precipitationUnit"],
+  ["timezone", "timezone"],
+  ["cell_selection", "cellSelection"],
+  ["past_days", "pastDays"],
+  ["forecast_days", "forecastDays"]
+];
+var OpenMeteoQuery = class {
+  constructor(language, fetchResource = (input, init) => fetch(input, init)) {
+    this.language = language;
+    this.fetchResource = fetchResource;
+  }
+  language;
+  fetchResource;
+  async run(values, signal) {
+    const place = String(values["place"] ?? "").trim();
+    if (place.length === 0) {
+      return failure("unresolved-place", "No place was given, so nothing could be looked up.");
+    }
+    let resolved;
+    try {
+      resolved = await this.resolvePlace(place, signal);
+    } catch (error) {
+      return this.transportFailure(error);
+    }
+    if (resolved === void 0) {
+      return failure(
+        "unresolved-place",
+        `No place named "${place}" was found. Try a larger nearby place, or add the country.`
+      );
+    }
+    let payload;
+    try {
+      payload = await this.requestForecast(resolved, values, signal);
+    } catch (error) {
+      return this.transportFailure(error);
+    }
+    const blocks = this.blocksFrom(payload, values);
+    return {
+      ok: true,
+      summary: this.summarize(resolved, blocks),
+      place: resolved,
+      blocks
+    };
+  }
+  async resolvePlace(place, signal) {
+    const url = new URL(GEOCODING_URL);
+    url.searchParams.set("name", place);
+    url.searchParams.set("count", "1");
+    url.searchParams.set("format", "json");
+    url.searchParams.set("language", this.language);
+    const payload = await this.requestJson(url, signal);
+    const results = payload["results"];
+    if (!Array.isArray(results) || results.length === 0) {
+      return void 0;
+    }
+    const first = results[0];
+    const latitude = Number(first["latitude"]);
+    const longitude = Number(first["longitude"]);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return void 0;
+    }
+    return {
+      name: String(first["name"] ?? place),
+      country: String(first["country"] ?? ""),
+      latitude,
+      longitude,
+      timezone: String(first["timezone"] ?? "")
+    };
+  }
+  async requestForecast(place, values, signal) {
+    const url = new URL(FORECAST_URL);
+    url.searchParams.set("latitude", String(place.latitude));
+    url.searchParams.set("longitude", String(place.longitude));
+    for (const [parameter, field] of BLOCKS) {
+      const selected = values[field];
+      if (Array.isArray(selected) && selected.length > 0) {
+        url.searchParams.set(parameter, selected.join(","));
+      }
+    }
+    for (const [parameter, field] of SCALAR_PARAMETERS) {
+      const value = values[field];
+      if (value !== void 0 && value !== "" && !Array.isArray(value)) {
+        url.searchParams.set(parameter, String(value));
+      }
+    }
+    return this.requestJson(url, signal);
+  }
+  async requestJson(url, signal) {
+    const response = await this.fetchResource(url.toString(), { signal });
+    if (response.status === 429) {
+      throw new RateLimited();
+    }
+    if (!response.ok) {
+      throw new Error(`The data source answered with status ${response.status}.`);
+    }
+    const payload = await response.json();
+    if (typeof payload !== "object" || payload === null) {
+      throw new Error("The data source answered with something other than an object.");
+    }
+    return payload;
+  }
+  transportFailure(error) {
+    if (error instanceof RateLimited) {
+      return failure("rate-limited", "The data source is refusing further requests for the moment.");
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      return failure("failed", "The query was stopped.");
+    }
+    const reason = error instanceof Error ? error.message : "The data source could not be reached.";
+    return failure("failed", reason);
+  }
+  blocksFrom(payload, values) {
+    const blocks = [];
+    for (const [key, field] of BLOCKS) {
+      const requested = values[field];
+      if (!Array.isArray(requested) || requested.length === 0) {
+        continue;
+      }
+      const data = payload[key];
+      const units = payload[`${key}_units`];
+      if (typeof data !== "object" || data === null) {
+        continue;
+      }
+      const block = this.block(key, requested, data, asRecord(units));
+      if (block.columns.length > 0) {
+        blocks.push(block);
+      }
+    }
+    return blocks;
+  }
+  block(key, requested, data, units) {
+    const time = data["time"];
+    const times = Array.isArray(time) ? time.map((entry) => String(entry)) : [String(time ?? "")];
+    const columns = [];
+    for (const name of requested) {
+      const values = data[name];
+      if (values === void 0) {
+        continue;
+      }
+      columns.push({
+        name,
+        unit: String(units[name] ?? ""),
+        values: Array.isArray(values) ? values.map(readCell) : [readCell(values)]
+      });
+    }
+    return { key, times, columns };
+  }
+  /**
+   * The caller is a model with a small context, so the summary states the
+   * place once and then one line per point in time, with units named in the
+   * header rather than repeated on every value.
+   */
+  summarize(place, blocks) {
+    const where = place.country === "" ? place.name : `${place.name}, ${place.country}`;
+    const lines = [
+      `Weather for ${where} (${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}, ${place.timezone}).`
+    ];
+    for (const block of blocks) {
+      const header = block.columns.map((column) => column.unit === "" ? column.name : `${column.name} in ${column.unit}`).join(", ");
+      lines.push("", `${block.key}: time, ${header}`);
+      const rows = Math.min(block.times.length, SUMMARY_ROW_LIMIT);
+      for (let row = 0; row < rows; row++) {
+        const cells = block.columns.map((column) => formatCell(column.values[row]));
+        lines.push([block.times[row] ?? "", ...cells].join(", "));
+      }
+      if (block.times.length > rows) {
+        lines.push(`(${block.times.length - rows} further rows are shown on the page.)`);
+      }
+    }
+    return lines.join("\n");
+  }
+};
+var RateLimited = class extends Error {
+  constructor() {
+    super("The data source is rate limiting.");
+    this.name = "RateLimited";
+  }
+};
+function failure(reason, summary) {
+  return { ok: false, failure: reason, summary, blocks: [] };
+}
+function readCell(value) {
+  if (typeof value === "number" || typeof value === "string") {
+    return value;
+  }
+  return null;
+}
+function formatCell(value) {
+  if (value === null || value === void 0) {
+    return "\u2014";
+  }
+  return String(value);
+}
+function asRecord(value) {
+  return typeof value === "object" && value !== null ? value : {};
+}
+
+// Resources/Private/TypeScript/result/ResultRenderer.ts
+var ResultRenderer = class {
+  constructor(output, labels2) {
+    this.output = output;
+    this.labels = labels2;
+  }
+  output;
+  labels;
+  clear() {
+    this.output.replaceChildren();
+    this.output.hidden = true;
+  }
+  render(outcome) {
+    this.output.replaceChildren();
+    if (!outcome.ok || outcome.blocks.length === 0) {
+      this.output.hidden = true;
+      return;
+    }
+    const heading = document.createElement("h3");
+    heading.className = "nr-browser-ai-form__result-title";
+    heading.textContent = this.labels.caption;
+    this.output.append(heading);
+    if (outcome.place !== void 0) {
+      const place = document.createElement("p");
+      place.className = "nr-browser-ai-form__result-place";
+      const where = outcome.place.country === "" ? outcome.place.name : `${outcome.place.name}, ${outcome.place.country}`;
+      place.textContent = `${this.labels.place}: ${where}`;
+      this.output.append(place);
+    }
+    for (const block of outcome.blocks) {
+      this.output.append(this.table(block));
+    }
+    this.output.hidden = false;
+  }
+  table(block) {
+    const scroller = document.createElement("div");
+    scroller.className = "nr-browser-ai-form__table-scroller";
+    const table = document.createElement("table");
+    table.className = "nr-browser-ai-form__table";
+    const caption = document.createElement("caption");
+    caption.textContent = block.key;
+    table.append(caption);
+    const head = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    headRow.append(this.headerCell(this.labels.time));
+    for (const column of block.columns) {
+      headRow.append(this.headerCell(
+        column.unit === "" ? column.name : `${column.name} (${column.unit})`
+      ));
+    }
+    head.append(headRow);
+    table.append(head);
+    const body = document.createElement("tbody");
+    for (let row = 0; row < block.times.length; row++) {
+      const bodyRow = document.createElement("tr");
+      bodyRow.append(this.headerCell(block.times[row] ?? "", "row"));
+      for (const column of block.columns) {
+        const cell = document.createElement("td");
+        const value = column.values[row];
+        cell.textContent = value === null || value === void 0 ? "\u2014" : String(value);
+        bodyRow.append(cell);
+      }
+      body.append(bodyRow);
+    }
+    table.append(body);
+    scroller.append(table);
+    return scroller;
+  }
+  headerCell(text, scope = "col") {
+    const cell = document.createElement("th");
+    cell.scope = scope;
+    cell.textContent = text;
+    return cell;
+  }
+};
+
+// Resources/Private/TypeScript/form/ArgumentValidator.ts
+function validateArguments(schema, input) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return { accepted: false, reason: "The arguments are not an object." };
+  }
+  const provided = input;
+  const values = {};
+  for (const [name, raw] of Object.entries(provided)) {
+    if (raw === void 0 || raw === null) {
+      continue;
+    }
+    const property = schema.properties[name];
+    if (property === void 0) {
+      return { accepted: false, reason: `The form has no field named "${name}".` };
+    }
+    const value = coerce(property, raw);
+    if (value === void 0) {
+      return { accepted: false, reason: `The value for "${name}" does not fit that field.` };
+    }
+    values[name] = value;
+  }
+  for (const name of schema.required ?? []) {
+    const value = values[name];
+    if (value === void 0 || typeof value === "string" && value.trim().length === 0) {
+      return { accepted: false, reason: `"${name}" is required and was not supplied.` };
+    }
+  }
+  return { accepted: true, values };
+}
+function coerce(property, raw) {
+  switch (property.type) {
+    case "string":
+      return coerceString(property.enum, raw);
+    case "number":
+      return coerceNumber(property.minimum, property.maximum, raw);
+    case "boolean":
+      return coerceBoolean(raw);
+    case "array":
+      return coerceArray(property.items.enum, raw);
+  }
+}
+function coerceString(allowed, raw) {
+  if (typeof raw !== "string") {
+    return void 0;
+  }
+  if (allowed !== void 0 && !allowed.includes(raw)) {
+    return void 0;
+  }
+  return raw;
+}
+function coerceNumber(minimum, maximum, raw) {
+  const value = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : Number.NaN;
+  if (!Number.isFinite(value)) {
+    return void 0;
+  }
+  let clamped = value;
+  if (minimum !== void 0) {
+    clamped = Math.max(clamped, minimum);
+  }
+  if (maximum !== void 0) {
+    clamped = Math.min(clamped, maximum);
+  }
+  return clamped;
+}
+function coerceBoolean(raw) {
+  if (typeof raw === "boolean") {
+    return raw;
+  }
+  if (raw === "true" || raw === "1") {
+    return true;
+  }
+  if (raw === "false" || raw === "0") {
+    return false;
+  }
+  return void 0;
+}
+function coerceArray(allowed, raw) {
+  const entries = Array.isArray(raw) ? raw : [raw];
+  const values = [];
+  for (const entry of entries) {
+    const value = coerceString(allowed, entry);
+    if (value === void 0) {
+      return void 0;
+    }
+    if (!values.includes(value)) {
+      values.push(value);
+    }
+  }
+  return values;
+}
+
+// Resources/Private/TypeScript/tools/FormTool.ts
+var FormTool = class {
+  constructor(name, description, inputSchema, filler, action, observer) {
+    this.name = name;
+    this.description = description;
+    this.inputSchema = inputSchema;
+    this.filler = filler;
+    this.action = action;
+    this.observer = observer;
+  }
+  name;
+  description;
+  inputSchema;
+  filler;
+  action;
+  observer;
+  async execute(input, signal) {
+    this.observer.onCall(input);
+    const validation = validateArguments(this.inputSchema, input);
+    if (!validation.accepted) {
+      this.observer.onRejected(validation.reason);
+      return `The arguments were not applied: ${validation.reason}`;
+    }
+    this.filler.fill(this.inputSchema, validation.values);
+    const values = this.filler.read(this.inputSchema);
+    this.observer.onFilled(values);
+    const outcome = await this.action.run(values, signal);
+    this.observer.onOutcome(outcome);
+    return outcome.summary;
+  }
+  /** Run the form as it currently stands, without a model in the loop. */
+  async rerun(signal) {
+    const values = this.filler.read(this.inputSchema);
+    this.observer.onFilled(values);
+    const outcome = await this.action.run(values, signal);
+    this.observer.onOutcome(outcome);
+    return outcome;
+  }
+};
+
+// Resources/Private/TypeScript/tools/LocalToolLoop.ts
+var LocalToolLoopError = class extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+    this.name = "LocalToolLoopError";
+  }
+  code;
+};
+var LocalToolLoop = class {
+  constructor(session, tool) {
+    this.session = session;
+    this.tool = tool;
+  }
+  session;
+  tool;
+  async run(request, signal) {
+    const trimmed = request.trim();
+    if (trimmed.length === 0) {
+      throw new LocalToolLoopError("empty-request", "Enter a request.");
+    }
+    const output = await this.session.prompt(trimmed, {
+      responseConstraint: this.tool.inputSchema,
+      signal
+    });
+    let parsed;
+    try {
+      parsed = JSON.parse(output);
+    } catch {
+      throw new LocalToolLoopError(
+        "unusable-output",
+        "The model did not return arguments that could be read."
+      );
+    }
+    return this.tool.execute(parsed, signal);
+  }
+};
+
+// Resources/Private/TypeScript/tools/ModelContextBinding.ts
+function bindModelContext(tool, signal, hosts = [
+  typeof document === "undefined" ? void 0 : document,
+  typeof navigator === "undefined" ? void 0 : navigator
+]) {
+  for (const host of hosts) {
+    const context = asModelContext(host?.modelContext);
+    if (context === void 0) {
+      continue;
+    }
+    try {
+      context.registerTool(
+        {
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+          execute: (input) => tool.execute(input),
+          annotations: { readOnlyHint: false, untrustedContentHint: true }
+        },
+        { signal }
+      );
+      return true;
+    } catch {
+    }
+  }
+  return false;
+}
+function asModelContext(candidate) {
+  if (typeof candidate !== "object" || candidate === null) {
+    return void 0;
+  }
+  const registerTool = candidate.registerTool;
+  return typeof registerTool === "function" ? candidate : void 0;
+}
+
+// Resources/Private/TypeScript/ui/FormAssistantController.ts
+var LABEL_KEYS = {
+  checking: "labelChecking",
+  downloadable: "labelDownloadable",
+  downloading: "labelDownloading",
+  ready: "labelReady",
+  deriving: "labelDeriving",
+  querying: "labelQuerying",
+  filled: "labelFilled",
+  rejected: "labelRejected",
+  unresolvedPlace: "labelUnresolvedPlace",
+  queryFailed: "labelQueryFailed",
+  rateLimited: "labelRateLimited",
+  errorRetryable: "labelErrorRetryable",
+  unavailable: "labelUnavailable"
+};
+var defaultActionFactory = (action, language) => action === "openMeteo" ? new OpenMeteoQuery(language) : void 0;
+var FormAssistantController = class _FormAssistantController {
+  constructor(root, form, schema, action, adapter) {
+    this.root = root;
+    this.form = form;
+    this.adapter = adapter;
+    this.schema = schema;
+    this.filler = new FormFiller(form);
+    this.renderer = new ResultRenderer(this.element("result"), {
+      caption: this.label("labelResultCaption"),
+      place: this.label("labelResultPlace"),
+      time: this.label("labelResultTime")
+    });
+    this.tool = new FormTool(
+      root.dataset["toolName"] ?? "",
+      root.dataset["toolDescription"] ?? "",
+      schema,
+      this.filler,
+      action,
+      this
+    );
+  }
+  root;
+  form;
+  adapter;
+  lifetime = new AbortController();
+  renderer;
+  filler;
+  tool;
+  schema;
+  session;
+  running = false;
+  /**
+   * @return undefined when this root carries no usable schema or no known
+   *         action, in which case the plugin stays a plain form
+   */
+  static create(root, adapter, actionFactory = defaultActionFactory) {
+    const form = root.querySelector("form");
+    const schema = readFormSchema(root.dataset["formSchema"] ?? "");
+    const action = actionFactory(root.dataset["action"] ?? "", pageLanguage());
+    if (form === null || schema === void 0 || action === void 0) {
+      return void 0;
+    }
+    if ((root.dataset["toolName"] ?? "") === "") {
+      return void 0;
+    }
+    const controller = new _FormAssistantController(root, form, schema, action, adapter);
+    controller.start();
+    return controller;
+  }
+  destroy() {
+    this.lifetime.abort();
+    this.session?.destroy();
+    this.session = void 0;
+  }
+  onCall(input) {
+    const display = this.root.querySelector("[data-nr-browser-ai-form-call]");
+    if (display !== null) {
+      display.textContent = JSON.stringify(input, null, 2);
+    }
+  }
+  onRejected(reason) {
+    this.setStatus("rejected", reason);
+  }
+  onFilled(_values) {
+    this.setStatus("querying");
+  }
+  onOutcome(outcome) {
+    if (outcome.ok) {
+      this.renderer.render(outcome);
+      this.setStatus("filled");
+      return;
+    }
+    this.renderer.clear();
+    if (outcome.failure === "unresolved-place") {
+      this.setStatus("unresolvedPlace", outcome.summary);
+    } else if (outcome.failure === "rate-limited") {
+      this.setStatus("rateLimited", outcome.summary);
+    } else {
+      this.setStatus("queryFailed", outcome.summary);
+    }
+  }
+  start() {
+    correctCheckboxGroupRoles(this.form);
+    bindModelContext(this.tool, this.lifetime.signal);
+    this.form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      void this.rerun();
+    }, { signal: this.lifetime.signal });
+    this.element("setup").addEventListener("click", () => {
+      void this.prepareModel();
+    }, { signal: this.lifetime.signal });
+    this.element("submit").addEventListener("click", () => {
+      void this.derive();
+    }, { signal: this.lifetime.signal });
+    this.requestField().addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void this.derive();
+      }
+    }, { signal: this.lifetime.signal });
+    void this.checkAvailability();
+  }
+  async checkAvailability() {
+    this.reveal();
+    this.setStatus("checking");
+    const availability = await this.adapter.availability(this.modelOptions());
+    if (availability === "unavailable") {
+      this.setStatus("unavailable");
+      this.showRequestRow(false);
+      this.showSetup(false);
+      return;
+    }
+    if (availability === "available") {
+      this.setStatus("ready");
+      this.showRequestRow(true);
+      this.showSetup(false);
+      return;
+    }
+    this.setStatus("downloadable");
+    this.showRequestRow(false);
+    this.showSetup(true);
+  }
+  /**
+   * Creating a session downloads the model on first use, which the browser
+   * only permits from a user gesture. That is why it happens here and on the
+   * first request, never during page load.
+   */
+  async prepareModel() {
+    if (this.session !== void 0) {
+      return this.session;
+    }
+    const progress = this.root.querySelector("[data-nr-browser-ai-form-progress]");
+    this.setStatus("downloading");
+    try {
+      this.session = await this.adapter.create({
+        ...this.modelOptions(),
+        onDownloadProgress: (value) => {
+          if (progress !== null) {
+            progress.value = value;
+          }
+        }
+      });
+    } catch {
+      this.setStatus("errorRetryable");
+      return void 0;
+    }
+    this.setStatus("ready");
+    this.showSetup(false);
+    this.showRequestRow(true);
+    return this.session;
+  }
+  async derive() {
+    const request = this.requestField().value;
+    if (this.running || request.trim().length === 0) {
+      return;
+    }
+    this.running = true;
+    try {
+      const session = await this.prepareModel();
+      if (session === void 0) {
+        return;
+      }
+      this.setStatus("deriving");
+      await new LocalToolLoop(session, this.tool).run(request, this.lifetime.signal);
+    } catch (error) {
+      this.setStatus(
+        error instanceof LocalToolLoopError ? "rejected" : "errorRetryable",
+        error instanceof Error ? error.message : void 0
+      );
+    } finally {
+      this.running = false;
+    }
+  }
+  /** Runs the form as it stands, after a manual correction or without a model. */
+  async rerun() {
+    if (this.running) {
+      return;
+    }
+    this.running = true;
+    try {
+      await this.tool.rerun(this.lifetime.signal);
+    } finally {
+      this.running = false;
+    }
+  }
+  modelOptions() {
+    const language = pageLanguage();
+    const instruction = (this.root.dataset["supplementalInstruction"] ?? "").trim();
+    const systemPrompt = [this.root.dataset["systemPrompt"] ?? "", instruction].map((part) => part.trim()).filter((part) => part.length > 0).join("\n\n");
+    return {
+      systemPrompt,
+      inputLanguages: language === "en" ? ["en"] : ["en", language],
+      outputLanguages: ["en"]
+    };
+  }
+  reveal() {
+    this.element("assistant").hidden = false;
+  }
+  showRequestRow(visible) {
+    const row = this.root.querySelector(".nr-browser-ai-form__request");
+    if (row !== null) {
+      row.hidden = !visible;
+    }
+  }
+  showSetup(visible) {
+    this.element("setup").hidden = !visible;
+    const progress = this.root.querySelector("[data-nr-browser-ai-form-progress]");
+    if (progress !== null) {
+      progress.hidden = !visible;
+    }
+  }
+  setStatus(status, detail) {
+    this.root.dataset["state"] = status;
+    const element = this.element("status");
+    const label = this.label(LABEL_KEYS[status]);
+    element.textContent = detail === void 0 || detail === "" ? label : `${label} (${detail})`;
+    const announcement = this.root.querySelector("[data-nr-browser-ai-form-announcement]");
+    if (announcement !== null && (status === "filled" || status === "rejected")) {
+      announcement.textContent = element.textContent;
+    }
+  }
+  requestField() {
+    const field = this.root.querySelector("[data-nr-browser-ai-form-request]");
+    if (field === null) {
+      throw new Error("The plugin markup has no request field.");
+    }
+    return field;
+  }
+  element(name) {
+    const element = this.root.querySelector(`[data-nr-browser-ai-form-${name}]`);
+    if (element === null) {
+      throw new Error(`The plugin markup has no ${name} element.`);
+    }
+    return element;
+  }
+  label(key) {
+    return this.root.dataset[key] ?? "";
+  }
+};
 var SUPPORTED_LANGUAGES = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
+function pageLanguage() {
+  const tag = document.documentElement.lang.trim().toLowerCase().split(/[-_]/u)[0] ?? "";
+  return SUPPORTED_LANGUAGES.has(tag) ? tag : "en";
+}
+
+// Resources/Private/TypeScript/Assistant.ts
+var SUPPORTED_LANGUAGES2 = /* @__PURE__ */ new Set(["de", "en", "es", "fr", "ja"]);
 function bootstrapAssistants(sourceDocument = document, adapterFactory = () => new BrowserLanguageModelAdapter(), providerFactory = () => new DomPageContextProvider(sourceDocument)) {
   const controllers = [];
   for (const root of sourceDocument.querySelectorAll("[data-nr-browser-ai-root]")) {
@@ -1491,13 +2460,26 @@ function bootstrapAssistants(sourceDocument = document, adapterFactory = () => n
   }
   return controllers;
 }
+function bootstrapFormAssistants(sourceDocument = document, adapterFactory = () => new BrowserLanguageModelAdapter()) {
+  const controllers = [];
+  for (const root of sourceDocument.querySelectorAll("[data-nr-browser-ai-form-root]")) {
+    const controller = FormAssistantController.create(root, adapterFactory(root));
+    if (controller !== void 0) {
+      controllers.push(controller);
+    }
+  }
+  return controllers;
+}
 function installAssistantLifecycle(sourceDocument = document, adapterFactory = () => new BrowserLanguageModelAdapter(), providerFactory = () => new DomPageContextProvider(sourceDocument)) {
   let controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+  let formControllers = bootstrapFormAssistants(sourceDocument, adapterFactory);
   const WindowAbortController = sourceDocument.defaultView?.AbortController ?? AbortController;
   const lifecycleEvents = new WindowAbortController();
   const destroyControllers = () => {
     controllers.forEach((controller) => controller.destroy());
     controllers = [];
+    formControllers.forEach((controller) => controller.destroy());
+    formControllers = [];
   };
   sourceDocument.defaultView?.addEventListener("pagehide", (event) => {
     destroyControllers();
@@ -1509,6 +2491,7 @@ function installAssistantLifecycle(sourceDocument = document, adapterFactory = (
     if (isPersistedPageTransition(event)) {
       destroyControllers();
       controllers = bootstrapAssistants(sourceDocument, adapterFactory, providerFactory);
+      formControllers = bootstrapFormAssistants(sourceDocument, adapterFactory);
     }
   }, { signal: lifecycleEvents.signal });
   return () => {
@@ -1539,8 +2522,8 @@ function configuration(root, sourceDocument) {
   if (systemPrompt.length === 0) {
     throw new Error("Missing system prompt.");
   }
-  const pageLanguage = normalizeLanguage(sourceDocument.documentElement.lang);
-  const outputLanguage = pageLanguage ?? "en";
+  const pageLanguage2 = normalizeLanguage(sourceDocument.documentElement.lang);
+  const outputLanguage = pageLanguage2 ?? "en";
   const inputLanguages = outputLanguage === "en" ? ["en"] : ["en", outputLanguage];
   return {
     contextSelector,
@@ -1580,12 +2563,13 @@ function requiredLabel(root, key) {
 }
 function normalizeLanguage(languageTag) {
   const primary = languageTag.trim().toLowerCase().split(/[-_]/u)[0];
-  return primary !== void 0 && SUPPORTED_LANGUAGES.has(primary) ? primary : void 0;
+  return primary !== void 0 && SUPPORTED_LANGUAGES2.has(primary) ? primary : void 0;
 }
-if (document.querySelector("[data-nr-browser-ai-root]") !== null) {
+if (document.querySelector("[data-nr-browser-ai-root], [data-nr-browser-ai-form-root]") !== null) {
   installAssistantLifecycle();
 }
 export {
   bootstrapAssistants,
+  bootstrapFormAssistants,
   installAssistantLifecycle
 };

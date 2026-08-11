@@ -63,6 +63,7 @@ function fixture(overrides: Partial<{
         measureContextUsage: measure,
         append,
         promptStreaming,
+        prompt: vi.fn(async () => '{}'),
         destroy,
     };
     const create = vi.fn(async () => browserSession);

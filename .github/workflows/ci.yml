@@ -98,3 +98,33 @@ jobs:
           files: coverage/lcov.info
           flags: browser
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # AGENTS.md names these two scripts among the commands that have to pass, but
+  # until now nothing ran them. That is how the metadata assertion came to
+  # contradict composer.json for four commits without anyone noticing: a check
+  # only guards what invokes it.
+  repository:
+    name: Repository metadata and documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No PHP is set up on purpose. Both scripts only read and compare JSON and
+      # text, so the runner's own interpreter is enough, and one less pinned
+      # third-party action is one less thing to keep current.
+      - name: Assert repository metadata
+        run: bash Tests/Repository/metadata.sh
+
+      - name: Assert documentation contract
+        run: bash Tests/Repository/documentation.sh

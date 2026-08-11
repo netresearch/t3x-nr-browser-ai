@@ -10,6 +10,7 @@
 declare(strict_types=1);
 
 use Netresearch\NrBrowserAi\Controller\AssistantController;
+use Netresearch\NrBrowserAi\Controller\FormAssistantController;
 use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') || exit;
@@ -18,6 +19,14 @@ ExtensionUtility::configurePlugin(
     'NrBrowserAi',
     'Assistant',
     [AssistantController::class => 'show'],
+    [],
+    ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT,
+);
+
+ExtensionUtility::configurePlugin(
+    'NrBrowserAi',
+    'FormAssistant',
+    [FormAssistantController::class => 'show'],
     [],
     ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT,
 );

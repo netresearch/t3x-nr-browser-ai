@@ -223,3 +223,129 @@ Context scope
 This version reads only the currently open document and never crawls another
 URL. A future provider may collect a page branch or complete site, but such a
 provider also needs an explicit collection, reduction and privacy design.
+
+.. _administration-form-assistant:
+
+Form assistant plugin
+=====================
+
+A second content element, **Netresearch Browser AI form assistant**, renders a
+parameter-rich form and offers it as a tool the on-device model can fill and
+run. It needs ``typo3/cms-form``, which the extension requires, and it
+loads through the same site set or static template as the first plugin.
+
+The demonstration form ships with the extension as
+:file:`Resources/Private/Forms/weatherQuery.form.yaml` and queries the open
+Open-Meteo service. Shipping it rather than expecting each installation to
+build one keeps the demonstration reproducible, and keeps one file as both what
+the visitor sees and what the model is told about.
+
+.. _administration-form-assistant-schema:
+
+Where the schema comes from
+---------------------------
+
+The JSON Schema that constrains the model's output is generated from the form
+definition, never written by hand. That definition already carries the
+semantics a schema needs, and generating it is what keeps the controls in the
+page and the contract handed to the model from describing different forms:
+
+===========================  ==========================================
+Form element                 Schema
+===========================  ==========================================
+``Text``, ``Textarea``       ``string``
+``Number``                   ``number``
+``Checkbox``                 ``boolean``
+``Date``                     ``string`` with ``format: date``
+``SingleSelect``             ``string`` with ``enum``
+``MultiCheckbox``            ``array`` with ``items.enum``
+===========================  ==========================================
+
+===========================  ==========================================
+Validator                    Schema
+===========================  ==========================================
+``NotEmpty``                 member of ``required``
+``NumberRange``              ``minimum``, ``maximum``
+``StringLength``             ``minLength``, ``maxLength``
+``RegularExpression``        ``pattern``
+===========================  ==========================================
+
+The element description becomes the property description, and that sentence is
+the only thing telling the model what an element means. An element without one
+is a parameter the model can only guess at.
+
+A multi-value element becomes **one** array property whose items carry the
+options as an enum, not one boolean property per option. That is what makes a
+form with forty selectable variables affordable for an on-device model at all.
+
+.. _administration-form-assistant-settings:
+
+Plugin settings
+---------------
+
+.. confval:: formIdentifier
+   :name: form-assistant-form-identifier
+   :type: string
+   :default: weatherQuery
+
+   The shipped form this plugin renders and offers. An unknown value falls back
+   to the demonstration form.
+
+.. confval:: title
+   :name: form-assistant-title
+   :type: string
+   :default: translated default title
+
+   Heading shown above the plugin.
+
+.. confval:: introduction
+   :name: form-assistant-introduction
+   :type: string
+
+   Paragraph below the heading.
+
+.. confval:: supplementalInstruction
+   :name: form-assistant-supplemental-instruction
+   :type: string
+
+   Editor instruction appended to the administrator system prompt. It does not
+   replace it.
+
+.. confval:: showConfiguration
+   :name: form-assistant-showconfiguration
+   :type: boolean
+   :default: 0
+
+   Renders a collapsed block naming the tool, its description, the system
+   prompt, the input schema and the arguments of the last call. It sits outside
+   the block that stays hidden until a model reports itself usable, so it is
+   readable in a browser that cannot run one.
+
+.. confval:: systemPrompt
+   :name: form-assistant-system-prompt
+   :type: string
+   :default: derive parameters and prompt-injection guard
+
+   TypoScript setting, administrator-owned. The supplied default tells the
+   model to set only what the request asks for, leave everything else at its
+   default and treat the request as untrusted data.
+
+   Override it under :guilabel:`Site Management > Sites > Settings` as
+   ``plugin.tx_nrbrowserai_formassistant.settings.systemPrompt``, or in the
+   TypoScript constants of the root template. It has to stay on one line for
+   the same reason the first plugin's does.
+
+.. _administration-form-assistant-boundaries:
+
+What leaves the browser
+-----------------------
+
+The model runs on the device and the extension adds no server endpoint. The
+query itself does leave the browser: it goes from the visitor's browser
+directly to the data source, which therefore sees the visitor's address and
+the parameters of the query. Say so in the site's privacy notice.
+
+The tool is also registered with the browser's model context where the browser
+provides one, so an agent can call it with the identical schema. It is
+annotated as changing the page and as returning content this page does not
+vouch for.

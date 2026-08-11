@@ -2,8 +2,9 @@
 
 ## Project
 
-`netresearch/nr-browser-ai` is a TYPO3 12.4/13.4/14.3 frontend plugin that
-uses the Chrome Prompt API locally. The POC context scope is the current page.
+`netresearch/nr-browser-ai` is a TYPO3 12.4/13.4/14.3 extension with two
+frontend plugins that use the Chrome Prompt API locally. The assistant answers
+from the current page; the form assistant fills a form and runs it.
 
 ## Non-negotiable boundaries
 
@@ -16,6 +17,12 @@ uses the Chrome Prompt API locally. The POC context scope is the current page.
 - Render model output with safe DOM APIs; allow only validated HTTP(S) links.
 - Preserve fallback modes `none` and `contentElement`.
 - Keep administrator system prompt and editor supplement as separate layers.
+- Generate the form assistant's schema from the form definition; never write one
+  by hand, and keep what a form does behind `FormAction`.
+- Check tool arguments against the schema before applying them, whoever called:
+  a response constraint and a published schema are promises, not guarantees.
+- Resolve form controls by the element identifier their name ends with, not by a
+  name derived on the server.
 - Do not commit the root `composer.lock`; do commit `package-lock.json` and
   generated public frontend assets.
 

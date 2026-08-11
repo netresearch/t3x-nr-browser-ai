@@ -1,0 +1,261 @@
+# The demonstration form for the form assistant plugin.
+#
+# It is shipped with the extension rather than created per installation so that
+# the demonstration is reproducible anywhere, and so that one file is both what
+# the visitor sees and what the model is told about. Classes/Domain/Form reads
+# this file twice: FormAssistantFormFactory hands it to EXT:form for rendering,
+# FormSchemaFactory turns it into the JSON Schema that constrains the model's
+# structured output.
+#
+# Two conventions this file has to keep:
+#
+# * Every element carries an elementDescription. That sentence is the only
+#   thing telling the model what the element means, and an element without one
+#   is a parameter the model will set by guesswork.
+# * Option keys are the API's own parameter values, so the tool can pass them
+#   through unchanged. Their labels are what the visitor reads.
+#
+# The rendered labels are translated through Resources/Private/Language/Forms.xlf,
+# the schema is not: a tool's description should not change identity with the
+# page language, or an agent would discover a different contract per language.
+type: Form
+identifier: weatherQuery
+label: 'Weather query'
+prototypeName: standard
+renderingOptions:
+  submitButtonLabel: 'Run query'
+  translation:
+    translationFiles:
+      10: 'EXT:nr_browser_ai/Resources/Private/Language/Forms.xlf'
+  # Read by FormAssistantController. The action names the client module that
+  # carries the call out; a form without one stays a plain form.
+  nrBrowserAi:
+    action: openMeteo
+    toolDescription: 'Query a weather forecast for a place. Fills the weather query form on this page with the parameters derived from the request and runs it, then returns the result. Use it for any question about weather, temperature, rain, snow, wind, sunshine or radiation at a named place, for the past 92 days and the next 16 days.'
+renderables:
+  -
+    type: Page
+    identifier: query
+    label: 'Weather query'
+    renderables:
+      -
+        type: Text
+        identifier: place
+        label: 'Place'
+        properties:
+          elementDescription: 'Name of the place the forecast is for, for example "Leipzig" or "Leipzig, Germany". It is resolved to coordinates before the forecast is requested.'
+        validators:
+          -
+            identifier: NotEmpty
+      -
+        type: Number
+        identifier: forecastDays
+        label: 'Forecast days'
+        defaultValue: '7'
+        properties:
+          elementDescription: 'How many days ahead to forecast, counted from today. 0 requests no future days, 16 is the maximum the source provides.'
+        validators:
+          -
+            identifier: NumberRange
+            options:
+              minimum: 0
+              maximum: 16
+      -
+        type: Number
+        identifier: pastDays
+        label: 'Past days'
+        defaultValue: '0'
+        properties:
+          elementDescription: 'How many days of measured past weather to include before today. Use it when the question compares with recent weather; 92 is the maximum.'
+        validators:
+          -
+            identifier: NumberRange
+            options:
+              minimum: 0
+              maximum: 92
+      -
+        type: MultiCheckbox
+        identifier: hourlyVariables
+        label: 'Hourly variables'
+        defaultValue:
+          - temperature_2m
+          - precipitation_probability
+          - wind_speed_10m
+        properties:
+          elementDescription: 'Variables reported for every hour. Pick the ones the question actually asks about; each one adds a column to the result.'
+          options:
+            temperature_2m: 'Temperature at 2 m'
+            relative_humidity_2m: 'Relative humidity at 2 m'
+            dew_point_2m: 'Dew point at 2 m'
+            apparent_temperature: 'Apparent temperature'
+            precipitation_probability: 'Precipitation probability'
+            precipitation: 'Precipitation'
+            rain: 'Rain'
+            showers: 'Showers'
+            snowfall: 'Snowfall'
+            snow_depth: 'Snow depth'
+            weather_code: 'Weather code'
+            pressure_msl: 'Pressure at mean sea level'
+            surface_pressure: 'Surface pressure'
+            cloud_cover: 'Cloud cover'
+            cloud_cover_low: 'Cloud cover, low'
+            cloud_cover_mid: 'Cloud cover, mid'
+            cloud_cover_high: 'Cloud cover, high'
+            visibility: 'Visibility'
+            evapotranspiration: 'Evapotranspiration'
+            et0_fao_evapotranspiration: 'Reference evapotranspiration'
+            vapour_pressure_deficit: 'Vapour pressure deficit'
+            wind_speed_10m: 'Wind speed at 10 m'
+            wind_speed_80m: 'Wind speed at 80 m'
+            wind_speed_120m: 'Wind speed at 120 m'
+            wind_direction_10m: 'Wind direction at 10 m'
+            wind_direction_80m: 'Wind direction at 80 m'
+            wind_direction_120m: 'Wind direction at 120 m'
+            wind_gusts_10m: 'Wind gusts at 10 m'
+            temperature_80m: 'Temperature at 80 m'
+            temperature_120m: 'Temperature at 120 m'
+            soil_temperature_0cm: 'Soil temperature at 0 cm'
+            soil_temperature_6cm: 'Soil temperature at 6 cm'
+            soil_temperature_18cm: 'Soil temperature at 18 cm'
+            soil_moisture_0_to_1cm: 'Soil moisture, 0 to 1 cm'
+            soil_moisture_1_to_3cm: 'Soil moisture, 1 to 3 cm'
+            soil_moisture_3_to_9cm: 'Soil moisture, 3 to 9 cm'
+            uv_index: 'UV index'
+            uv_index_clear_sky: 'UV index, clear sky'
+            is_day: 'Daylight'
+            sunshine_duration: 'Sunshine duration'
+            shortwave_radiation: 'Shortwave radiation'
+            direct_radiation: 'Direct radiation'
+            diffuse_radiation: 'Diffuse radiation'
+            terrestrial_radiation: 'Terrestrial radiation'
+      -
+        type: MultiCheckbox
+        identifier: dailyVariables
+        label: 'Daily variables'
+        defaultValue:
+          - weather_code
+          - temperature_2m_max
+          - temperature_2m_min
+          - precipitation_sum
+        properties:
+          elementDescription: 'Variables aggregated per day. Prefer these over hourly ones when the question is about a day as a whole, such as a maximum, a total or a sunrise.'
+          options:
+            weather_code: 'Weather code'
+            temperature_2m_max: 'Maximum temperature'
+            temperature_2m_min: 'Minimum temperature'
+            apparent_temperature_max: 'Maximum apparent temperature'
+            apparent_temperature_min: 'Minimum apparent temperature'
+            sunrise: 'Sunrise'
+            sunset: 'Sunset'
+            daylight_duration: 'Daylight duration'
+            sunshine_duration: 'Sunshine duration'
+            uv_index_max: 'Maximum UV index'
+            uv_index_clear_sky_max: 'Maximum UV index, clear sky'
+            precipitation_sum: 'Precipitation total'
+            rain_sum: 'Rain total'
+            showers_sum: 'Showers total'
+            snowfall_sum: 'Snowfall total'
+            precipitation_hours: 'Precipitation hours'
+            precipitation_probability_max: 'Maximum precipitation probability'
+            wind_speed_10m_max: 'Maximum wind speed at 10 m'
+            wind_gusts_10m_max: 'Maximum wind gusts at 10 m'
+            wind_direction_10m_dominant: 'Dominant wind direction at 10 m'
+            shortwave_radiation_sum: 'Shortwave radiation total'
+            et0_fao_evapotranspiration: 'Reference evapotranspiration'
+      -
+        type: MultiCheckbox
+        identifier: currentVariables
+        label: 'Current conditions'
+        properties:
+          elementDescription: 'Variables for the present moment. Pick these when the question is about right now rather than about a forecast.'
+          options:
+            temperature_2m: 'Temperature at 2 m'
+            relative_humidity_2m: 'Relative humidity at 2 m'
+            apparent_temperature: 'Apparent temperature'
+            is_day: 'Daylight'
+            precipitation: 'Precipitation'
+            rain: 'Rain'
+            showers: 'Showers'
+            snowfall: 'Snowfall'
+            weather_code: 'Weather code'
+            cloud_cover: 'Cloud cover'
+            pressure_msl: 'Pressure at mean sea level'
+            surface_pressure: 'Surface pressure'
+            wind_speed_10m: 'Wind speed at 10 m'
+            wind_direction_10m: 'Wind direction at 10 m'
+            wind_gusts_10m: 'Wind gusts at 10 m'
+      -
+        type: SingleSelect
+        identifier: weatherModel
+        label: 'Weather model'
+        defaultValue: best_match
+        properties:
+          elementDescription: 'Which numerical weather model to ask. Leave it at the automatic choice unless the question names a model or a national weather service.'
+          options:
+            best_match: 'Automatic choice'
+            icon_seamless: 'ICON, German weather service'
+            gfs_seamless: 'GFS, United States'
+            ecmwf_ifs025: 'IFS, European centre'
+            meteofrance_seamless: 'AROME and ARPEGE, France'
+            ukmo_seamless: 'UKMO, United Kingdom'
+            jma_seamless: 'JMA, Japan'
+            gem_seamless: 'GEM, Canada'
+      -
+        type: SingleSelect
+        identifier: temperatureUnit
+        label: 'Temperature unit'
+        defaultValue: celsius
+        properties:
+          elementDescription: 'Unit for every temperature in the result.'
+          options:
+            celsius: 'Degrees Celsius'
+            fahrenheit: 'Degrees Fahrenheit'
+      -
+        type: SingleSelect
+        identifier: windSpeedUnit
+        label: 'Wind speed unit'
+        defaultValue: kmh
+        properties:
+          elementDescription: 'Unit for every wind speed in the result.'
+          options:
+            kmh: 'Kilometres per hour'
+            ms: 'Metres per second'
+            mph: 'Miles per hour'
+            kn: 'Knots'
+      -
+        type: SingleSelect
+        identifier: precipitationUnit
+        label: 'Precipitation unit'
+        defaultValue: mm
+        properties:
+          elementDescription: 'Unit for every precipitation amount in the result.'
+          options:
+            mm: 'Millimetres'
+            inch: 'Inches'
+      -
+        type: SingleSelect
+        identifier: timezone
+        label: 'Time zone'
+        defaultValue: auto
+        properties:
+          elementDescription: 'Time zone the reported times are in. The automatic choice uses the time zone of the place itself, which is almost always what a question means.'
+          options:
+            auto: 'Time zone of the place'
+            UTC: 'Coordinated universal time'
+            Europe/Berlin: 'Europe/Berlin'
+            Europe/London: 'Europe/London'
+            America/New_York: 'America/New_York'
+            America/Sao_Paulo: 'America/Sao_Paulo'
+            Asia/Tokyo: 'Asia/Tokyo'
+            Australia/Sydney: 'Australia/Sydney'
+      -
+        type: SingleSelect
+        identifier: cellSelection
+        label: 'Grid cell'
+        defaultValue: land
+        properties:
+          elementDescription: 'Which grid cell to read when the place sits near a coast. Land is the usual choice; sea answers questions about water, nearest ignores the distinction.'
+          options:
+            land: 'Prefer a land cell'
+            sea: 'Prefer a sea cell'
+            nearest: 'Nearest cell'

@@ -27,6 +27,31 @@
             <trans-unit id="configuration.contextSelector"><source>Page area used as the source</source><target>Als Quelle genutzter Seitenbereich</target></trans-unit>
             <trans-unit id="configuration.contextUsageLimit"><source>Share of the model input the page text may occupy</source><target>Anteil der Modell-Eingabe, den der Seitentext belegen darf</target></trans-unit>
             <trans-unit id="configuration.note"><source>The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</source><target>Das Modell erhält zusätzlich die Anweisung, in der Sprache der Frage zu antworten, sowie den Text des gewählten Seitenbereichs. Mehr wird ihm nicht übergeben.</target></trans-unit>
+            <trans-unit id="formAssistant.title"><source>Fill this form by describing what you want</source><target>Beschreiben Sie, was Sie wollen — das Formular füllt sich</target></trans-unit>
+            <trans-unit id="formAssistant.region"><source>Form assistant</source><target>Formularassistent</target></trans-unit>
+            <trans-unit id="field.request"><source>What do you want to know?</source><target>Was möchten Sie wissen?</target></trans-unit>
+            <trans-unit id="action.derive"><source>Fill and run</source><target>Füllen und abfragen</target></trans-unit>
+            <trans-unit id="formStatus.ready"><source>Describe what you want and the form will be filled with it.</source><target>Beschreiben Sie Ihr Anliegen, dann wird das Formular damit gefüllt.</target></trans-unit>
+            <trans-unit id="formStatus.deriving"><source>Deriving the parameters…</source><target>Parameter werden abgeleitet…</target></trans-unit>
+            <trans-unit id="formStatus.querying"><source>Running the query…</source><target>Abfrage läuft…</target></trans-unit>
+            <trans-unit id="formStatus.filled"><source>Form filled and query answered. Adjust anything and run it again.</source><target>Formular gefüllt und Abfrage beantwortet. Ändern Sie, was Sie wollen, und fragen Sie erneut ab.</target></trans-unit>
+            <trans-unit id="formStatus.rejected"><source>The derived parameters did not fit the form, so nothing was changed. Try describing it differently.</source><target>Die abgeleiteten Parameter passten nicht zum Formular, deshalb wurde nichts geändert. Beschreiben Sie es anders.</target></trans-unit>
+            <trans-unit id="formStatus.unresolvedPlace"><source>That place could not be found. Try a larger nearby place or add the country.</source><target>Dieser Ort wurde nicht gefunden. Nennen Sie einen größeren Ort in der Nähe oder ergänzen Sie das Land.</target></trans-unit>
+            <trans-unit id="formStatus.queryFailed"><source>The data source could not be reached. The form keeps its values, so you can run it again.</source><target>Die Datenquelle war nicht erreichbar. Das Formular behält seine Werte, Sie können erneut abfragen.</target></trans-unit>
+            <trans-unit id="formStatus.rateLimited"><source>The data source is refusing further requests for now. Wait a moment and run it again.</source><target>Die Datenquelle nimmt vorerst keine weiteren Anfragen an. Warten Sie einen Moment und fragen Sie erneut ab.</target></trans-unit>
+            <trans-unit id="formStatus.unavailable"><source>Browser AI is unavailable in this browser. The form can still be filled in and run by hand.</source><target>Browser-KI steht in diesem Browser nicht zur Verfügung. Das Formular lässt sich weiterhin von Hand ausfüllen und abfragen.</target></trans-unit>
+            <trans-unit id="formResult.caption"><source>Query result</source><target>Ergebnis der Abfrage</target></trans-unit>
+            <trans-unit id="formResult.place"><source>Place</source><target>Ort</target></trans-unit>
+            <trans-unit id="formResult.time"><source>Time</source><target>Zeit</target></trans-unit>
+            <trans-unit id="formConfiguration.summary"><source>What this form exposes to an assistant</source><target>Was dieses Formular einem Assistenten anbietet</target></trans-unit>
+            <trans-unit id="formConfiguration.lead"><source>The form is offered as a tool: a name, a description and a schema derived from the form's own definition. Everything below runs in your browser; only the query itself leaves it, to the data source.</source><target>Das Formular wird als Werkzeug angeboten: ein Name, eine Beschreibung und ein Schema, das aus der Formulardefinition selbst entsteht. Alles Folgende läuft in Ihrem Browser; nur die Abfrage selbst verlässt ihn, zur Datenquelle.</target></trans-unit>
+            <trans-unit id="formConfiguration.toolName"><source>Tool name</source><target>Name des Werkzeugs</target></trans-unit>
+            <trans-unit id="formConfiguration.toolDescription"><source>Tool description</source><target>Beschreibung des Werkzeugs</target></trans-unit>
+            <trans-unit id="formConfiguration.systemPrompt"><source>System prompt</source><target>System-Prompt</target></trans-unit>
+            <trans-unit id="formConfiguration.schema"><source>Input schema</source><target>Eingabeschema</target></trans-unit>
+            <trans-unit id="formConfiguration.lastCall"><source>Last tool call</source><target>Letzter Werkzeugaufruf</target></trans-unit>
+            <trans-unit id="formConfiguration.noCallYet"><source>No call yet.</source><target>Noch kein Aufruf.</target></trans-unit>
+            <trans-unit id="formConfiguration.note"><source>The same tool is registered with the browser's model context where that is available, so an agent outside this page can call it with the identical schema.</source><target>Dasselbe Werkzeug wird beim Modellkontext des Browsers angemeldet, sofern es ihn gibt. Ein Agent außerhalb dieser Seite kann es dann mit demselben Schema aufrufen.</target></trans-unit>
         </body>
     </file>
 </xliff>

@@ -21,6 +21,7 @@ $expectedTypo3Packages = [
     "typo3/cms-core",
     "typo3/cms-extbase",
     "typo3/cms-fluid",
+    "typo3/cms-form",
     "typo3/cms-frontend",
 ];
 
@@ -39,7 +40,7 @@ if (array_key_exists("platform", $composer["config"] ?? [])) {
 if (array_key_exists("phpunit/phpunit", $composer["require-dev"] ?? [])) {
     throw new RuntimeException("PHPUnit must be resolved through the TYPO3 testing framework");
 }
-if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1.3") {
+if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^1.4") {
     throw new RuntimeException("Unexpected Netresearch CI tooling constraint");
 }
 if (($composer["require-dev"]["typo3/testing-framework"] ?? null) !== "^8.2 || ^9.0") {
