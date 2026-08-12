@@ -34,9 +34,23 @@
         <a class="nr-browser-ai-form__brand-link" href="https://www.netresearch.de/" aria-label="Netresearch DTT GmbH">
             <img class="nr-browser-ai-form__symbol" src="{f:uri.resource(path: 'Icons/Extension.svg', extensionName: 'NrBrowserAi')}" alt="" width="48" height="48" />
         </a>
-        <h2 id="{instanceId}-title" class="nr-browser-ai-form__title">
-            <f:if condition="{title}"><f:then>{title}</f:then><f:else><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formAssistant.title" /></f:else></f:if>
-        </h2>
+        <f:comment>
+            The level is configurable because the plugin does not know where an
+            editor puts it. Placed inside a section that already has an h2, a
+            hardcoded h2 produces two headings on the same level and a document
+            outline that says the two are siblings when one contains the other.
+            h2 stays the default, so existing content renders unchanged.
+
+            Fluid has no dynamic tag name, hence the switch rather than an
+            interpolated element: the title itself is resolved once into a
+            variable so only the tag differs between the branches.
+        </f:comment>
+        <f:variable name="assistantTitle"><f:if condition="{title}"><f:then>{title}</f:then><f:else><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formAssistant.title" /></f:else></f:if></f:variable>
+        <f:switch expression="{headingLevel}">
+            <f:case value="h3"><h3 id="{instanceId}-title" class="nr-browser-ai-form__title">{assistantTitle}</h3></f:case>
+            <f:case value="h4"><h4 id="{instanceId}-title" class="nr-browser-ai-form__title">{assistantTitle}</h4></f:case>
+            <f:defaultCase><h2 id="{instanceId}-title" class="nr-browser-ai-form__title">{assistantTitle}</h2></f:defaultCase>
+        </f:switch>
     </header>
     <f:if condition="{introduction}"><p class="nr-browser-ai-form__introduction">{introduction}</p></f:if>
 
