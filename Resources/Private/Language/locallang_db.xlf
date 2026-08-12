@@ -14,6 +14,21 @@
             <trans-unit id="flexform.field.title" resname="flexform.field.title">
                 <source>Title</source>
             </trans-unit>
+            <trans-unit id="flexform.field.headingLevel" resname="flexform.field.headingLevel">
+                <source>Heading level</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.headingLevel.description" resname="flexform.field.headingLevel.description">
+                <source>The level the plugin's own title renders at. Pick the one that fits where the plugin sits: a section already introduced by an h2 wants h3 here, so the document outline stays a hierarchy instead of two headings on the same level.</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.headingLevel.h2" resname="flexform.item.headingLevel.h2">
+                <source>Heading 2 — the plugin introduces its own section</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.headingLevel.h3" resname="flexform.item.headingLevel.h3">
+                <source>Heading 3 — the plugin sits inside a section</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.headingLevel.h4" resname="flexform.item.headingLevel.h4">
+                <source>Heading 4 — the plugin sits inside a subsection</source>
+            </trans-unit>
             <trans-unit id="flexform.field.introduction" resname="flexform.field.introduction">
                 <source>Introduction</source>
             </trans-unit>

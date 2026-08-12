@@ -96,6 +96,50 @@ final class FormAssistantControllerTest extends FunctionalTestCase
     }
 
     /**
+     * A record written before the heading level existed carries no such setting,
+     * and must keep rendering exactly as it did — h2. Content record 20 is that
+     * case: its FlexForm has no settings.headingLevel at all.
+     */
+    #[Test]
+    public function theTitleRendersAsAnH2WhenNoLevelIsConfigured(): void
+    {
+        $xpath = new DOMXPath($this->render());
+
+        self::assertSame(
+            1,
+            $xpath->query('//h2[@class="nr-browser-ai-form__title"]')?->length ?? 0,
+            'The plugin title is not an h2, so an existing record changed appearance.',
+        );
+        self::assertSame(
+            0,
+            $xpath->query('//h3[@class="nr-browser-ai-form__title"]|//h4[@class="nr-browser-ai-form__title"]')?->length ?? 0,
+        );
+    }
+
+    /**
+     * The level is configurable because the plugin cannot know where an editor
+     * puts it: nested inside a section that already has an h2, a second h2 tells
+     * a screen reader the two are siblings when one contains the other. Content
+     * record 21 sets h3.
+     */
+    #[Test]
+    public function theTitleRendersAtTheConfiguredLevel(): void
+    {
+        $xpath = new DOMXPath($this->render('https://website.local/form-assistant-h3'));
+
+        self::assertSame(
+            1,
+            $xpath->query('//h3[@class="nr-browser-ai-form__title"]')?->length ?? 0,
+            'The configured heading level did not reach the markup.',
+        );
+        self::assertSame(
+            0,
+            $xpath->query('//h2[@class="nr-browser-ai-form__title"]')?->length ?? 0,
+            'The h2 is still there as well, so the switch rendered both branches.',
+        );
+    }
+
+    /**
      * The schema is transported as an attribute rather than a script element so
      * that Fluid's escaping applies to it like to every other setting.
      */
@@ -219,9 +263,9 @@ final class FormAssistantControllerTest extends FunctionalTestCase
         return $root;
     }
 
-    private function render(): DOMDocument
+    private function render(string $url = self::URL): DOMDocument
     {
-        $response = $this->executeFrontendSubRequest(new InternalRequest(self::URL));
+        $response = $this->executeFrontendSubRequest(new InternalRequest($url));
         $body     = (string) $response->getBody();
         self::assertSame(200, $response->getStatusCode(), $body);
 

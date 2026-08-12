@@ -50,6 +50,12 @@ final class FormAssistantController extends ActionController
      */
     private const SUPPORTED_ACTIONS = ['openMeteo'];
 
+    /**
+     * Allowed heading levels for the plugin's own title, first entry being the
+     * default. Mirrors the items in Configuration/FlexForms/FormAssistant.xml.
+     */
+    private const HEADING_LEVELS = ['h2', 'h3', 'h4'];
+
     private static int $renderSequence = 0;
 
     public function __construct(
@@ -87,6 +93,7 @@ final class FormAssistantController extends ActionController
             'toolDescription'         => $this->text($pluginOptions['toolDescription'] ?? null),
             'action'                  => in_array($action, self::SUPPORTED_ACTIONS, true) ? $action : '',
             'title'                   => $this->stringSetting('title'),
+            'headingLevel'            => $this->headingLevelSetting(),
             'introduction'            => $this->stringSetting('introduction'),
             'supplementalInstruction' => $this->stringSetting('supplementalInstruction'),
             'systemPrompt'            => $this->stringSetting('systemPrompt'),
@@ -148,6 +155,19 @@ final class FormAssistantController extends ActionController
     private function stringSetting(string $name): string
     {
         return $this->text($this->settings[$name] ?? null);
+    }
+
+    /**
+     * The heading level reaches the template as a tag name, so it is checked
+     * against the allow-list rather than passed through. A record written
+     * before this setting existed, or edited around the FlexForm, would
+     * otherwise put an arbitrary string where an element name belongs.
+     */
+    private function headingLevelSetting(): string
+    {
+        $value = $this->text($this->settings['headingLevel'] ?? null);
+
+        return in_array($value, self::HEADING_LEVELS, true) ? $value : self::HEADING_LEVELS[0];
     }
 
     private function text(mixed $value): string

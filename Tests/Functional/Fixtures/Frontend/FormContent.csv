@@ -2,6 +2,7 @@
 ,"uid","pid","title","slug","deleted","hidden"
 ,1,0,"Browser AI form test",/,0,0
 ,20,1,"Form assistant",/form-assistant,0,0
+,21,1,"Form assistant with an h3 title",/form-assistant-h3,0,0
 "tt_content"
 ,"uid","pid","CType","header","bodytext","colPos","sorting","deleted","hidden","sys_language_uid","pi_flexform"
 ,20,20,"nrbrowserai_formassistant","Form assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
@@ -14,6 +15,24 @@
                 </field>
                 <field index=""settings.showConfiguration"">
                     <value index=""vDEF"">1</value>
+                </field>
+            </language>
+        </sheet>
+    </data>
+</T3FlexForms>"
+,21,21,"nrbrowserai_formassistant","Form assistant","",0,256,0,0,0,"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<T3FlexForms>
+    <data>
+        <sheet index=""sDEF"">
+            <language index=""lDEF"">
+                <field index=""settings.formIdentifier"">
+                    <value index=""vDEF"">weatherQuery</value>
+                </field>
+                <field index=""settings.showConfiguration"">
+                    <value index=""vDEF"">1</value>
+                </field>
+                <field index=""settings.headingLevel"">
+                    <value index=""vDEF"">h3</value>
                 </field>
             </language>
         </sheet>
