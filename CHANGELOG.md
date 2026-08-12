@@ -5,6 +5,33 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-08-12
+
+### Added
+
+- The form assistant's own title has a configurable heading level. It used to
+  render as an `h2` regardless of where the plugin sat, so an editor placing it
+  inside a section that an `h2` already opened got two headings on the same
+  level — and a document outline telling a screen reader the two are siblings
+  when one contains the other. A new FlexForm setting picks `h2`, `h3` or `h4`.
+
+  `h2` remains the default, so every existing record renders exactly as before.
+  The value is checked against an allow-list in the controller before it
+  reaches the template, because it arrives there as an element name.
+
+### Removed
+
+- The form assistant's title no longer carries an `id`. With a configurable
+  level the template holds three heading branches, and one id written across
+  all three is a defect waiting for whoever copies a branch next. Nothing
+  referenced it: the plugin's section names itself with `aria-label` rather
+  than `aria-labelledby`, and no script or template looked it up.
+
+### Fixed
+
+- `package-lock.json` had been left at 0.5.0 while `package.json` said 0.6.0.
+  Both now carry the released version.
+
 ## [0.6.0] - 2026-08-11
 
 ### Added
