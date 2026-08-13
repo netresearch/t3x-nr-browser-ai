@@ -319,27 +319,32 @@ final class FormSchemaFactoryTest extends TestCase
         $elements = $this->shippedForm()['renderables'][0]['renderables'] ?? [];
         self::assertNotSame([], $elements);
 
-        $xlf = simplexml_load_file(__DIR__ . '/../../../../Resources/Private/Language/Forms.xlf');
-        self::assertNotFalse($xlf);
+        // Both files: a translation whose source still quotes the old English
+        // is a translation nobody updated, and its target is what the German
+        // tester reads.
+        foreach (['Forms.xlf', 'de.Forms.xlf'] as $file) {
+            $xlf = simplexml_load_file(__DIR__ . '/../../../../Resources/Private/Language/' . $file);
+            self::assertNotFalse($xlf, $file);
 
-        $sources = [];
-        foreach ($xlf->file->body->{'trans-unit'} as $unit) {
-            $sources[(string) $unit['id']] = (string) $unit->source;
-        }
-
-        foreach ($elements as $element) {
-            $description = $element['properties']['elementDescription'] ?? null;
-            if (!is_string($description) || $description === '') {
-                continue;
+            $sources = [];
+            foreach ($xlf->file->body->{'trans-unit'} as $unit) {
+                $sources[(string) $unit['id']] = (string) $unit->source;
             }
 
-            $id = sprintf('weatherQuery.element.%s.properties.elementDescription', $element['identifier']);
-            self::assertArrayHasKey($id, $sources, sprintf('%s has no trans-unit', $element['identifier']));
-            self::assertSame(
-                $description,
-                $sources[$id],
-                sprintf('The YAML description and the XLF source for %s have drifted apart.', $element['identifier']),
-            );
+            foreach ($elements as $element) {
+                $description = $element['properties']['elementDescription'] ?? null;
+                if (!is_string($description) || $description === '') {
+                    continue;
+                }
+
+                $id = sprintf('weatherQuery.element.%s.properties.elementDescription', $element['identifier']);
+                self::assertArrayHasKey($id, $sources, sprintf('%s has no trans-unit in %s', $element['identifier'], $file));
+                self::assertSame(
+                    $description,
+                    $sources[$id],
+                    sprintf('The YAML description and the %s source for %s have drifted apart.', $file, $element['identifier']),
+                );
+            }
         }
     }
 
