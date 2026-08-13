@@ -210,10 +210,18 @@ Prompt API supports for output: German, English, Spanish, French or Japanese.
 Any other page language falls back to English for the capability declaration,
 while the question-language rule still applies.
 
+This applies to both plugins. The form assistant also phrases its answer in the
+language of the request; the page language is the tiebreak there too.
+
 This instruction is required. The ``expectedOutputs`` capability passed to the
 Prompt API only tells Chrome which language assets to prepare; it does not ask
 the model for anything. Without the instruction the model answers in the
 language of the system prompt.
+
+It is an instruction, not a guarantee. A small on-device model can still answer
+in the wrong language, and on a page whose ``lang`` is ``en`` an English answer
+is also what the fallback asks for — a German answer is only expected where the
+question's own language is unmistakable.
 
 .. _administration-context-scope:
 

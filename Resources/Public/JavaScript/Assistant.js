@@ -482,9 +482,9 @@ ${editorInstruction}`);
 function languageInstruction(outputLanguages) {
   const pageLanguage2 = LANGUAGE_NAMES[outputLanguages[0] ?? ""];
   if (pageLanguage2 === void 0) {
-    return "Answer in the language of the question.";
+    return "Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English.";
   }
-  return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage2}.`;
+  return `Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English. If the language of the question is unclear, answer in ${pageLanguage2}.`;
 }
 function remainingContextBudget(session, usageLimit) {
   const maximumUsage = session.contextWindow * usageLimit;
@@ -2227,7 +2227,11 @@ function phrasingPrompt(request, results, language) {
   const data = results.map((result) => result.length > budget ? `${result.slice(0, budget)}
 (truncated; the full result is shown on the page)` : result).join("\n\n");
   return [
-    `Answer this request in ${language}, in at most four sentences: "${request}"`,
+    // `language` is the PAGE language. Naming it alone told the model to
+    // answer an English page's German request in English, which is what a
+    // tester saw. The request's own language wins; the page is the tiebreak.
+    `Answer this request in the language it is written in \u2014 if that is unclear,`,
+    `in ${language} \u2014 in at most four sentences: "${request}"`,
     "",
     "Use only the query results below. Name the values that answer the request and",
     "nothing else \u2014 do not list every row, and never state a number the results do",
@@ -2515,9 +2519,15 @@ var FormAssistantController = class _FormAssistantController {
     const instruction = (this.root.dataset["supplementalInstruction"] ?? "").trim();
     const systemPrompt = [this.root.dataset["systemPrompt"] ?? "", instruction].map((part) => part.trim()).filter((part) => part.length > 0).join("\n\n");
     return {
-      systemPrompt,
+      // The answer-language rule is the page assistant's; the form
+      // assistant had none at all, so a German request was answered in
+      // English whatever the page said.
+      systemPrompt: [systemPrompt, languageInstruction([language])].filter((part) => part.length > 0).join("\n\n"),
       inputLanguages: language === "en" ? ["en"] : ["en", language],
-      outputLanguages: ["en"]
+      // Was hardcoded to English, which declared English output to Chrome
+      // on every page. The page assistant has always passed the page
+      // language through here (Assistant.ts).
+      outputLanguages: [language]
     };
   }
   reveal() {

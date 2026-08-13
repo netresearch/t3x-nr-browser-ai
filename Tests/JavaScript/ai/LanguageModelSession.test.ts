@@ -124,7 +124,7 @@ describe('LanguageModelSession initialization', () => {
         expect(fakes.create).toHaveBeenCalledWith({
             systemPrompt: `Antworte ausschließlich aus dem Quelldokument.
 
-Answer in the language of the question. If that language is unclear, answer in German.
+Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English. If the language of the question is unclear, answer in German.
 
 Additional editor instruction:
 Antworte kurz.`,
@@ -152,7 +152,7 @@ Antworte kurz.`,
         expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
             systemPrompt: `Antworte ausschließlich aus dem Quelldokument.
 
-Answer in the language of the question. If that language is unclear, answer in German.`,
+Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English. If the language of the question is unclear, answer in German.`,
         }));
     });
 
@@ -170,7 +170,7 @@ Answer in the language of the question. If that language is unclear, answer in G
         expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
             systemPrompt: `Answer only from the source.
 
-Answer in the language of the question. If that language is unclear, answer in French.`,
+Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English. If the language of the question is unclear, answer in French.`,
         }));
     });
 
@@ -188,7 +188,7 @@ Answer in the language of the question. If that language is unclear, answer in F
         expect(fakes.create).toHaveBeenCalledWith(expect.objectContaining({
             systemPrompt: `Answer only from the source.
 
-Answer in the language of the question.`,
+Answer in the language the question is written in, never in another: a German question is answered in German, an English question in English.`,
         }));
     });
 

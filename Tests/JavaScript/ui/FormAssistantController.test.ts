@@ -105,6 +105,25 @@ describe('FormAssistantController', () => {
         document.body.innerHTML = '';
     });
 
+    /**
+     * The form assistant used to declare English output on every page and
+     * carried no answer-language rule at all, so a German request on a German
+     * page came back in English. Nothing pinned either, which is why it shipped.
+     */
+    it('declares the page language and asks for the question language', async () => {
+        document.documentElement.lang = 'de';
+        const fixed = fixture();
+        start(fixed);
+        await settle();
+
+        const options = vi.mocked(fixed.adapter.availability).mock.calls[0]?.[0];
+        expect(options?.outputLanguages).toEqual(['de']);
+        expect(options?.inputLanguages).toEqual(['en', 'de']);
+        expect(options?.systemPrompt).toContain('Answer in the language the question is written in');
+        expect(options?.systemPrompt).toContain('answer in German');
+        document.documentElement.lang = '';
+    });
+
     it('reveals the request row when a model is ready', async () => {
         const fixed = fixture();
         start(fixed);
