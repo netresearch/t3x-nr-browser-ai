@@ -301,6 +301,53 @@ final class FormSchemaFactoryTest extends TestCase
      *
      * @return array<string, mixed>
      */
+    /**
+     * The model reads the YAML, the human reads the XLF — they must say the same
+     * thing.
+     *
+     * FormSchemaFactory takes elementDescription straight from the YAML into the
+     * JSON Schema, while the rendered form resolves the same key through the
+     * translation files by trans-unit id. Editing only the YAML therefore
+     * instructs the model and leaves the field hint the tester reads unchanged.
+     * That happened once already, on the very property whose wording the fix was
+     * about: the schema asked for at least three forecast days while the hint
+     * under the field still offered 0 as an ordinary value.
+     */
+    #[Test]
+    public function everyShippedDescriptionMatchesItsTranslationSource(): void
+    {
+        $elements = $this->shippedForm()['renderables'][0]['renderables'] ?? [];
+        self::assertNotSame([], $elements);
+
+        // Both files: a translation whose source still quotes the old English
+        // is a translation nobody updated, and its target is what the German
+        // tester reads.
+        foreach (['Forms.xlf', 'de.Forms.xlf'] as $file) {
+            $xlf = simplexml_load_file(__DIR__ . '/../../../../Resources/Private/Language/' . $file);
+            self::assertNotFalse($xlf, $file);
+
+            $sources = [];
+            foreach ($xlf->file->body->{'trans-unit'} as $unit) {
+                $sources[(string) $unit['id']] = (string) $unit->source;
+            }
+
+            foreach ($elements as $element) {
+                $description = $element['properties']['elementDescription'] ?? null;
+                if (!is_string($description) || $description === '') {
+                    continue;
+                }
+
+                $id = sprintf('weatherQuery.element.%s.properties.elementDescription', $element['identifier']);
+                self::assertArrayHasKey($id, $sources, sprintf('%s has no trans-unit in %s', $element['identifier'], $file));
+                self::assertSame(
+                    $description,
+                    $sources[$id],
+                    sprintf('The YAML description and the %s source for %s have drifted apart.', $file, $element['identifier']),
+                );
+            }
+        }
+    }
+
     private function form(array $elements): array
     {
         return [
