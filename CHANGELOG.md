@@ -5,6 +5,26 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-08-13
+
+### Fixed
+
+- The form assistant answers in the language of the request. It had no
+  answer-language rule at all — the instruction the page assistant uses is
+  added on a path it never takes — and it declared English output to the
+  browser on every page. Its only steering was the phrasing call, which named
+  the *page* language, so on an English page a German request was explicitly
+  told to answer in English.
+- A question about the future no longer produces an empty table. The schema's
+  `forecastDays` default of 7 is an annotation that nothing applies, and its
+  description named 0 first while giving no rule for "the weekend", so the
+  model emitted 0 — which is forwarded to the API and answered with empty
+  rows. The description now anchors relative expressions to a day count.
+
+  Both are prompt and schema wording: they shift what the model does rather
+  than making either failure impossible. What it emitted stays visible in the
+  last-call disclosure.
+
 ## [0.7.0] - 2026-08-12
 
 ### Added
