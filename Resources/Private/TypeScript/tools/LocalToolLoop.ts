@@ -91,14 +91,20 @@ const DEFAULT_MAXIMUM_QUERIES = 4;
  * and today on a Saturday, and a model asked to derive that from an ISO date
  * alone has to do calendar arithmetic it is bad at.
  *
- * The clock is the device's. A machine with a wrong date derives a wrong window
- * and nothing detects it; the derived parameters stay visible in the last-call
- * disclosure, which is where such a mistake becomes apparent.
+ * The clock is the device's, and so is the date boundary: both are formatted in
+ * LOCAL time, not UTC. Someone asking about "the weekend" at 01:00 on a Saturday
+ * in Berlin is in Saturday; UTC still says Friday, and the answer would be a day
+ * out for the first hours of every day east of Greenwich. `en-CA` is used purely
+ * because it formats as YYYY-MM-DD.
+ *
+ * A machine with a wrong date derives a wrong window and nothing detects it; the
+ * derived parameters stay visible in the last-call disclosure, which is where
+ * such a mistake becomes apparent.
  */
 export function datedRequest(request: string, now?: () => Date): string {
     const today = (now ?? (() => new Date()))();
-    const weekday = new Intl.DateTimeFormat('en-US', {weekday: 'long', timeZone: 'UTC'}).format(today);
-    const iso = today.toISOString().slice(0, 10);
+    const weekday = new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(today);
+    const iso = new Intl.DateTimeFormat('en-CA', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(today);
 
     return `Today is ${weekday}, ${iso}.\n\n${request}`;
 }

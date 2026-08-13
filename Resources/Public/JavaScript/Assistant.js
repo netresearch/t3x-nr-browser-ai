@@ -2134,8 +2134,8 @@ var PROSE_INPUT_LIMIT = 2400;
 var DEFAULT_MAXIMUM_QUERIES = 4;
 function datedRequest(request, now) {
   const today = (now ?? (() => /* @__PURE__ */ new Date()))();
-  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "UTC" }).format(today);
-  const iso = today.toISOString().slice(0, 10);
+  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(today);
+  const iso = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(today);
   return `Today is ${weekday}, ${iso}.
 
 ${request}`;
