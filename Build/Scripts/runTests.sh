@@ -317,8 +317,17 @@ case "${SUITE}" in
         # in the per-version runtime directory. Materialise a rewritten copy so the
         # config never depends on a Composer install at the repository root.
         shared_config="${RUNTIME_VENDOR}/netresearch/typo3-ci-workflows/config/phpstan/phpstan.neon"
+        shared_config_dir="$(dirname "${shared_config}")"
+        # The shared config declares its bootstrap stubs RELATIVE to itself, on
+        # purpose, so it works whatever vendor dir the consuming repo uses.
+        # PHPStan resolves such a path against the file that declares it — and
+        # the copy below declares it from ${RUNTIME_DIR}, where no stubs/ exists.
+        # Rewriting the placeholders alone therefore left the runner dead:
+        # "Bootstrap file .../stubs/phpunit-attributes.php does not exist".
+        # Absolutise those paths too, back to the shared config's own directory.
         sed -e "s#%currentWorkingDirectory%/.Build/vendor#${RUNTIME_VENDOR}#g" \
             -e "s#%currentWorkingDirectory%#${ROOT_DIR}#g" \
+            -e "s#^\( *- *\)\(stubs/\)#\1${shared_config_dir}/\2#" \
             "${shared_config}" > "${RUNTIME_DIR}/phpstan-shared.neon"
         sed -e "s#%currentWorkingDirectory%/.Build/vendor/netresearch/typo3-ci-workflows/config/phpstan/phpstan.neon#${RUNTIME_DIR}/phpstan-shared.neon#" \
             -e "s#%currentWorkingDirectory%#${ROOT_DIR}#g" \
