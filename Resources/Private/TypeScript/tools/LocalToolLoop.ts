@@ -212,7 +212,11 @@ function phrasingPrompt(request: string, results: string[], language: string): s
         .join('\n\n');
 
     return [
-        `Answer this request in ${language}, in at most four sentences: "${request}"`,
+        // `language` is the PAGE language. Naming it alone told the model to
+        // answer an English page's German request in English, which is what a
+        // tester saw. The request's own language wins; the page is the tiebreak.
+        `Answer this request in the language it is written in — if that is unclear,`,
+        `in ${language} — in at most four sentences: "${request}"`,
         '',
         'Use only the query results below. Name the values that answer the request and',
         'nothing else — do not list every row, and never state a number the results do',

@@ -10,6 +10,7 @@ import {FormTool} from '../tools/FormTool';
 import type {ToolObserver} from '../tools/FormTool';
 import {LocalToolLoop, LocalToolLoopError} from '../tools/LocalToolLoop';
 import {bindModelContext} from '../tools/ModelContextBinding';
+import {languageInstruction} from '../ai/LanguageModelSession';
 import type {LanguageModelAdapter, ModelSession} from '../types';
 
 type Status =
@@ -332,9 +333,17 @@ export class FormAssistantController implements ToolObserver {
             .join('\n\n');
 
         return {
-            systemPrompt,
+            // The answer-language rule is the page assistant's; the form
+            // assistant had none at all, so a German request was answered in
+            // English whatever the page said.
+            systemPrompt: [systemPrompt, languageInstruction([language])]
+                .filter(part => part.length > 0)
+                .join('\n\n'),
             inputLanguages: language === 'en' ? ['en'] : ['en', language],
-            outputLanguages: ['en'],
+            // Was hardcoded to English, which declared English output to Chrome
+            // on every page. The page assistant has always passed the page
+            // language through here (Assistant.ts).
+            outputLanguages: [language],
         };
     }
 

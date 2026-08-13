@@ -53,7 +53,7 @@ renderables:
         label: 'Forecast days'
         defaultValue: '7'
         properties:
-          elementDescription: 'How many days ahead to forecast, counted from today. 0 requests no future days, 16 is the maximum the source provides.'
+          elementDescription: 'How many days ahead to forecast, counted from today. Any question about the future needs at least 3 here: "the weekend" or "the next few days" is 3, "next week" is 7. Use 0 only for a question about the past or this moment. 16 is the maximum the source provides.'
         validators:
           -
             identifier: NumberRange

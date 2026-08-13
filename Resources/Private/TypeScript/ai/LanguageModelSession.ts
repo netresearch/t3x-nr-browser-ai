@@ -242,13 +242,16 @@ function combineInstructions(
  * does not ask the model for anything. Without this the model answers in the
  * language of the system prompt, which is English regardless of the page.
  */
-function languageInstruction(outputLanguages: readonly string[]): string {
+export function languageInstruction(outputLanguages: readonly string[]): string {
     const pageLanguage = LANGUAGE_NAMES[outputLanguages[0] ?? ''];
     if (pageLanguage === undefined) {
-        return 'Answer in the language of the question.';
+        return 'Answer in the language the question is written in, never in another: '
+            + 'a German question is answered in German, an English question in English.';
     }
 
-    return `Answer in the language of the question. If that language is unclear, answer in ${pageLanguage}.`;
+    return 'Answer in the language the question is written in, never in another: '
+        + 'a German question is answered in German, an English question in English. '
+        + `If the language of the question is unclear, answer in ${pageLanguage}.`;
 }
 
 function remainingContextBudget(session: ModelSession, usageLimit: number): number {
