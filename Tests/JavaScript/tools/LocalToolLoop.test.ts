@@ -44,6 +44,28 @@ function session(derivation: string, prose = 'It will be warm.'): {
 const options = {language: 'German'};
 
 describe('LocalToolLoop', () => {
+    /**
+     * Without a date, "the weekend" is unresolvable by construction — the model
+     * can only guess a number of days. The weekday is stated too: the weekend is
+     * two days out on a Thursday and today on a Saturday, and deriving that from
+     * an ISO date alone is calendar arithmetic a small model is bad at.
+     */
+    it('anchors the request to a day the model can reason about', async () => {
+        const fake = session('{"queries":[{"place":"Leipzig"}]}');
+
+        await new LocalToolLoop(fake, tool()).run(
+            'Will the weekend in Leipzig be any good for a barbecue?',
+            undefined,
+            {...options, now: () => new Date('2026-08-13T09:00:00Z')},
+        );
+
+        const sent = fake.prompt.mock.calls[0]?.[0] as string;
+        expect(sent).toContain('Today is Thursday, 2026-08-13.');
+        // The request itself survives, after the anchor.
+        expect(sent).toContain('Will the weekend in Leipzig be any good for a barbecue?');
+        expect(sent.indexOf('Today is')).toBeLessThan(sent.indexOf('Will the weekend'));
+    });
+
     /** The one thing that makes structured output structured. */
     it('constrains the model to a list of the tool schema', async () => {
         const fake = session('{"queries":[{"place":"Leipzig"}]}');

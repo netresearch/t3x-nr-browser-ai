@@ -2132,6 +2132,14 @@ var LocalToolLoopError = class extends Error {
 };
 var PROSE_INPUT_LIMIT = 2400;
 var DEFAULT_MAXIMUM_QUERIES = 4;
+function datedRequest(request, now) {
+  const today = (now ?? (() => /* @__PURE__ */ new Date()))();
+  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "UTC" }).format(today);
+  const iso = today.toISOString().slice(0, 10);
+  return `Today is ${weekday}, ${iso}.
+
+${request}`;
+}
 var LocalToolLoop = class {
   constructor(session, tool) {
     this.session = session;
@@ -2145,7 +2153,7 @@ var LocalToolLoop = class {
       throw new LocalToolLoopError("empty-request", "Enter a request.");
     }
     const maximum = options?.maximumQueries ?? DEFAULT_MAXIMUM_QUERIES;
-    const output = await this.session.prompt(trimmed, {
+    const output = await this.session.prompt(datedRequest(trimmed, options?.now), {
       responseConstraint: batchSchema(this.tool.inputSchema, maximum),
       signal
     });

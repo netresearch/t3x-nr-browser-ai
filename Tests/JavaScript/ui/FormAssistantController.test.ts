@@ -145,11 +145,14 @@ describe('FormAssistantController', () => {
         element('submit').click();
         await settle();
 
+        // The derivation call carries the day it is anchored to; the request
+        // itself follows it unchanged.
         expect(fixed.prompt).toHaveBeenNthCalledWith(
             1,
-            'weather in Leipzig for three days',
+            expect.stringContaining('weather in Leipzig for three days'),
             expect.objectContaining({responseConstraint: expect.objectContaining({type: 'object'})}),
         );
+        expect(fixed.prompt.mock.calls[0]?.[0]).toMatch(/^Today is \w+, \d{4}-\d{2}-\d{2}\./);
         expect(document.querySelector<HTMLInputElement>('input[name$="[place]"]')?.value).toBe('Leipzig');
         expect(fixed.run).toHaveBeenCalledWith(
             expect.objectContaining({place: 'Leipzig', forecastDays: 3}),
