@@ -26,6 +26,11 @@ export interface LocalToolLoopOptions {
     language: string;
     /** Upper bound on the queries one request may trigger. */
     maximumQueries?: number;
+    /**
+     * The clock the derivation is anchored to. Injected so a test can pin it;
+     * production passes nothing and gets the device clock.
+     */
+    now?(): Date;
     onQuery?(index: number, total: number): void;
     /**
      * Asked before the phrasing call. The loop sees result texts, not
@@ -73,6 +78,37 @@ const DEFAULT_MAXIMUM_QUERIES = 4;
  * page and the numbers are the answer; the prose is what makes them read like
  * one.
  */
+/**
+ * Anchor the request to a day.
+ *
+ * Without this the model has no idea when "now" is, so "the weekend", "tomorrow"
+ * or "next week" are unresolvable by construction — it can only guess a
+ * plausible number of days. The date is stated before the request rather than
+ * offered as a callable tool: a tool has to be *chosen*, and a small on-device
+ * model skips it, while the day is needed by every request that mentions time.
+ *
+ * The weekday is named explicitly. "The weekend" is two days away on a Thursday
+ * and today on a Saturday, and a model asked to derive that from an ISO date
+ * alone has to do calendar arithmetic it is bad at.
+ *
+ * The clock is the device's, and so is the date boundary: both are formatted in
+ * LOCAL time, not UTC. Someone asking about "the weekend" at 01:00 on a Saturday
+ * in Berlin is in Saturday; UTC still says Friday, and the answer would be a day
+ * out for the first hours of every day east of Greenwich. `en-CA` is used purely
+ * because it formats as YYYY-MM-DD.
+ *
+ * A machine with a wrong date derives a wrong window and nothing detects it; the
+ * derived parameters stay visible in the last-call disclosure, which is where
+ * such a mistake becomes apparent.
+ */
+export function datedRequest(request: string, now?: () => Date): string {
+    const today = (now ?? (() => new Date()))();
+    const weekday = new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(today);
+    const iso = new Intl.DateTimeFormat('en-CA', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(today);
+
+    return `Today is ${weekday}, ${iso}.\n\n${request}`;
+}
+
 export class LocalToolLoop {
     public constructor(
         private readonly session: ConstrainedSession,
@@ -90,7 +126,7 @@ export class LocalToolLoop {
         }
 
         const maximum = options?.maximumQueries ?? DEFAULT_MAXIMUM_QUERIES;
-        const output = await this.session.prompt(trimmed, {
+        const output = await this.session.prompt(datedRequest(trimmed, options?.now), {
             responseConstraint: batchSchema(this.tool.inputSchema, maximum),
             signal,
         });

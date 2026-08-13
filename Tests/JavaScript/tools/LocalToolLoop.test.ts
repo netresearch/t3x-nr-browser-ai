@@ -4,6 +4,7 @@ import {describe, expect, it, vi} from 'vitest';
 import type {FormSchema} from '../../../Resources/Private/TypeScript/form/FormSchema';
 import type {ToolDefinition} from '../../../Resources/Private/TypeScript/tools/FormTool';
 import type {ConstrainedSession} from '../../../Resources/Private/TypeScript/tools/LocalToolLoop';
+import {datedRequest} from '../../../Resources/Private/TypeScript/tools/LocalToolLoop';
 import {LocalToolLoop, LocalToolLoopError} from '../../../Resources/Private/TypeScript/tools/LocalToolLoop';
 
 const schema: FormSchema = {type: 'object', properties: {place: {type: 'string'}}};
@@ -44,6 +45,52 @@ function session(derivation: string, prose = 'It will be warm.'): {
 const options = {language: 'German'};
 
 describe('LocalToolLoop', () => {
+    /**
+     * The date boundary is the user's, not Greenwich's. At 01:00 on a Saturday
+     * in Berlin the weekend has begun; UTC still says Friday, and a UTC-formatted
+     * anchor would be a day out for the first hours of every day east of
+     * Greenwich — exactly the window in which "the weekend" is asked about.
+     */
+    it('names the local day, not the UTC one', () => {
+        // 22:30 UTC on the 14th is already the 15th in any zone at UTC+2.
+        const instant = new Date('2026-08-14T22:30:00Z');
+        const anchored = datedRequest('x', () => instant);
+
+        const localDay = new Intl.DateTimeFormat('en-CA', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+        }).format(instant);
+        const localWeekday = new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(instant);
+
+        expect(anchored).toContain(`Today is ${localWeekday}, ${localDay}.`);
+        // Guards the implementation, not the formatter: a UTC build would say
+        // 2026-08-14 wherever the runner sits ahead of UTC.
+        if (instant.toISOString().slice(0, 10) !== localDay) {
+            expect(anchored).not.toContain(instant.toISOString().slice(0, 10));
+        }
+    });
+
+    /**
+     * Without a date, "the weekend" is unresolvable by construction — the model
+     * can only guess a number of days. The weekday is stated too: the weekend is
+     * two days out on a Thursday and today on a Saturday, and deriving that from
+     * an ISO date alone is calendar arithmetic a small model is bad at.
+     */
+    it('anchors the request to a day the model can reason about', async () => {
+        const fake = session('{"queries":[{"place":"Leipzig"}]}');
+
+        await new LocalToolLoop(fake, tool()).run(
+            'Will the weekend in Leipzig be any good for a barbecue?',
+            undefined,
+            {...options, now: () => new Date('2026-08-13T09:00:00Z')},
+        );
+
+        const sent = fake.prompt.mock.calls[0]?.[0] as string;
+        expect(sent).toContain('Today is Thursday, 2026-08-13.');
+        // The request itself survives, after the anchor.
+        expect(sent).toContain('Will the weekend in Leipzig be any good for a barbecue?');
+        expect(sent.indexOf('Today is')).toBeLessThan(sent.indexOf('Will the weekend'));
+    });
+
     /** The one thing that makes structured output structured. */
     it('constrains the model to a list of the tool schema', async () => {
         const fake = session('{"queries":[{"place":"Leipzig"}]}');
