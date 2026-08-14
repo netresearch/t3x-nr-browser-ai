@@ -28,7 +28,8 @@ The browser side is split behind interfaces so the model vendor and the context
 source can each be replaced:
 
 1. `DomPageContextProvider`, behind a `PageContextProvider` interface;
-2. `AiCapabilityService`, behind a `LanguageModelAdapter` interface;
+2. `BrowserLanguageModelAdapter`, behind a `LanguageModelAdapter` interface,
+   answering `availability()` and creating sessions;
 3. `LanguageModelSession`, owning model lifecycle and quota;
 4. `ChatController`, owning UI state and user interaction;
 5. `SafeResponseRenderer`, owning untrusted model output.
