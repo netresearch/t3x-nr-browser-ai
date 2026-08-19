@@ -67,6 +67,12 @@
     "vendor-dir": ".Build/vendor"
   },
   "scripts": {
+    "post-install-cmd": [
+      "@php .Build/bin/captainhook install --force --skip-existing -c Build/captainhook.json 2>/dev/null || true"
+    ],
+    "post-update-cmd": [
+      "@php .Build/bin/captainhook install --force --skip-existing -c Build/captainhook.json 2>/dev/null || true"
+    ],
     "ci:cgl": "php-cs-fixer fix --config Build/.php-cs-fixer.dist.php --diff --verbose --cache-file .Build/.php-cs-fixer.cache",
     "ci:test:php:cgl": "@ci:cgl --dry-run",
     "ci:test:php:functional": "phpunit --configuration Build/FunctionalTests.xml",
