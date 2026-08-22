@@ -2,6 +2,7 @@
 /composer.lock
 /var/
 /node_modules/
+/.php-cs-fixer.cache
 /coverage/
 /public/
 /playwright-report/
