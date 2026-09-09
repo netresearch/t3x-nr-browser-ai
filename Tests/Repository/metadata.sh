@@ -125,7 +125,16 @@ if ($actualDevDependencies !== $expectedDevDependencies) {
 
 $vitestConstraint = $package["devDependencies"]["vitest"];
 $coverageConstraint = $package["devDependencies"]["@vitest/coverage-v8"];
-if ($vitestConstraint !== $coverageConstraint || preg_match("/^\^4\./", $vitestConstraint) !== 1) {
+// Both on major 4, but NOT the identical range string. Two carets differing in
+// their patch floor install the same version -- `^4.1.10` already admits
+// 4.1.11 -- so requiring identity failed main whenever an update touched one
+// manifest entry and left the other, which is exactly what happened on
+// 2026-08-31. What actually has to hold is that the two RESOLVED versions
+// match, and package-lock.json is checked for that below; this is the weaker
+// declaration-level check it deserves.
+if (preg_match("/^\^4\./", $vitestConstraint) !== 1
+    || preg_match("/^\^4\./", $coverageConstraint) !== 1
+) {
     throw new RuntimeException("Vitest and its coverage provider must use the same major 4 constraint");
 }
 
