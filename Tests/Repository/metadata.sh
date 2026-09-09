@@ -132,8 +132,12 @@ $coverageConstraint = $package["devDependencies"]["@vitest/coverage-v8"];
 // 2026-08-31. What actually has to hold is that the two RESOLVED versions
 // match, and package-lock.json is checked for that below; this is the weaker
 // declaration-level check it deserves.
-if (preg_match("/^\^4\./", $vitestConstraint) !== 1
-    || preg_match("/^\^4\./", $coverageConstraint) !== 1
+// Anchored at both ends: `/^\^4\./` alone also accepts `^4.1.11 || ^5.0.0`,
+// which admits a major this project does not support, and the lockfile check
+// below would not catch it either — a range union can resolve to 4 today and 5
+// after the next install.
+if (preg_match("/^\^4\.\d+\.\d+$/", $vitestConstraint) !== 1
+    || preg_match("/^\^4\.\d+\.\d+$/", $coverageConstraint) !== 1
 ) {
     throw new RuntimeException("Vitest and its coverage provider must use the same major 4 constraint");
 }
