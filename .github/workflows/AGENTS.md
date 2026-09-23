@@ -9,7 +9,7 @@ Thin callers of shared Netresearch reusables plus two repo-local jobs.
 | Workflow | Purpose |
 |----------|---------|
 | `ci.yml` | Test matrix via `netresearch/typo3-ci-workflows/ci.yml`: PHP 8.2-8.5 x TYPO3 ^13.4/^14.3 (full), PHP 8.2-8.4 x ^12.4 (compat, reduced checks); `browser` job (typecheck, vitest+coverage, rebuild, `git diff --exit-code -- Resources/Public`); `repository` job running the contract scripts |
-| `checks.yml` | Security/quality reusables (security, gitleaks, zizmor, fuzz, license-check, CodeQL, scorecard, dependency-review, pr-quality) feeding the single required `All security checks` gate |
+| `checks.yml` | Security/quality reusables (security, betterleaks, zizmor, fuzz, license-check, CodeQL, scorecard, dependency-review, pr-quality) feeding the single required `All security checks` gate |
 | `harness-verify.yml` | Agent-harness consistency via `Build/Scripts/verify-harness.sh` (exit 2 = warnings only, passes) |
 | `release.yml` / `ter-publish.yml` | Release and manual TER publishing reusables |
 | `pages.yml` | Builds and publishes the demo page from source |
