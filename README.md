@@ -161,6 +161,8 @@ disposable TYPO3 12.4, 13.4 and 14.3 installations.
 - [TYPO3 manual](Documentation/Index.rst).
 - [Contribution guide](CONTRIBUTING.md).
 - [Security policy](SECURITY.md).
+- [Security assurance case](docs/SECURITY-ASSURANCE.md): data flows, threat
+  model and how the code counters the weaknesses that apply.
 - [GitHub issues](https://github.com/netresearch/t3x-nr-browser-ai/issues).
 
 ## License
