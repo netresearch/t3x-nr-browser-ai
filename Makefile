@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
 .PHONY: help check test unit functional e2e lint phpstan cs fix rector typecheck javascript assets ci clean
 
 .DEFAULT_GOAL := help

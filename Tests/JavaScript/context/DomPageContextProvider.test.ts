@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 /** @vitest-environment jsdom */
 
 import {beforeEach, describe, expect, it, vi} from 'vitest';

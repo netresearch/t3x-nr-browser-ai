@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import type {FormValues} from '../form/FormSchema';
 
 export type ActionFailure = 'unresolved-place' | 'rate-limited' | 'failed';

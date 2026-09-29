@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
 # ADR-0002: The assistant runs entirely in the browser, on untrusted input
 
 ## Status

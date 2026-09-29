@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import type {ActionOutcome, ResultBlock} from '../query/FormAction';
 
 export interface ResultLabels {

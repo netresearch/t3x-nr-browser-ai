@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {describe, expect, it, vi} from 'vitest';
 
 import {OpenMeteoQuery} from '../../../Resources/Private/TypeScript/query/OpenMeteoQuery';

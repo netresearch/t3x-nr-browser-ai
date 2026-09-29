@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {LanguageModelSession, LanguageModelSessionError} from '../ai/LanguageModelSession';
 import {PageContextError} from '../context/DomPageContextProvider';
 import type {PageContext, PageContextProvider} from '../context/PageContextProvider';

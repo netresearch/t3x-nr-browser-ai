@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 /**
  * Single source of the form assistant root markup for the browser unit tests
  * and the end-to-end suite. Both drive the real bundle against this markup, so

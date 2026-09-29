@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
 # systemPrompt is one line on purpose, and must stay that way. TYPO3 hands a
 # site set's settings to TypoScript by serialising them into constants text, one
 # "key = value" line per setting (SysTemplateTreeBuilder::

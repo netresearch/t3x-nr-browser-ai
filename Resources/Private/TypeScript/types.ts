@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 export type Availability = 'available' | 'downloadable' | 'downloading' | 'unavailable';
 
 export interface ModelOptions {

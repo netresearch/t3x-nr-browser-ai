@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 /**
  * Withholds the beginning of a streamed reply for as long as it could still turn
  * out to be the "page does not answer this" marker, and reports which of the two

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {describe, expect, it} from 'vitest';
 
 import {readFormSchema} from '../../../Resources/Private/TypeScript/form/FormSchemaSource';

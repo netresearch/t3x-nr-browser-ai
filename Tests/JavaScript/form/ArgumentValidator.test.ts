@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {describe, expect, it} from 'vitest';
 
 import {validateArguments} from '../../../Resources/Private/TypeScript/form/ArgumentValidator';

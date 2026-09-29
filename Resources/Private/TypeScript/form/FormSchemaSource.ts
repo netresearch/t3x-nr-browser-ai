@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import type {ArrayProperty, FormSchema, SchemaProperty} from './FormSchema';
 
 const SUPPORTED_TYPES = new Set(['string', 'number', 'boolean', 'array']);
