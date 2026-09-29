@@ -93,11 +93,18 @@ enable fields including access groups and time-based publishing.
 Content Security Policy
 =======================
 
-The extension loads its JavaScript module, CSS and icon from the TYPO3 site
-and performs no application network request. A typical
-``Content-Security-Policy`` can therefore keep ``script-src`` and
-``style-src`` restricted to the site's own assets and does not need an
-external ``connect-src`` destination for the extension.
+The extension loads its JavaScript module, CSS and icon from the TYPO3 site.
+The page assistant performs no application network request. On a page that
+carries only the page assistant, a typical ``Content-Security-Policy`` can
+therefore keep ``script-src`` and ``style-src`` restricted to the site's own
+assets and does not need an external ``connect-src`` destination for the
+extension.
+
+The form assistant is the exception: its query goes from the browser to
+``https://geocoding-api.open-meteo.com`` and ``https://api.open-meteo.com``
+(see :ref:`security-form-assistant-flow`). On a page that carries the form
+assistant, ``connect-src`` has to permit these two origins, or the form cannot
+run.
 
 The exact policy belongs to the integrating site. Verify that TYPO3's emitted
 module and stylesheet are permitted; do not add ``unsafe-inline`` or broad
