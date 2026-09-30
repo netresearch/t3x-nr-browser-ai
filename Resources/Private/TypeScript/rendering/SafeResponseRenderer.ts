@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 const WEB_PROTOCOLS = new Set(['http:', 'https:']);
 const URL_CANDIDATE = /https?:\/\/[^\s<>"']+/giu;
 const URL_AT_START = /^https?:\/\/[^\s<>"']+/u;

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
 # The plugin's TypoScript lives in the site set and is imported from there, so
 # this static include and the set never drift apart. See the header of the
 # imported file for why the import points this way and not the other.

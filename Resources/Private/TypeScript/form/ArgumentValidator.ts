@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import type {FormSchema, FormValue, FormValues, SchemaProperty} from './FormSchema';
 
 export type ValidationResult =

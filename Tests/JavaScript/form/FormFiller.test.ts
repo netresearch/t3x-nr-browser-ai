@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {beforeEach, describe, expect, it} from 'vitest';
 
 import {FormFiller, identifierOf} from '../../../Resources/Private/TypeScript/form/FormFiller';

@@ -4,6 +4,9 @@
   </a>
 </p>
 
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 <h1 align="center">Netresearch Browser AI for TYPO3</h1>
 
 <p align="center">
@@ -156,8 +159,10 @@ disposable TYPO3 12.4, 13.4 and 14.3 installations.
 ## Documentation, contributing and support
 
 - [TYPO3 manual](Documentation/Index.rst).
-- [Contribution guide](CONTRIBUTING.md).
-- [Security policy](SECURITY.md).
+- [Contribution guide](https://github.com/netresearch/t3x-nr-browser-ai/blob/main/CONTRIBUTING.md).
+- [Security policy](https://github.com/netresearch/t3x-nr-browser-ai/blob/main/SECURITY.md).
+- [Security assurance case](https://github.com/netresearch/t3x-nr-browser-ai/blob/main/docs/SECURITY-ASSURANCE.md): data flows, threat
+  model and how the code counters the weaknesses that apply.
 - [GitHub issues](https://github.com/netresearch/t3x-nr-browser-ai/issues).
 
 ## License

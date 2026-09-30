@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText: Netresearch DTT GmbH
 import {readFormSchema} from '../form/FormSchemaSource';
 import {FormFiller} from '../form/FormFiller';
 import {correctCheckboxGroupRoles} from '../form/GroupRoles';
