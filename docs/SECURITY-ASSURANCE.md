@@ -144,7 +144,7 @@ LLM entries refer to the OWASP Top 10 for LLM Applications 2025.
 | Request to an unintended destination | Form action | Allow-list of actions on server and client; fixed URLs in `OpenMeteoQuery.ts`. Covered by `Tests/JavaScript/query/OpenMeteoQuery.test.ts` |
 | Uncontrolled recursion (CWE-674) | Fallback content referencing itself | Render stack in `FallbackContentRenderer.php`. Covered by `Tests/Unit/Service/FallbackContentRendererTest.php` |
 | Regular-expression denial of service (CWE-1333) | Parsing streamed model output on every chunk | Block syntax recognised with string operations, not patterns (`SafeResponseRenderer.ts`) |
-| Model download without consent | Opening a page | `LanguageModel.create()` is reached only from the event handler of a click or a form submission (`ChatController.ts`, `FormAssistantController.ts`); `demo/capability-check.js` only calls `availability()` |
+| Model download without consent | Opening a page | `LanguageModel.create()` is reached only from the event handler of a click, a form submission or the Enter key in the request field (`ChatController.ts`, `FormAssistantController.ts`); `demo/capability-check.js` only calls `availability()` |
 
 ## Secure design principles applied
 

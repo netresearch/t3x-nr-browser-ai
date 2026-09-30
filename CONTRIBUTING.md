@@ -69,7 +69,7 @@ described in [docs/SECURITY-ASSURANCE.md](docs/SECURITY-ASSURANCE.md).
 
 These checks run on every pull request:
 
-- `.github/workflows/checks.yml`: Composer Audit and Opengrep (through `security.yml` of netresearch/typo3-ci-workflows), Dependency Review, the PHP licence audit (`license-check.yml`), CodeQL for JavaScript/TypeScript and the workflows, Betterleaks secret scanning and zizmor. Its `fuzz` job finds no fuzz suite in `Build/*.xml` and is skipped.
+- `.github/workflows/checks.yml`: Composer Audit and Opengrep (through `security.yml` of netresearch/typo3-ci-workflows), Dependency Review, the PHP licence audit (`license-check.yml`), CodeQL for JavaScript/TypeScript and the workflows, Betterleaks secret scanning and zizmor. Its `fuzz` job looks for the PHPUnit configuration `Build/phpunit.xml` (the reusable workflow's default), which this repository does not have, and so runs no fuzz tests.
 - `.github/workflows/ci.yml`: PHP lint, code style, PHPStan, Rector, unit and functional tests and the documentation render on the supported PHP and TYPO3 versions; the browser job type-checks the TypeScript, runs the Vitest suites with coverage and fails when the committed files in `Resources/Public` differ from a fresh build; `Tests/Repository/metadata.sh` and `Tests/Repository/documentation.sh`.
 - `.github/workflows/harness-verify.yml` and `.github/workflows/check-template-drift.yml`: agent harness consistency and drift from the shared typo3-extension template.
 
