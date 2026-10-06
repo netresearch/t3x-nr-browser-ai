@@ -1,6 +1,6 @@
 {
   "name": "netresearch/nr-browser-ai",
-  "description": "On-device AI assistant for TYPO3 that answers questions about the current page, powered by Chrome built-in AI - by Netresearch",
+  "description": "Netresearch Browser AI - On-device AI assistant for TYPO3 that answers questions about the current page, powered by Chrome built-in AI - by Netresearch",
   "type": "typo3-cms-extension",
   "license": "GPL-2.0-or-later",
   "keywords": [
