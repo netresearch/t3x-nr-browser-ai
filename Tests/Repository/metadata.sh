@@ -56,8 +56,8 @@ foreach ($expectedTypo3Packages as $packageName) {
         throw new RuntimeException(sprintf("Unexpected constraint for %s", $packageName));
     }
 }
-if (!str_contains($composer["description"] ?? "", "Netresearch")) {
-    throw new RuntimeException("Composer description must mention Netresearch");
+if (!str_starts_with($composer["description"] ?? "", "Browser AI - ")) {
+    throw new RuntimeException("Composer description must start with the extension title and \" - \"");
 }
 if (($composer["authors"][0]["email"] ?? null) !== "typo3@netresearch.de") {
     throw new RuntimeException("Unexpected Composer author email");
@@ -195,8 +195,12 @@ if (($configuration["author_company"] ?? null) !== "Netresearch DTT GmbH") {
 if (($configuration["constraints"]["depends"]["typo3"] ?? null) !== "12.4.0-14.3.99") {
     throw new RuntimeException("Unexpected TYPO3 version range");
 }
-if (!str_contains($configuration["description"] ?? "", "Netresearch")) {
-    throw new RuntimeException("Extension description must mention Netresearch");
+if (($configuration["title"] ?? null) !== "Browser AI") {
+    throw new RuntimeException("Unexpected extension title");
+}
+$composerDescription = json_decode((string) file_get_contents(dirname($emConfFile) . "/composer.json"), true)["description"] ?? "";
+if ("Browser AI - " . ($configuration["description"] ?? "") !== $composerDescription) {
+    throw new RuntimeException("Extension description must equal the composer description after the title");
 }
 ' "${repository_root}/ext_emconf.php"
 
