@@ -7,7 +7,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 <!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
 
-<h1 align="center">Netresearch Browser AI for TYPO3</h1>
+<h1 align="center">Browser AI for TYPO3</h1>
 
 <p align="center">
   <strong>Page-grounded answers using Chrome built-in AI on the visitor's device</strong>

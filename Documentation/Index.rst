@@ -5,9 +5,9 @@
 
 .. _start:
 
-==========================
-Netresearch Browser AI
-==========================
+==========
+Browser AI
+==========
 
 .. image:: /Images/netresearch-underline.svg
    :alt:
