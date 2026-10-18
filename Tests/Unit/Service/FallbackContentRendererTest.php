@@ -68,12 +68,10 @@ final class FallbackContentRendererTest extends TestCase
             ->method('cObjGetSingle')
             ->with(
                 'RECORDS',
-                self::callback(static function (array $configuration): bool {
-                    return ($configuration['tables'] ?? null) === 'tt_content'
-                        && ($configuration['source'] ?? null) === '12'
-                        && !isset($configuration['dontCheckPid'])
-                        && count($configuration) === 2;
-                }),
+                self::callback(static fn(array $configuration): bool => ($configuration['tables'] ?? null) === 'tt_content'
+                    && ($configuration['source'] ?? null) === '12'
+                    && !isset($configuration['dontCheckPid'])
+                    && count($configuration) === 2),
             )
             ->willReturn('<p>TYPO3-rendered fallback</p>');
 

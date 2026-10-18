@@ -295,7 +295,7 @@ final class FormSchemaFactoryTest extends TestCase
         self::assertIsArray($properties);
         foreach ($properties as $name => $property) {
             self::assertIsArray($property);
-            self::assertArrayHasKey('description', $property, (string) $name . ' has no description');
+            self::assertArrayHasKey('description', $property, $name . ' has no description');
         }
     }
 

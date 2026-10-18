@@ -186,6 +186,7 @@ final class FormAssistantControllerTest extends FunctionalTestCase
                     break;
                 }
             }
+
             self::assertTrue($found, sprintf('No rendered control carries the identifier "%s".', $property));
         }
     }
@@ -274,6 +275,7 @@ final class FormAssistantControllerTest extends FunctionalTestCase
 
         $document                      = new DOMDocument();
         $document->strictErrorChecking = false;
+
         $previous                      = libxml_use_internal_errors(true);
         $document->loadHTML($body);
         libxml_clear_errors();
