@@ -14,10 +14,10 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Service;
 
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
+
 use function array_pop;
 use function in_array;
-
-use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class FallbackContentRenderer
 {

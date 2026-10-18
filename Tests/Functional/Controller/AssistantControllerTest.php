@@ -14,17 +14,9 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Functional\Controller;
 
-use function call_user_func;
-use function class_exists;
-
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-
-use function file_get_contents;
-use function is_array;
-use function is_callable;
-
 use Netresearch\NrBrowserAi\Controller\AssistantController;
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,10 +24,6 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use ReflectionMethod;
 use ReflectionProperty;
-
-use function str_repeat;
-use function strpos;
-
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -45,6 +33,14 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
+
+use function call_user_func;
+use function class_exists;
+use function file_get_contents;
+use function is_array;
+use function is_callable;
+use function str_repeat;
+use function strpos;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {

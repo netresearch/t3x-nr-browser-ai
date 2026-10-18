@@ -14,6 +14,12 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Controller;
 
+use Netresearch\NrBrowserAi\Domain\Form\FormDefinitionLoader;
+use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
+use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
+
 use function in_array;
 use function is_array;
 use function is_bool;
@@ -23,16 +29,8 @@ use function is_numeric;
 use function is_scalar;
 use function is_string;
 use function max;
-
-use Netresearch\NrBrowserAi\Domain\Form\FormDefinitionLoader;
-use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
-use Psr\Http\Message\ResponseInterface;
-
 use function sprintf;
 use function trim;
-
-use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
-use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
  * Renders a parameter-rich form together with the tool that fills and runs it.

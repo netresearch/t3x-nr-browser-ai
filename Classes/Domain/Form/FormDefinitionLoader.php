@@ -14,13 +14,13 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Domain\Form;
 
+use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 use function is_array;
 use function is_string;
 use function preg_match;
 use function sprintf;
-
-use TYPO3\CMS\Core\Configuration\Loader\YamlFileLoader;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Reads a form definition this extension ships.

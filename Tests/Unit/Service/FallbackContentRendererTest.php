@@ -68,7 +68,7 @@ final class FallbackContentRendererTest extends TestCase
             ->method('cObjGetSingle')
             ->with(
                 'RECORDS',
-                self::callback(static fn(array $configuration): bool => ($configuration['tables'] ?? null) === 'tt_content'
+                self::callback(static fn (array $configuration): bool => ($configuration['tables'] ?? null) === 'tt_content'
                     && ($configuration['source'] ?? null) === '12'
                     && !isset($configuration['dontCheckPid'])
                     && count($configuration) === 2),

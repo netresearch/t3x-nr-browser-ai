@@ -14,11 +14,11 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Domain\Form;
 
-use function is_string;
-
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Form\Domain\Factory\FormFactoryInterface;
 use TYPO3\CMS\Form\Domain\Model\FormDefinition;
+
+use function is_string;
 
 /**
  * Renders a form this extension ships, from the same array the schema is
