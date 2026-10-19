@@ -14,17 +14,9 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Functional\Controller;
 
-use function call_user_func;
-use function class_exists;
-
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-
-use function file_get_contents;
-use function is_array;
-use function is_callable;
-
 use Netresearch\NrBrowserAi\Controller\AssistantController;
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,10 +24,6 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use ReflectionMethod;
 use ReflectionProperty;
-
-use function str_repeat;
-use function strpos;
-
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -45,6 +33,14 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
+
+use function call_user_func;
+use function class_exists;
+use function file_get_contents;
+use function is_array;
+use function is_callable;
+use function str_repeat;
+use function strpos;
 
 final class AssistantControllerTest extends FunctionalTestCase
 {
@@ -143,11 +139,13 @@ final class AssistantControllerTest extends FunctionalTestCase
             if (is_array($item)) {
                 $item = SelectItem::fromTcaItemArray($item);
             }
+
             if ($item instanceof SelectItem && $item->getValue() === 'nrbrowserai_assistant') {
                 $assistantItem = $item;
                 break;
             }
         }
+
         self::assertInstanceOf(SelectItem::class, $assistantItem);
         self::assertSame(
             'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:plugin.assistant.title',
@@ -560,6 +558,7 @@ final class AssistantControllerTest extends FunctionalTestCase
                 $fields[$fieldName]['label'] ?? null,
             );
         }
+
         self::assertSame(
             'LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.fallbackMode.none',
             $fields['settings.fallbackMode']['config']['items'][0]['label'] ?? null,
@@ -582,6 +581,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertTrue($document->load($languageFile));
         $xpath = new DOMXPath($document);
         $xpath->registerNamespace('xlf', 'urn:oasis:names:tc:xliff:document:1.2');
+
         $translationUnits = $xpath->query('//xlf:trans-unit');
         self::assertNotFalse($translationUnits);
         $translationKeys = [];
@@ -642,6 +642,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         self::assertTrue($document->load($languageFile));
         $xpath = new DOMXPath($document);
         $xpath->registerNamespace('xlf', 'urn:oasis:names:tc:xliff:document:1.2');
+
         $translationUnits = $xpath->query('//xlf:trans-unit');
         self::assertNotFalse($translationUnits);
 
@@ -650,6 +651,7 @@ final class AssistantControllerTest extends FunctionalTestCase
             if (!$translationUnit instanceof DOMElement) {
                 continue;
             }
+
             $target = $xpath->query('xlf:target', $translationUnit);
             $source = $xpath->query('xlf:source', $translationUnit);
             $value  = $target !== false && $target->length > 0
@@ -689,6 +691,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         if ($injectFallbackContentRenderer) {
             $controller->injectFallbackContentRenderer(new FallbackContentRenderer());
         }
+
         $controller->injectResponseFactory(GeneralUtility::makeInstance(ResponseFactoryInterface::class));
         $controller->injectStreamFactory(GeneralUtility::makeInstance(StreamFactoryInterface::class));
 
@@ -724,12 +727,14 @@ final class AssistantControllerTest extends FunctionalTestCase
         if (!class_exists($standaloneViewClass)) {
             self::fail('The TYPO3 Fluid standalone view is not available.');
         }
+
         $makeInstanceMethod = new ReflectionMethod(GeneralUtility::class, 'makeInstance');
         $view               = $makeInstanceMethod->invoke(null, $standaloneViewClass);
         self::assertIsObject($view);
         if (!is_callable([$view, 'setTemplatePathAndFilename'])) {
             self::fail('The TYPO3 Fluid standalone view cannot accept a template file.');
         }
+
         call_user_func([$view, 'setTemplatePathAndFilename'], $templateFile);
 
         return $view;

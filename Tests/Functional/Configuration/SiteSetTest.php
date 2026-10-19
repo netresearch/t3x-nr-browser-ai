@@ -59,7 +59,6 @@ final class SiteSetTest extends FunctionalTestCase
         if ((new Typo3Version())->getMajorVersion() < 13) {
             self::markTestSkipped('Site sets require TYPO3 13 or newer');
         }
-
     }
 
     #[Test]

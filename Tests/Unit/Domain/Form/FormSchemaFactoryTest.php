@@ -14,16 +14,16 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Unit\Domain\Form;
 
-use function count;
-use function dirname;
-use function file_get_contents;
-use function is_array;
-
 use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
+
+use function count;
+use function dirname;
+use function file_get_contents;
+use function is_array;
 
 final class FormSchemaFactoryTest extends TestCase
 {
@@ -295,7 +295,7 @@ final class FormSchemaFactoryTest extends TestCase
         self::assertIsArray($properties);
         foreach ($properties as $name => $property) {
             self::assertIsArray($property);
-            self::assertArrayHasKey('description', $property, (string) $name . ' has no description');
+            self::assertArrayHasKey('description', $property, $name . ' has no description');
         }
     }
 

@@ -14,23 +14,21 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Tests\Unit\Configuration;
 
-use function dirname;
-use function file_get_contents;
-use function is_array;
-use function is_file;
-use function is_scalar;
-
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-
-use function sprintf;
-
 use Symfony\Component\Yaml\Yaml;
 use TYPO3\CMS\Core\EventDispatcher\NoopEventDispatcher;
 use TYPO3\CMS\Core\TypoScript\AST\AstBuilder;
 use TYPO3\CMS\Core\TypoScript\AST\Node\NodeInterface;
 use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
 use TYPO3\CMS\Core\TypoScript\Tokenizer\LosslessTokenizer;
+
+use function dirname;
+use function file_get_contents;
+use function is_array;
+use function is_file;
+use function is_scalar;
+use function sprintf;
 
 /**
  * The plugin's defaults are stated in two files, because the two configuration

@@ -19,12 +19,11 @@ use DOMElement;
 use DOMXPath;
 use Netresearch\NrBrowserAi\Controller\FormAssistantController;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 use function sprintf;
 use function str_contains;
-
-use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\InternalRequest;
-use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * What this pins down is the one thing unit tests cannot: that the controls
@@ -186,6 +185,7 @@ final class FormAssistantControllerTest extends FunctionalTestCase
                     break;
                 }
             }
+
             self::assertTrue($found, sprintf('No rendered control carries the identifier "%s".', $property));
         }
     }
@@ -274,7 +274,8 @@ final class FormAssistantControllerTest extends FunctionalTestCase
 
         $document                      = new DOMDocument();
         $document->strictErrorChecking = false;
-        $previous                      = libxml_use_internal_errors(true);
+
+        $previous = libxml_use_internal_errors(true);
         $document->loadHTML($body);
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
