@@ -42,7 +42,7 @@ if (array_key_exists("platform", $composer["config"] ?? [])) {
 if (array_key_exists("phpunit/phpunit", $composer["require-dev"] ?? [])) {
     throw new RuntimeException("PHPUnit must be resolved through the TYPO3 testing framework");
 }
-if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^2.0.2") {
+if (($composer["require-dev"]["netresearch/typo3-ci-workflows"] ?? null) !== "^2.0.3") {
     throw new RuntimeException("Unexpected Netresearch CI tooling constraint");
 }
 if (($composer["require-dev"]["typo3/testing-framework"] ?? null) !== "^8.2 || ^9.0") {
