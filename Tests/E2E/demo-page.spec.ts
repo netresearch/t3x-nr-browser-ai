@@ -87,6 +87,41 @@ for (const route of ['/', '/de/']) {
     }
 }
 
+for (const route of ['/', '/de/']) {
+    for (const adaptation of ['200% text', 'WCAG text spacing']) {
+        test(`text adaptation: ${route} preserves content with ${adaptation} at 320px`, async ({page}) => {
+            await page.setViewportSize({width: 320, height: 900});
+            await page.goto(route, {waitUntil: 'networkidle'});
+            await page.evaluate(() => document.fonts.ready);
+            if (adaptation === '200% text') {
+                await page.evaluate(() => {
+                    // Snapshot every size first: px-based labels and native controls
+                    // must enlarge too, without multiplying inherited sizes twice.
+                    const sizes = [...document.querySelectorAll<HTMLElement>('body, body *')]
+                        .map((element) => [element, Number.parseFloat(getComputedStyle(element).fontSize)] as const);
+                    for (const [element, size] of sizes) element.style.fontSize = `${size * 2}px`;
+                });
+            } else {
+                await page.addStyleTag({content: '*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}'});
+            }
+            await page.locator('.menu-toggle').click();
+            await expect(page.locator('[data-theme-control]')).toBeVisible();
+            const state = await page.evaluate(() => ({
+                width: document.documentElement.scrollWidth,
+                clipped: [...document.querySelectorAll<HTMLElement>('.capability-card dt, .capability-card dd')]
+                    .filter((element) => {
+                        const bounds = element.getBoundingClientRect();
+                        const card = element.closest('.capability-card')!.getBoundingClientRect();
+                        return bounds.left < card.left - 1 || bounds.right > card.right + 1
+                            || element.scrollWidth > element.clientWidth + 1;
+                    }).map((element) => element.textContent?.trim()),
+            }));
+            expect(state.clipped).toEqual([]);
+            expect(state.width).toBe(320);
+        });
+    }
+}
+
 // An axe run on a page whose stylesheet 404ed finds no contrast failures at all
 // and passes for the wrong reason, so a silent asset error has to fail on its
 // own. The third-party test above watches what the page reaches for; this one
