@@ -9,6 +9,7 @@ export default defineConfig({
     use: {
         browserName: 'chromium',
         headless: true,
+        launchOptions: {executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH},
         baseURL: 'http://127.0.0.1:4173/',
     },
     // The demo suite exercises the published artifact over HTTP, because the page

@@ -25,6 +25,7 @@ const output = resolve(root, 'public');
 const FILES = [
     ['demo/demo.css', 'assets/demo.css'],
     ['demo/capability-check.js', 'assets/capability-check.js'],
+    ['demo/site-controls.js', 'assets/site-controls.js'],
     ['demo/og-browser-ai-en.png', 'assets/og-browser-ai-en.png'],
     ['demo/og-browser-ai-de.png', 'assets/og-browser-ai-de.png'],
     ['Resources/Public/JavaScript/Assistant.js', 'assets/Assistant.js'],
