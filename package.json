@@ -14,7 +14,8 @@
     "test:e2e": "playwright test -c Tests/E2E/playwright.config.ts",
     "ci": "npm run typecheck && npm run build && npm run build:css && npm run test:js",
     "verify:demo": "node demo/verify.mjs",
-    "build:og": "uv run demo/render_og.py"
+    "build:og": "uv run demo/render_og.py",
+    "test:demo": "node --test demo/render.test.mjs demo/verify-product-urls.test.mjs"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"

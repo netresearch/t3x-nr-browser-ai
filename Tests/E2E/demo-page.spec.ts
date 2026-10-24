@@ -69,17 +69,21 @@ test('published demo page requests nothing from a third party', async ({page}) =
 // markup-level gates had passed.
 for (const route of ['/', '/de/']) {
     for (const colorScheme of ['light', 'dark'] as const) {
-        test(`published demo page ${route} has no accessibility violations in ${colorScheme} mode`,
+      for (const width of [320, 1280]) {
+        test(`published demo page ${route} has no accessibility violations in ${colorScheme} mode at ${width}px`,
             async ({page}) => {
+                await page.setViewportSize({width, height: 900});
                 await page.emulateMedia({colorScheme});
                 await page.goto(route);
 
                 const results = await new AxeBuilder({page})
-                    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'wcag2aaa'])
                     .analyze();
 
                 expect(results.violations).toEqual([]);
+                expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
             });
+      }
     }
 }
 
@@ -101,3 +105,40 @@ for (const route of ['/', '/de/']) {
         expect(broken).toEqual([]);
     });
 }
+
+for (const route of ['/', '/de/']) {
+    test(`mobile page ${route} preserves its appearance preference and closes the menu with Escape`, async ({page}) => {
+        await page.setViewportSize({width: 320, height: 900});
+        await page.goto(route);
+        const menu = page.locator('.menu-toggle');
+        await expect(page.locator('.language-switch')).toBeVisible();
+        await expect(page.locator('#site-navigation')).toBeHidden();
+        await menu.click();
+        await expect(menu).toHaveAttribute('aria-expanded', 'true');
+        await page.locator('[data-theme-control]').selectOption('dark');
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+        await page.reload();
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+        await menu.click();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#site-navigation')).toBeHidden();
+        await expect(menu).toBeFocused();
+    });
+}
+
+
+test.describe('navigation without JavaScript', () => {
+    test.use({javaScriptEnabled: false});
+    for (const route of ['/', '/de/']) {
+        test(`all navigation links remain available on ${route} at 320px`, async ({page}) => {
+            await page.setViewportSize({width: 320, height: 900});
+            await page.goto(route);
+            await expect(page.locator('#site-navigation')).toBeVisible();
+            await expect(page.locator('#site-navigation a').first()).toBeVisible();
+            await expect(page.locator('.language-switch')).toBeVisible();
+            await expect(page.locator('.menu-toggle')).toBeHidden();
+            await expect(page.locator('.theme-control')).toBeHidden();
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+        });
+    }
+});

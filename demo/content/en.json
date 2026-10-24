@@ -305,7 +305,7 @@
       {
         "title": "nr-llm — the server-side complement",
         "body": "When a question spans the whole site, or needs a model this one cannot run, nr-llm is the controlled server-side path.",
-        "href": "https://netresearch.github.io/t3x-nr-llm/",
+        "href": "https://netresearch.github.io/t3x-nr-llm/en/",
         "label": "nr-llm"
       },
       {

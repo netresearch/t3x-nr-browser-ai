@@ -297,6 +297,41 @@
       "browser": "Im Browser der Besucherin",
       "own-server": "Eigener Server",
       "external-provider": "Externer Anbieter"
+    },
+    "values": {
+      "intended_purpose": "Fragen zur gerade geöffneten Seite anhand ihres Textes beantworten – mit dem Sprachmodell des Browsers.",
+      "excluded_uses": [
+        "Suche im Wissen der gesamten Website: Der Assistent sieht nur eine Seite.",
+        "Fragen mit Bedarf an aktuellen externen Informationen: Der Assistent hat keinen eigenen Netzwerkzugriff.",
+        "Transaktionen und andere folgenreiche Aktionen: Er antwortet, führt aber keine Aktionen aus.",
+        "Ein garantierter Kontaktkanal: Nicht unterstützte Browser zeigen den redaktionell festgelegten Ersatzinhalt.",
+        "Berechtigungsentscheidungen sowie rechtliche, medizinische oder finanzielle Entscheidungen ohne unabhängige Kontrollen."
+      ],
+      "models": [
+        "Das von Chrome bereitgestellte und verwaltete Modell. Die Extension wählt es nicht aus; der Download wird vom Browser verwaltet."
+      ],
+      "data": [
+        "Die Frage der Besucherin und der Text des konfigurierten Seitenbereichs.",
+        "Keine zusätzlichen Kennungen, gespeicherten Verläufe oder Analysedaten."
+      ],
+      "human_oversight": "Die Besucherin stellt die Frage, liest die Antwort und bewertet sie. Der Assistent führt keine Aktionen aus und ändert nichts.",
+      "permissions": "Redaktionen konfigurieren die Plugin-Instanz; Administratoren legen Systemanweisung und Quellbereich in TypoScript fest. Besucher benötigen kein Konto.",
+      "logging": "Die Extension speichert weder Fragen noch Antworten in Protokollen, Datenbank oder Browserspeicher.",
+      "retention": "Der Dialog bleibt im Arbeitsspeicher des Browsers und wird beim Zurücksetzen oder Seitenwechsel verworfen.",
+      "cost_control": "Es entstehen keine Gebühren für einen externen Inferenzdienst. Das Gerät der Besucherin führt das Browsermodell aus.",
+      "security_controls": [
+        "Getrennte Anweisungen für Administration und Redaktion",
+        "Seiteninhalt wird als nicht vertrauenswürdige Eingabe behandelt",
+        "Antworten werden mit DOM-Methoden ausgegeben, ohne HTML zu interpretieren",
+        "Modelldownload nur nach einer ausdrücklichen Nutzeraktion"
+      ],
+      "known_limitations": [
+        "Nur unterstützte Chrome-Versionen auf Desktopgeräten mit ausreichend Speicher können das Modell ausführen. Für alle anderen Besuche muss ein Ersatzinhalt vorgesehen sein.",
+        "Verhalten, Updates und Verfügbarkeit des Browsermodells liegen beim Browseranbieter.",
+        "Manipulierte Anweisungen im Seiteninhalt bleiben ein Risiko. Öffentlich ausgegebene Seiten dürfen keine Geheimnisse enthalten.",
+        "Das Modell kann sich irren und Antworten erfinden. Die Beschränkung auf eine Seite garantiert keine Richtigkeit.",
+        "Die Qualität der Antworten hängt auch von der Verständlichkeit des Seiteninhalts ab."
+      ]
     }
   },
   "related": {
@@ -305,7 +340,7 @@
       {
         "title": "nr-llm – die serverseitige Ergänzung",
         "body": "Wenn eine Frage die ganze Seite betrifft oder ein Modell braucht, das hier nicht läuft, ist nr-llm der kontrollierte serverseitige Weg.",
-        "href": "https://netresearch.github.io/t3x-nr-llm/",
+        "href": "https://netresearch.github.io/t3x-nr-llm/de/",
         "label": "nr-llm"
       },
       {
