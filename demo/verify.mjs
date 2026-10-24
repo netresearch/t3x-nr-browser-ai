@@ -97,15 +97,17 @@ if (!await exists(manifestPath)) {
 const pages = await htmlFiles(output);
 if (pages.length !== 2) fail(`expected 2 rendered pages, found ${pages.length}`);
 
-for (const page of pages) {
+const renderedPages = await Promise.all(pages.map(async (page) => {
     const name = relative(output, page);
     const html = await readFile(page, 'utf8');
+    const problems = manifest
+        ? await verifyProductUrls(html, name, output, manifest.slug, deploymentOrigin) : [];
+    return {name, html, problems};
+}));
+
+for (const {name, html, problems} of renderedPages) {
     const text = stripMarkup(html);
-    if (manifest) {
-        for (const problem of await verifyProductUrls(html, name, output, manifest.slug, deploymentOrigin)) {
-            fail(`${name}: ${problem}`);
-        }
-    }
+    for (const problem of problems) fail(`${name}: ${problem}`);
 
     for (const placeholder of PLACEHOLDERS) {
         if (text.includes(placeholder)) fail(`${name}: placeholder text in the initial HTML: ${placeholder}`);
