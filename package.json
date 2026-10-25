@@ -15,7 +15,7 @@
     "ci": "npm run typecheck && npm run build && npm run build:css && npm run test:js",
     "verify:demo": "node demo/verify.mjs",
     "build:og": "uv run demo/render_og.py",
-    "test:demo": "node --test demo/render.test.mjs demo/verify-product-urls.test.mjs"
+    "test:demo": "node --test demo/render.test.mjs demo/verify-product-urls.test.mjs demo/verify-site-shell.test.mjs"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"

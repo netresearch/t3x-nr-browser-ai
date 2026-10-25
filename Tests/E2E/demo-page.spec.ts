@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // SPDX-FileCopyrightText: Netresearch DTT GmbH
 import AxeBuilder from '@axe-core/playwright';
-import {expect, test} from '@playwright/test';
+import {expect, test, type Page} from '@playwright/test';
+
+async function chooseTheme(page: Page, preference: string) {
+    const picker = page.locator('[data-nr-theme-picker]');
+    if (!await picker.evaluate((element: HTMLDetailsElement) => element.open)) {
+        await picker.locator('summary').click();
+    }
+    await picker.locator(`input[value="${preference}"]`).check();
+}
 
 /**
  * Exercises the published demo page as GitHub Pages serves it: real bundle, real
@@ -104,8 +112,8 @@ for (const route of ['/', '/de/']) {
             } else {
                 await page.addStyleTag({content: '*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}'});
             }
-            await page.locator('.menu-toggle').click();
-            await expect(page.locator('[data-theme-control]')).toBeVisible();
+            await page.locator('[data-nr-theme-trigger]').click();
+            await expect(page.locator('[data-nr-theme-option]').first()).toBeVisible();
             const state = await page.evaluate(() => ({
                 width: document.documentElement.scrollWidth,
                 clipped: [...document.querySelectorAll<HTMLElement>('.capability-card dt, .capability-card dd')]
@@ -142,37 +150,67 @@ for (const route of ['/', '/de/']) {
 }
 
 for (const route of ['/', '/de/']) {
-    test(`mobile page ${route} preserves its appearance preference and closes the menu with Escape`, async ({page}) => {
+    test(`mobile page ${route} preserves theme choices, System and native disclosure focus`, async ({page}) => {
         await page.setViewportSize({width: 320, height: 900});
+        await page.emulateMedia({colorScheme: 'light'});
         await page.goto(route);
-        const menu = page.locator('.menu-toggle');
-        await expect(page.locator('.language-switch')).toBeVisible();
-        await expect(page.locator('#site-navigation')).toBeHidden();
-        await menu.click();
-        await expect(menu).toHaveAttribute('aria-expanded', 'true');
-        await page.locator('[data-theme-control]').selectOption('dark');
+        const picker = page.locator('[data-nr-theme-picker]');
+        const menu = page.locator('[data-nr-mobile-menu]');
+        await expect(page.locator('.nr-shell-locales')).toBeVisible();
+        await expect(menu).not.toHaveAttribute('open');
+        await chooseTheme(page, 'dark');
         await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+        await expect(page.locator('html')).toHaveClass(/dark/);
         await page.reload();
+        await expect(picker.locator('input[value="dark"]')).toBeChecked();
         await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-        await menu.click();
+        await page.evaluate(() => localStorage.setItem('nrllm-theme', 'dark'));
+        await chooseTheme(page, 'system');
+        await page.reload();
+        await expect(page.locator('html')).toHaveAttribute('data-theme-preference', 'system');
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+        await page.emulateMedia({colorScheme: 'dark'});
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+        await page.locator('[data-nr-theme-trigger]').click();
         await page.keyboard.press('Escape');
-        await expect(page.locator('#site-navigation')).toBeHidden();
-        await expect(menu).toBeFocused();
+        await expect(picker).not.toHaveAttribute('open');
+        await expect(page.locator('[data-nr-theme-trigger]')).toBeFocused();
+        await menu.locator('summary').focus();
+        await page.keyboard.press('Enter');
+        await expect(menu).toHaveAttribute('open', '');
+        await page.keyboard.press('Escape');
+        await expect(menu).not.toHaveAttribute('open');
+        await expect(menu.locator('summary')).toBeFocused();
+        const local = page.locator('[data-nr-page-menu]');
+        await local.locator('summary').focus();
+        await page.keyboard.press('Enter');
+        await expect(local.locator('a').first()).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(local).not.toHaveAttribute('open');
+        await expect(local.locator('summary')).toBeFocused();
     });
 }
-
 
 test.describe('navigation without JavaScript', () => {
     test.use({javaScriptEnabled: false});
     for (const route of ['/', '/de/']) {
-        test(`all navigation links remain available on ${route} at 320px`, async ({page}) => {
+        test(`native navigation remains available on ${route} at 320px`, async ({page}) => {
             await page.setViewportSize({width: 320, height: 900});
             await page.goto(route);
-            await expect(page.locator('#site-navigation')).toBeVisible();
-            await expect(page.locator('#site-navigation a').first()).toBeVisible();
-            await expect(page.locator('.language-switch')).toBeVisible();
-            await expect(page.locator('.menu-toggle')).toBeHidden();
-            await expect(page.locator('.theme-control')).toBeHidden();
+            const skip = page.locator('.skip-link');
+            await skip.focus();
+            expect(await skip.evaluate((element) => {
+                const rect = element.getBoundingClientRect();
+                return element.contains(document.elementFromPoint(rect.left + 8, rect.top + 8));
+            })).toBe(true);
+            const localMenu = page.locator('[data-nr-page-menu]');
+            await localMenu.locator('summary').click();
+            await expect(localMenu.locator('a').first()).toBeVisible();
+            await expect(page.locator('.nr-shell-locales')).toBeVisible();
+            await expect(page.locator('[data-nr-theme-picker]')).toBeHidden();
+            const menu = page.locator('[data-nr-mobile-menu]');
+            await menu.locator('summary').click();
+            await expect(menu.locator('nav a').first()).toBeVisible();
             expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
         });
     }
