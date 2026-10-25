@@ -6,6 +6,7 @@ Published at <https://netresearch.github.io/t3x-nr-browser-ai/>. English at the
 site root, German at `/de/`.
 
 ```bash
+npm ci --ignore-scripts             # install the locked build and verifier dependencies
 npm run build && npm run build:css   # the distributable bundle the demo runs
 npm run build:demo                   # assemble assets and render both pages
 npm run verify:demo                  # gate the rendered artifact
