@@ -102,6 +102,7 @@ $expectedDevDependencies = [
     "@vitest/coverage-v8",
     "esbuild",
     "jsdom",
+    "parse5",
     "typescript",
     "vitest",
 ];
