@@ -15,13 +15,10 @@
 
 /** All attributes of one tag, lower-cased keys. */
 export function attrs(tag) {
-  const out = {};
-  for (const match of tag.matchAll(/([a-zA-Z-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)) {
-    out[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? '';
-  }
-  for (const match of tag.matchAll(/\s([a-zA-Z-]+)(?=[\s>])/g)) {
+  const out = Object.create(null);
+  for (const match of tag.matchAll(/(?:^|[\t\n\f\r ])([^\t\n\f\r "'<>/=]+)(?:[\t\n\f\r ]*=[\t\n\f\r ]*(?:"([^"]*)"|'([^']*)'|([^\t\n\f\r >]+)))?/g)) {
     const key = match[1].toLowerCase();
-    if (!(key in out)) out[key] = '';
+    if (!(key in out)) out[key] = match[2] ?? match[3] ?? match[4] ?? '';
   }
   return out;
 }
