@@ -58,6 +58,27 @@ for (const [basePath, expected] of [
             const notFound = await readFile(resolve(fixture, 'public/404.html'), 'utf8');
             const symbol = await readFile(resolve(root, 'demo/site-shell/netresearch-symbol-only.svg'));
             assert.deepEqual(verifyNotFoundPage(notFound, symbol, expected), []);
+            for (const extra of [
+                "<script src='https://tracker.example/script.js'></script>",
+                '<img src=https://tracker.example/image.png alt="">',
+                "<link rel='stylesheet' href='//tracker.example/style.css'>",
+                "<SCRIPT SRC='https:&#47;&#47;tracker.example/script.js'></SCRIPT>",
+            ]) {
+                assert.notDeepEqual(verifyNotFoundPage(notFound.replace('</body>', `${extra}</body>`), symbol, expected), []);
+            }
+            for (const inert of [
+                "<!-- <img src='https://tracker.example/image.png' alt=''> -->",
+                `<script>const example = "<img src='https://tracker.example/image.png' alt=''>";</script>`,
+            ]) {
+                assert.deepEqual(verifyNotFoundPage(notFound.replace('</body>', `${inert}</body>`), symbol, expected), []);
+            }
+            for (const quote of ["'", '']) {
+                const asset = `${new URL(expected).pathname}assets/demo.css`;
+                assert.deepEqual(verifyNotFoundPage(notFound.replace(`"${asset}"`, `${quote}${asset}${quote}`), symbol, expected), []);
+                if (new URL(expected).pathname !== '/') {
+                    assert.notDeepEqual(verifyNotFoundPage(notFound.replace(`"${asset}"`, `${quote}${expected}%2e%2e/assets/demo.css${quote}`), symbol, expected), []);
+                }
+            }
             assert.notDeepEqual(verifyNotFoundPage(notFound.replace('noindex,follow', 'index,follow'), symbol, expected), []);
             assert.notDeepEqual(verifyNotFoundPage(notFound.replace(`${new URL(expected).pathname}assets/demo.css`, 'assets/demo.css'), symbol, expected), []);
             if (new URL(expected).pathname !== '/') {
