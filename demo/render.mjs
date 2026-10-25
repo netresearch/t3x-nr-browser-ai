@@ -38,19 +38,19 @@ const SITE_URL = process.env.PAGES_ORIGIN
     ? new URL(basePath, `${new URL(process.env.PAGES_ORIGIN).origin}/`).href
     : 'https://netresearch.github.io/t3x-nr-browser-ai/';
 
-const CONTACT_BASE = 'https://www.netresearch.de/kontakt/';
+const CONTACT_BASE = {en: 'https://www.netresearch.de/en/contact/', de: 'https://www.netresearch.de/kontakt/'};
 const LANGS = ['en', 'de'];
 const PATHS = {en: '', de: 'de/'};
 
 /** Business CTA target, tagged so the campaign report can tell positions apart. */
-function contactUrl(position) {
+function contactUrl(position, lang) {
     const params = new URLSearchParams({
         utm_source: 'github-pages',
         utm_medium: 'referral',
         utm_campaign: 'nr-browser-ai',
         utm_content: position,
     });
-    return `${CONTACT_BASE}?${params}`;
+    return `${CONTACT_BASE[lang]}?${params}`;
 }
 
 /**
@@ -347,7 +347,7 @@ function page(c, manifest, lang) {
 
 ${renderSiteHeader({lang, assetBase: `${base}assets/site-shell`,
     languageUrls: {en: SITE_URL, de: `${SITE_URL}de/`}, active: null,
-    contactHref: contactUrl('header')})}
+    contactHref: contactUrl('header', lang)})}
 ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
     links: [...c.nav.items, {href: manifest.repository, label: c.nav.repo}]})}
 
@@ -359,7 +359,7 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
       <h1>${e(c.hero.title)}</h1>
       <p class="hero__lead">${e(c.hero.lead)}</p>
       <p class="hero__cta">
-        <a class="btn btn--primary" href="${e(contactUrl('hero'))}" data-cta="business" data-cta-position="hero">${e(c.hero.ctaBusiness)}</a>
+        <a class="btn btn--primary" href="${e(contactUrl('hero', lang))}" data-cta="business" data-cta-position="hero">${e(c.hero.ctaBusiness)}</a>
         <a class="btn btn--secondary" href="${e(c.hero.ctaTechnicalHref)}">${e(c.hero.ctaTechnical)}</a>
       </p>
 
@@ -548,7 +548,7 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
         <p>${e(c.cta.body)}</p>
       </div>
       <div class="cta-band__actions">
-        <a class="btn btn--primary" href="${e(contactUrl('cta-band'))}" data-cta="business" data-cta-position="cta-band">${e(c.cta.business)}</a>
+        <a class="btn btn--primary" href="${e(contactUrl('cta-band', lang))}" data-cta="business" data-cta-position="cta-band">${e(c.cta.business)}</a>
         <a class="btn btn--secondary" href="${e(c.cta.technicalHref)}">${e(c.cta.technical)}</a>
       </div>
     </div>
@@ -562,9 +562,9 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
       <a href="https://netresearch.github.io/${lang === 'de' ? 'de/' : ''}">Portfolio</a> &middot;
       <a href="https://netresearch.github.io/modularer-ki-stack-page/${lang === 'en' ? 'en/' : ''}">${lang === 'de' ? 'KI-Stack' : 'AI stack'}</a> &middot;
       <a href="https://www.netresearch.de/">${e(c.footer.company)}</a> &middot;
-      <a href="${e(contactUrl('footer'))}" data-cta="business" data-cta-position="footer">${e(c.footer.contact)}</a> &middot;
-      <a href="https://www.netresearch.de/impressum/" lang="de">${e(c.footer.imprint)}</a> &middot;
-      <a href="https://www.netresearch.de/datenschutz/" lang="de">${e(c.footer.privacy)}</a> &middot;
+      <a href="${e(contactUrl('footer', lang))}" data-cta="business" data-cta-position="footer">${e(c.footer.contact)}</a> &middot;
+      <a href="${lang === 'de' ? 'https://www.netresearch.de/impressum/' : 'https://www.netresearch.de/en/imprint/'}" lang="${lang}">${e(c.footer.imprint)}</a> &middot;
+      <a href="${lang === 'de' ? 'https://www.netresearch.de/datenschutz/' : 'https://www.netresearch.de/en/privacy-policy/'}" lang="${lang}">${e(c.footer.privacy)}</a> &middot;
       <a href="${e(manifest.repository)}">${e(c.footer.source)}</a>
     </p>
     <p class="site-footer__meta">
@@ -576,6 +576,53 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
 
 <script src="${base}assets/capability-check.js" defer></script>
 <script type="module" src="${base}assets/Assistant.js"></script>
+</body>
+</html>
+`;
+}
+
+function notFoundPage() {
+    const assets = new URL('assets/', SITE_URL).pathname;
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<meta name="color-scheme" content="light dark">
+<title>Page not found · Seite nicht gefunden | Browser AI</title>
+<script>${themeBootstrap}</script>
+<link rel="icon" href="${e(assets)}icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="${e(assets)}demo.css">
+<link rel="stylesheet" href="${e(assets)}site-shell/site-shell.css">
+<script defer src="${e(assets)}site-shell/site-shell.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content / Zum Inhalt</a>
+${renderSiteHeader({lang: 'en', assetBase: `${assets}site-shell`,
+    languageUrls: {en: SITE_URL, de: `${SITE_URL}de/`}, active: null,
+    contactHref: contactUrl('header', 'en')})}
+${renderPageNavigation({lang: 'en', title: 'Browser AI', titleHref: SITE_URL,
+    links: [{href: SITE_URL, label: 'English'}, {href: `${SITE_URL}de/`, label: 'Deutsch'}]})}
+<main id="main" tabindex="-1">
+  <section class="section"><div class="wrap">
+    <p class="hero__eyebrow">404 · Browser AI</p>
+    <h1>Page not found</h1>
+    <p>This address does not lead to a Browser AI page. Return to the project overview to continue.</p>
+    <p class="hero__cta"><a class="btn btn--primary" href="${e(SITE_URL)}" lang="en" hreflang="en">Browser AI in English</a></p>
+    <div lang="de">
+      <h2>Seite nicht gefunden</h2>
+      <p>Unter dieser Adresse gibt es keine Browser-AI-Seite. Die Projektübersicht hilft Ihnen weiter.</p>
+      <p class="hero__cta"><a class="btn btn--secondary" href="${e(SITE_URL)}de/" lang="de" hreflang="de">Browser AI auf Deutsch</a></p>
+    </div>
+  </div></section>
+</main>
+<footer class="site-footer"><div class="wrap site-footer__inner"><p>
+  <a href="https://www.netresearch.de/">Netresearch DTT GmbH</a> ·
+  <a href="${e(contactUrl('footer', 'en'))}" data-cta="business" data-cta-position="footer">Contact</a> ·
+  <a href="https://www.netresearch.de/en/imprint/" lang="en">Imprint</a> ·
+  <a href="https://www.netresearch.de/en/privacy-policy/" lang="en">Privacy</a>
+</p></div></footer>
 </body>
 </html>
 `;
@@ -598,6 +645,7 @@ export async function render() {
         await mkdir(dirname(target), {recursive: true});
         await writeFile(target, page(content, manifest, lang), 'utf8');
     }
+    await writeFile(resolve(output, '404.html'), notFoundPage(), 'utf8');
 
     await writeFile(
         resolve(output, 'project-manifest.json'),

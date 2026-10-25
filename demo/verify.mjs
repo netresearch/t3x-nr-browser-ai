@@ -15,7 +15,7 @@ import {fileURLToPath} from 'node:url';
 
 import {checkAccessibility} from './check-accessibility.mjs';
 import {verifyProductUrls} from './verify-product-urls.mjs';
-import {verifySiteShell} from './verify-site-shell.mjs';
+import {verifyBusinessContacts, verifyNotFoundPage, verifySiteShell} from './verify-site-shell.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(root, 'public');
@@ -23,6 +23,11 @@ const headerSymbol = await readFile(resolve(output, 'assets/site-shell/netresear
 
 // Trusted deployment configuration, independent of the rendered canonical.
 const deploymentOrigin = process.env.PAGES_ORIGIN || 'https://netresearch.github.io';
+const configuredBase = (process.env.PAGES_BASE_PATH ?? '/').split('/').filter(Boolean).join('/');
+const configuredPath = configuredBase ? `${configuredBase}/` : '/';
+const recoveryRoot = process.env.PAGES_ORIGIN
+    ? new URL(configuredPath, `${new URL(deploymentOrigin).origin}/`).href
+    : 'https://netresearch.github.io/t3x-nr-browser-ai/';
 
 const errors = [];
 const fail = (message) => errors.push(message);
@@ -97,17 +102,23 @@ if (!await exists(manifestPath)) {
 }
 
 const pages = await htmlFiles(output);
-if (pages.length !== 2) fail(`expected 2 rendered pages, found ${pages.length}`);
+const productPages = pages.filter(page => relative(output, page) !== '404.html');
+if (productPages.length !== 2) fail(`expected 2 rendered product pages, found ${productPages.length}`);
+if (!await exists(resolve(output, '404.html'))) fail('missing public/404.html project recovery page');
 
 const renderedPages = await Promise.all(pages.map(async (page) => {
     const name = relative(output, page);
     const html = await readFile(page, 'utf8');
-    const problems = manifest
+    const problems = manifest && name !== '404.html'
         ? await verifyProductUrls(html, name, output, manifest.slug, deploymentOrigin) : [];
     return {name, html, problems};
 }));
 
 for (const {name, html, problems} of renderedPages) {
+    if (name === '404.html') {
+        for (const problem of verifyNotFoundPage(html, headerSymbol, recoveryRoot)) fail(`${name}: ${problem}`);
+        continue;
+    }
     const text = stripMarkup(html);
     for (const problem of problems) fail(`${name}: ${problem}`);
 
@@ -130,15 +141,10 @@ for (const {name, html, problems} of renderedPages) {
         }
     }
 
-    const contactLinks = [...html.matchAll(/href="([^"]*netresearch\.de\/kontakt\/[^"]*)"/g)].map((m) => m[1]);
-    if (contactLinks.length === 0) fail(`${name}: no business CTA to the contact form`);
-    for (const href of contactLinks) {
-        for (const param of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']) {
-            if (!href.includes(`${param}=`)) fail(`${name}: contact link without ${param}`);
-        }
-    }
+    const lang = /<html\b[^>]*\blang="de"/.test(html) ? 'de' : 'en';
+    for (const problem of verifyBusinessContacts(html, lang, ['hero', 'cta-band', 'footer'])) fail(`${name}: ${problem}`);
 
-    for (const problem of verifySiteShell(html, headerSymbol)) fail(`${name}: ${problem}`);
+    for (const problem of verifySiteShell(html, headerSymbol, lang)) fail(`${name}: ${problem}`);
 
     // Accessibility and semantics decidable from the markup alone.
     for (const problem of checkAccessibility(html)) fail(`${name}: ${problem}`);
