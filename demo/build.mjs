@@ -25,7 +25,10 @@ const output = resolve(root, 'public');
 const FILES = [
     ['demo/demo.css', 'assets/demo.css'],
     ['demo/capability-check.js', 'assets/capability-check.js'],
-    ['demo/site-controls.js', 'assets/site-controls.js'],
+    ['demo/site-shell/site-shell.css', 'assets/site-shell/site-shell.css'],
+    ['demo/site-shell/site-shell.js', 'assets/site-shell/site-shell.js'],
+    ['demo/site-shell/theme-bootstrap.js', 'assets/site-shell/theme-bootstrap.js'],
+    ['demo/site-shell/netresearch-symbol-only.svg', 'assets/site-shell/netresearch-symbol-only.svg'],
     ['demo/og-browser-ai-en.png', 'assets/og-browser-ai-en.png'],
     ['demo/og-browser-ai-de.png', 'assets/og-browser-ai-de.png'],
     ['Resources/Public/JavaScript/Assistant.js', 'assets/Assistant.js'],
