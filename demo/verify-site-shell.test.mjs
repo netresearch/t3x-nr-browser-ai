@@ -30,6 +30,9 @@ test('attribute parsing consumes complete names and quoted values atomically', (
     assert.equal(parsed.required, '');
     assert.equal(parsed.disabled, 'false');
     assert.equal(attrs('<a href="first" href="second">').href, 'first');
+    assert.equal(attrs('<input title="adjacent"class="real" required>').class, 'real');
+    assert.equal(attrs('<input =class="fake">').class, undefined);
+    assert.equal(attrs('<input src=asset.svg/>').src, 'asset.svg/');
 });
 const inertScriptFixtures = {
     en: `<script type="application/json"><header>

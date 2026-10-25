@@ -13,12 +13,49 @@
  *   for (const problem of checkAccessibility(html)) fail(name, problem);
  */
 
-/** All attributes of one tag, lower-cased keys. */
+function skipAttributeSpaces(tag, start) {
+  let index = start;
+  while (index < tag.length && /[\t\n\f\r ]/.test(tag[index])) index++;
+  return index;
+}
+
+function attributeValue(tag, start) {
+  const quote = tag[start];
+  if (quote === '"' || quote === "'") {
+    const close = tag.indexOf(quote, start + 1);
+    if (close === -1) return {value: tag.slice(start + 1), end: tag.length};
+    return {value: tag.slice(start + 1, close), end: close + 1};
+  }
+  let end = start;
+  while (end < tag.length && !/[\t\n\f\r >]/.test(tag[end])) end++;
+  return {value: tag.slice(start, end), end};
+}
+
+function attributeToken(tag, start) {
+  // Consume a full name, including malformed-name characters, so a suffix can
+  // never turn into a separate class, href or boolean attribute.
+  let end = start + 1;
+  while (end < tag.length && !/[\t\n\f\r /=>]/.test(tag[end])) end++;
+  const key = tag.slice(start, end).toLowerCase();
+  end = skipAttributeSpaces(tag, end);
+  if (tag[end] !== '=') return {key, value: '', end};
+  return {key, ...attributeValue(tag, skipAttributeSpaces(tag, end + 1))};
+}
+
+/** All attributes of one tag, lower-cased keys; the first duplicate wins. */
 export function attrs(tag) {
   const out = Object.create(null);
-  for (const match of tag.matchAll(/(?:^|[\t\n\f\r ])([^\t\n\f\r "'<>/=]+)(?:[\t\n\f\r ]*=[\t\n\f\r ]*(?:"([^"]*)"|'([^']*)'|([^\t\n\f\r >]+)))?/g)) {
-    const key = match[1].toLowerCase();
-    if (!(key in out)) out[key] = match[2] ?? match[3] ?? match[4] ?? '';
+  let index = /^<[^\t\n\f\r />]+/.exec(tag)?.[0].length ?? 0;
+  while (index < tag.length) {
+    index = skipAttributeSpaces(tag, index);
+    if (index >= tag.length || tag[index] === '>') break;
+    if (tag[index] === '/') {
+      index++;
+      continue;
+    }
+    const {key, value, end} = attributeToken(tag, index);
+    if (!(key in out)) out[key] = value;
+    index = end;
   }
   return out;
 }
