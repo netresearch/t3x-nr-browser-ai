@@ -32,6 +32,8 @@ The mapping as built:
 | Output as text nodes; only validated HTTP(S) links | `SafeResponseRenderer` |
 | Fallback modes `none` / `contentElement` | `FallbackContentRenderer` |
 | Keyboard lifecycle and answer announcement | `ChatController`, E2E suite |
+| Form assistant fills an editable form, validates arguments against the generated schema and queries weather data | `Documentation/User/FormAssistant.rst`, `Resources/Private/TypeScript/ui/FormAssistantController.ts`, `Resources/Private/TypeScript/form/`, `Resources/Private/TypeScript/query/OpenMeteoQuery.ts` |
+| Form assistant sends query parameters to its configured data source; manual weather queries need JavaScript | `Documentation/Security/Privacy.rst`, `Documentation/User/FormAssistant.rst` |
 
 The claim about on-device inference is attributed to Chrome rather than
 asserted by us, because it is Chrome's statement about Chrome's model.

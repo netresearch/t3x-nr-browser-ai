@@ -293,6 +293,7 @@ function jsonLd(c, manifest, canonical) {
     return JSON.stringify({'@context': 'https://schema.org', '@graph': graph}).replaceAll('<', '\\u003c');
 }
 
+/** Render one localized landing page from its copy and derived project metadata. */
 function page(c, manifest, lang) {
     const base = lang === 'en' ? '' : '../';
     const canonical = `${SITE_URL}${PATHS[lang]}`;
@@ -426,6 +427,23 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
     </div>
   </section>
 
+  <section id="form-assistant" class="section section--alt" aria-labelledby="form-assistant-heading">
+    <div class="wrap">
+      <h2 id="form-assistant-heading">${e(c.formDemo.heading)}</h2>
+      <p class="section__lead">${e(c.formDemo.lead)}</p>
+      <p><strong>${e(c.formDemo.exampleLabel)}:</strong> <q>${e(c.formDemo.example)}</q></p>
+      <ol>
+          ${bullets(c.formDemo.steps)}
+      </ol>
+      <p>${e(c.formDemo.privacy)}</p>
+      <p class="note">${e(c.formDemo.fallback)}</p>
+      <p class="cta-band__actions">
+        <a class="btn btn--primary" href="${e(c.formDemo.href)}" hreflang="en">${e(c.formDemo.label)}</a>
+        <a class="btn" href="${e(c.formDemo.docsHref)}" hreflang="en">${e(c.formDemo.docsLabel)}</a>
+      </p>
+    </div>
+  </section>
+
   <section id="fit" class="section section--alt">
     <div class="wrap">
       <h2>${e(c.fit.heading)}</h2>
@@ -464,6 +482,7 @@ ${renderPageNavigation({lang, title: 'Browser AI', titleHref: canonical,
   <section id="privacy" class="section section--alt">
     <div class="wrap">
       <h2>${e(c.privacy.heading)}</h2>
+      <p class="section__lead">${e(c.privacy.scope)}</p>
 
       <h3>${e(c.privacy.flowHeading)}</h3>
       <ol class="flow-list">

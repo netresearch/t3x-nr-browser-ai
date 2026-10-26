@@ -6,8 +6,8 @@
   "otherLabel": "English",
   "skipToContent": "Zum Inhalt springen",
   "meta": {
-    "title": "Browser AI für TYPO3 — On-Device-Assistent für Fragen zur aufgerufenen Seite",
-    "description": "Ein On-Device-Assistent für Fragen zu einer einzelnen TYPO3-Seite. Die Inferenz läuft im Browser der Besucherin, die Extension definiert keine Chat-Schnittstelle, und jeder nicht unterstützte Besuch bekommt einen redaktionell gewählten Fallback.",
+    "title": "Browser AI für TYPO3 — Seitenfragen und Formularassistenz",
+    "description": "Zwei Browser-KI-Anwendungen für TYPO3: Fragen zur Seite beantworten oder Formularabfragen aus Freitext ausführen. Mit Live-Demos, Fallbacks und erklärten Datenwegen.",
     "ogImageAlt": "Browser AI für TYPO3 — On-Device-Assistent"
   },
   "nav": {
@@ -16,6 +16,10 @@
       {
         "href": "#demo",
         "label": "Demo"
+      },
+      {
+        "href": "#form-assistant",
+        "label": "Formularassistent"
       },
       {
         "href": "#fit",
@@ -95,7 +99,7 @@
     }
   },
   "demo": {
-    "heading": "Auf dieser Seite ausprobieren",
+    "heading": "Seitenassistent: auf dieser Seite ausprobieren",
     "lead": "Der Assistent unten ist das echte Extension-Bundle, keine Attrappe. Sein Quelldokument ist diese Seite.",
     "questionsHeading": "Fragen, die sich lohnen",
     "questionsLead": "Jede davon hat eine Antwort auf dieser Seite – und die letzte hat eine bewusst ehrliche.",
@@ -108,8 +112,25 @@
     ],
     "questionsNote": "Die letzte Frage lässt sich aus dieser Seite nicht beantworten. Ein korrekter Assistent sagt das, statt eine Zahl zu erfinden."
   },
+  "formDemo": {
+    "heading": "Formularassistent: Wetter per Freitext abfragen",
+    "lead": "Das zweite Plugin der Extension nutzt das Browsermodell, um aus einer natürlichsprachlichen Anfrage eine geprüfte Formularabfrage zu machen. Die separate Live-Demo zeigt das mit echten Wetterdaten.",
+    "exampleLabel": "Beispiel",
+    "example": "Ist am Wochenende in Leipzig gutes Wetter zum Grillen?",
+    "steps": [
+      "Das Browsermodell leitet Ort, Zeitraum und gewünschte Wetterwerte aus der Frage ab.",
+      "Die Parameter werden gegen das aus dem Formular erzeugte Schema geprüft. Das sichtbare Formular wird ausgefüllt und bleibt korrigierbar.",
+      "Die konfigurierte Formularaktion ruft Open-Meteo ab. Die Demo zeigt die Ergebnisse als Tabelle und kann sie mit dem Browsermodell zusammenfassen."
+    ],
+    "privacy": "Die Interpretation der Frage und die Textzusammenfassung laufen lokal. Für Ortsauflösung und Wetterdaten stellt der Browser jedoch direkte Anfragen an Open-Meteo. Der Dienst erhält die benötigten Orts- und Abfrageparameter sowie die IP-Adresse. Diese Demo benötigt deshalb externe Datenabfragen.",
+    "fallback": "Ohne verfügbares Browsermodell bleibt das Formular manuell bedienbar. Die Wetterabfrage selbst benötigt JavaScript. Die verlinkte Demo und ihre Dokumentation sind auf Englisch.",
+    "href": "https://typo3-demo.netresearch.de/extensions/browser-ai-form-assistant",
+    "label": "Formularassistent-Demo öffnen (Englisch)",
+    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/User/FormAssistant.rst",
+    "docsLabel": "Formular-Konfiguration lesen (Englisch)"
+  },
   "fit": {
-    "heading": "Wofür es passt – und wofür nicht",
+    "heading": "Wofür der Seitenassistent passt – und wofür nicht",
     "suitedHeading": "Geeignet für",
     "suited": [
       "Kontextbezogene Produkt- und Serviceseiten, deren Fragen sich auf genau diese Seite beziehen.",
@@ -127,8 +148,8 @@
     ]
   },
   "fallback": {
-    "heading": "Was jede Besucherin tatsächlich bekommt",
-    "lead": "Sechs Situationen, je eine Zeile. Keine davon endet in einer Fehlermeldung.",
+    "heading": "Seitenassistent: Was Besucher tatsächlich bekommen",
+    "lead": "Typische Situationen und der jeweilige Ersatzinhalt des Seitenassistenten.",
     "columns": {
       "situation": "Situation",
       "behaviour": "Verhalten"
@@ -165,7 +186,7 @@
     ]
   },
   "business": {
-    "heading": "Was es bringt – und was es kostet",
+    "heading": "Seitenassistent: Nutzen und Grenzen",
     "gainsHeading": "Was es bringt",
     "gains": [
       "Kein serverseitiger Inferenzaufruf für unterstützte Besucher, also keine Kosten je Frage.",
@@ -182,7 +203,7 @@
     ]
   },
   "features": {
-    "heading": "Was die Extension tut",
+    "heading": "Was der Seitenassistent tut",
     "items": [
       {
         "title": "Antworten sind an die Seite gebunden",
@@ -219,7 +240,7 @@
     ]
   },
   "privacy": {
-    "heading": "Datenschutz und Bedrohungsmodell",
+    "heading": "Seitenassistent: Datenschutz und Bedrohungsmodell",
     "flowHeading": "Wohin die Daten gehen",
     "flow": [
       {
@@ -232,7 +253,7 @@
       },
       {
         "title": "Das Modell des Browsers antwortet",
-        "body": "Die eingebaute Prompt-API von Chrome führt das Modell auf dem Gerät aus. Die Extension hat gar keine Adresse, an die sie etwas senden könnte."
+        "body": "Die eingebaute Prompt-API von Chrome führt das Modell auf dem Gerät aus. Der Seitenassistent definiert keine Chat-Schnittstelle."
       },
       {
         "title": "Die Antwort wird dargestellt",
@@ -259,7 +280,8 @@
       }
     ],
     "docsLink": "Vollständige Dokumentation zu Datenschutz und Vertrauensgrenzen lesen",
-    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst"
+    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst",
+    "scope": "Der folgende Ablauf beschreibt den Seitenassistenten. Der Formularassistent fragt dagegen eine konfigurierte Datenquelle ab; für die Wetterdemo ist das Open-Meteo, wie oben beschrieben."
   },
   "integration": {
     "heading": "In eine TYPO3-Seite einbauen",
@@ -275,8 +297,8 @@
     "cspBody": "Die Extension lädt ein JavaScript-Modul, ein Stylesheet und ein Icon von Ihrer eigenen Seite. Der Assistent stellt keine Anwendungsanfrage ins Netz; für ihn genügt eine Richtlinie, die <code>script-src</code> und <code>style-src</code> auf eigene Assets beschränkt, ein externes <code>connect-src</code>-Ziel braucht er nicht. Der Formularassistent ist die Ausnahme: Er fragt seine Datenquelle aus dem Browser ab, deshalb muss <code>connect-src</code> diese Quelle auf Seiten erlauben, die ihn enthalten."
   },
   "capabilityCard": {
-    "heading": "KI-Faktenkarte",
-    "intro": "Auf jedem KI-Produkt von Netresearch dieselben Felder – damit sie vergleichbar sind und nicht nur beeindruckend.",
+    "heading": "KI-Faktenkarte: Seitenassistent",
+    "intro": "Diese Faktenkarte beschreibt den Seitenassistenten. Für die Formularabfragen gelten die oben beschriebenen Datenwege und Grenzen des Formularassistenten.",
     "labels": {
       "intended_purpose": "Vorgesehener Zweck",
       "excluded_uses": "Ausdrücklich nicht dafür",
@@ -299,7 +321,7 @@
       "external-provider": "Externer Anbieter"
     },
     "values": {
-      "intended_purpose": "Fragen zur gerade geöffneten Seite anhand ihres Textes beantworten – mit dem Sprachmodell des Browsers.",
+      "intended_purpose": "Seitenassistent: Fragen zur gerade geöffneten Seite anhand ihres Textes beantworten – mit dem Sprachmodell des Browsers.",
       "excluded_uses": [
         "Suche im Wissen der gesamten Website: Der Assistent sieht nur eine Seite.",
         "Fragen mit Bedarf an aktuellen externen Informationen: Der Assistent hat keinen eigenen Netzwerkzugriff.",
