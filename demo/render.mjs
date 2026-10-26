@@ -293,6 +293,7 @@ function jsonLd(c, manifest, canonical) {
     return JSON.stringify({'@context': 'https://schema.org', '@graph': graph}).replaceAll('<', '\\u003c');
 }
 
+/** Render one localized landing page from its copy and derived project metadata. */
 function page(c, manifest, lang) {
     const base = lang === 'en' ? '' : '../';
     const canonical = `${SITE_URL}${PATHS[lang]}`;
