@@ -6,8 +6,8 @@
   "otherLabel": "Deutsch",
   "skipToContent": "Skip to content",
   "meta": {
-    "title": "Browser AI for TYPO3 — an on-device assistant for page-level questions",
-    "description": "An on-device assistant for questions about a single TYPO3 page. Inference runs in the visitor's browser, the extension defines no chat endpoint, and every unsupported visitor gets an editor-chosen fallback.",
+    "title": "Browser AI for TYPO3 — page answers and form assistance",
+    "description": "Two browser AI uses for TYPO3: answer page questions or turn plain language into validated form queries. Explore live demos, fallbacks and their data flows.",
     "ogImageAlt": "Browser AI for TYPO3 — on-device page assistant"
   },
   "nav": {
@@ -16,6 +16,10 @@
       {
         "href": "#demo",
         "label": "Demo"
+      },
+      {
+        "href": "#form-assistant",
+        "label": "Form assistant"
       },
       {
         "href": "#fit",
@@ -95,7 +99,7 @@
     }
   },
   "demo": {
-    "heading": "Try it on this page",
+    "heading": "Page assistant: try it on this page",
     "lead": "The assistant below is the real extension bundle, not a mock-up. Its source document is this page.",
     "questionsHeading": "Questions worth asking",
     "questionsLead": "Each of these has an answer on this page — and the last one has a deliberately honest answer.",
@@ -108,8 +112,25 @@
     ],
     "questionsNote": "The last question is not answerable from this page. A correct assistant says so rather than inventing a figure."
   },
+  "formDemo": {
+    "heading": "Form assistant: ask for weather in plain language",
+    "lead": "The extension’s second plugin uses the browser model to turn a natural-language request into a validated form query. The separate live demo shows this with real weather data.",
+    "exampleLabel": "Example",
+    "example": "Will the weekend in Leipzig be any good for a barbecue?",
+    "steps": [
+      "The browser model derives the location, date range and requested weather values from the question.",
+      "Parameters are checked against the schema generated from the form. The visible form is filled and remains editable.",
+      "The configured form action queries Open-Meteo. The demo displays the results in a table and can summarise them with the browser model."
+    ],
+    "privacy": "Question interpretation and text summarisation run locally. For location lookup and weather data, however, the browser makes direct requests to Open-Meteo. The service receives the necessary location and query parameters and the visitor’s IP address. This demo therefore requires external data requests.",
+    "fallback": "Without an available browser model, the form remains usable by hand. The weather query itself requires JavaScript. The linked demo and documentation are in English.",
+    "href": "https://typo3-demo.netresearch.de/extensions/browser-ai-form-assistant",
+    "label": "Open the form assistant demo",
+    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/User/FormAssistant.rst",
+    "docsLabel": "Read the form assistant configuration"
+  },
   "fit": {
-    "heading": "Where it fits, and where it does not",
+    "heading": "Where the page assistant fits, and where it does not",
     "suitedHeading": "Suited for",
     "suited": [
       "Contextual product and service pages where the questions are about that page.",
@@ -127,8 +148,8 @@
     ]
   },
   "fallback": {
-    "heading": "What each visitor actually gets",
-    "lead": "Six situations, one row each. Nothing here degrades into an error message.",
+    "heading": "Page assistant: what each visitor actually gets",
+    "lead": "Common situations and the page assistant’s corresponding fallback.",
     "columns": {
       "situation": "Situation",
       "behaviour": "Behaviour"
@@ -165,7 +186,7 @@
     ]
   },
   "business": {
-    "heading": "What it buys, and what it costs",
+    "heading": "Page assistant: benefits and trade-offs",
     "gainsHeading": "What it buys",
     "gains": [
       "No server-side inference call for supported visitors, so no per-question provider cost.",
@@ -182,7 +203,7 @@
     ]
   },
   "features": {
-    "heading": "What the extension does",
+    "heading": "What the page assistant does",
     "items": [
       {
         "title": "Answers are tied to the page",
@@ -219,7 +240,7 @@
     ]
   },
   "privacy": {
-    "heading": "Privacy and threat model",
+    "heading": "Page assistant: privacy and threat model",
     "flowHeading": "Where the data goes",
     "flow": [
       {
@@ -232,7 +253,7 @@
       },
       {
         "title": "The browser's model answers",
-        "body": "Chrome's built-in Prompt API runs the model on the device. The extension has no endpoint to send anything to."
+        "body": "Chrome’s built-in Prompt API runs the model on the device. The page assistant defines no chat endpoint."
       },
       {
         "title": "The answer is rendered",
@@ -259,7 +280,8 @@
       }
     ],
     "docsLink": "Read the full privacy and trust-boundary documentation",
-    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst"
+    "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst",
+    "scope": "The flow below describes the page assistant. The form assistant instead queries a configured data source; the weather demo uses Open-Meteo, as described above."
   },
   "integration": {
     "heading": "Adding it to a TYPO3 site",
@@ -275,8 +297,8 @@
     "cspBody": "The extension loads one JavaScript module, one stylesheet and one icon from your own site. The assistant makes no application network request, so a policy restricting <code>script-src</code> and <code>style-src</code> to your own assets is enough for it; no external <code>connect-src</code> destination is needed. The form assistant is the exception: it queries its data source from the browser, so <code>connect-src</code> has to permit that source on pages that carry it."
   },
   "capabilityCard": {
-    "heading": "AI capability card",
-    "intro": "The same fields on every Netresearch AI product, so they can be compared rather than admired.",
+    "heading": "AI capability card: page assistant",
+    "intro": "This card covers the page assistant. Form queries follow the data flow and limits described in the form assistant section above.",
     "labels": {
       "intended_purpose": "Intended purpose",
       "excluded_uses": "Excluded uses",

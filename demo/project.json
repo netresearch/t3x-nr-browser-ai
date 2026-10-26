@@ -31,7 +31,7 @@
     {
       "id": "no-endpoint",
       "label": "No chat endpoint of its own",
-      "detail": "No server route, no database table, no cookie, no local storage, no telemetry.",
+      "detail": "The page assistant defines no chat endpoint, database table, cookie, local storage or telemetry.",
       "state": "implemented",
       "evidence": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/Security/Privacy.rst"
     },
@@ -99,10 +99,15 @@
       "type": "release",
       "label": "Releases",
       "url": "https://github.com/netresearch/t3x-nr-browser-ai/releases"
+    },
+    {
+      "type": "demo",
+      "label": "Form assistant weather demo (English)",
+      "url": "https://typo3-demo.netresearch.de/extensions/browser-ai-form-assistant"
     }
   ],
   "ai": {
-    "intended_purpose": "Answering a visitor's question about the page they are currently reading, using the browser's own language model, with the page text as the only source.",
+    "intended_purpose": "Page assistant: answering a visitor's question about the page they are currently reading, using the browser's own language model, with the page text as the only source.",
     "excluded_uses": [
       "Site-wide knowledge search. The assistant sees one page.",
       "Anything needing current external information. It has no network access of its own.",
