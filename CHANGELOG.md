@@ -7,6 +7,35 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-31
+
+### Added
+
+- The assistant tells the model what day it is. Each request is preceded by
+  the local weekday and date, so "the weekend", "tomorrow" or "next week" can
+  be resolved to a forecast window instead of guessed. The weekday is named
+  because deriving it from a date is arithmetic small on-device models get
+  wrong. The date comes from the device clock and is the local day, not the
+  UTC one; a device with a wrong date derives a wrong window, which shows in
+  the last-call disclosure (#47).
+
+### Fixed
+
+- The hint under the form's forecast-days field matches the description the
+  model receives. 0.7.1 changed the schema description only, so the rendered
+  hint still said that 0 requests no future days, in English and German.
+
+### Changed
+
+- The `composer.json` description is the `ext_emconf.php` title and
+  description joined by " - ", which TER and TYPO3 14 read as title and
+  description, and which clears the "Composer Manifest" warning in the
+  TYPO3 14.3 Reports module. The extension is called "Browser AI" in every
+  field.
+- Source files carry SPDX licence and copyright notices; PHP code style and
+  tooling follow the shared configuration of `netresearch/typo3-ci-workflows`
+  2.x.
+
 ## [0.7.1] - 2026-08-13
 
 ### Fixed
@@ -249,6 +278,9 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.8.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.8.0
+[0.7.1]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.7.1
+[0.7.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.7.0
 [0.6.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.6.0
 [0.5.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.5.0
 [0.4.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.4.0
