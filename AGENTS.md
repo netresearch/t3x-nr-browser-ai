@@ -54,6 +54,11 @@ bash Build/Scripts/verify-harness.sh
 Use PHP 8.2-compatible syntax, TYPO3 APIs valid across all supported majors,
 strict TypeScript, signed commits, DCO sign-off and Conventional Commits.
 
+## Changelog
+
+- Changes are recorded in [`CHANGELOG.md`](CHANGELOG.md), [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/): `## [X.Y.Z] - YYYY-MM-DD` with `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Supported versions` as needed, newest first. There is no `## [Unreleased]` section.
+- The release PR (branch `release/X.Y.Z`) writes the version's section; feature, fix and dependency PRs leave the file alone.
+
 ## Index of scoped AGENTS.md
 
 - [Classes/AGENTS.md](./Classes/AGENTS.md) -- PHP source: controllers, form domain model, fallback renderer
