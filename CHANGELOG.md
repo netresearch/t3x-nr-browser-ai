@@ -7,6 +7,50 @@ All notable changes to this extension are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-14
+
+### Added
+
+- The form assistant plugin renders and fills a form created in the TYPO3 form
+  editor. The plugin record has a form selector filled from EXT:form's
+  persistence manager (database on TYPO3 14, file mounts and extension paths
+  before); the bundled `weatherQuery` form stays the default. The controller
+  loads the definition once and the same array feeds the schema handed to the
+  model and the rendered controls. Field descriptions come from each element's
+  Description in the form editor (#126).
+- Plugin fields for the data source and the tool description. Both fall back
+  to `renderingOptions.nrBrowserAi` in the form definition, then to a sentence
+  derived from the form label (#126).
+- A JSON endpoint data source: the browser sends the form's values as query
+  parameters named after the form elements to an HTTPS URL entered in the
+  plugin record. The host must be listed in the new site setting
+  `allowedDataSourceHosts`, which is empty by default and keeps the data source
+  off. The request carries no credentials or referrer, refuses redirects and
+  reads at most 512 KiB (#127).
+- ADR-0005 records the decisions, including why no WebLLM runtime is added, and
+  the setup guide states that the model runtime is Chrome's Prompt API only
+  (#126).
+
+### Changed
+
+- The system prompts, the context usage limit and `allowedDataSourceHosts` are
+  read from TypoScript only. A value for one of them stored in a plugin
+  record's FlexForm, which the FlexForm does not declare, no longer replaces
+  it (#127).
+- Password elements are not offered to the model (#127).
+- The form assistant renders its form through the core `ArrayFormFactory`;
+  `FormAssistantFormFactory` is removed (#126).
+- What a JSON endpoint returns is shortened, stripped of angle brackets and
+  control characters and labelled as external data before it reaches the model
+  (#127).
+
+### Fixed
+
+- Choosing a radio option no longer rewrites the value of the first option; a
+  radio group is filled by checking the matching option (#126).
+- Only the first page of a multi-step form is offered as parameters, because
+  EXT:form renders one page at a time (#126).
+
 ## [0.8.0] - 2026-10-31
 
 ### Added
@@ -278,6 +322,7 @@ this entry covers the extension as a whole.
 - Chrome 148 or newer for the assistant itself; other browsers receive the
   configured fallback.
 
+[0.9.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.9.0
 [0.8.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.8.0
 [0.7.1]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.7.1
 [0.7.0]: https://github.com/netresearch/t3x-nr-browser-ai/releases/tag/v0.7.0
