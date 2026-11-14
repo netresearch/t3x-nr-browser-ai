@@ -86,7 +86,7 @@ final class FormSchemaFactory
         $required    = [];
         $unsupported = [];
 
-        foreach ($this->inputElements($definition, $unsupported) as $element) {
+        foreach ($this->inputElements($this->firstPage($definition, $unsupported), $unsupported) as $element) {
             $identifier = $element['identifier'];
             $property   = $this->property($element);
             if ($property === null) {
@@ -114,6 +114,43 @@ final class FormSchemaFactory
         }
 
         return new FormSchema($schema, $unsupported);
+    }
+
+    /**
+     * EXT:form renders one page of a multi-step form at a time, so the controls
+     * of the later pages are not in the document the tool writes into. Only the
+     * first page is described to the model; the inputs of the others are
+     * reported as unmapped rather than offered as parameters nothing can set.
+     *
+     * @param array<mixed> $definition
+     * @param list<string> $unsupported
+     *
+     * @return array<mixed>
+     */
+    private function firstPage(array $definition, array &$unsupported): array
+    {
+        $children = $definition['renderables'] ?? null;
+        if (!is_array($children)) {
+            return $definition;
+        }
+
+        $kept     = [];
+        $seenPage = false;
+        foreach ($children as $child) {
+            $isPage = is_array($child) && ($child['type'] ?? null) === 'Page';
+            if (!$isPage || !$seenPage) {
+                $seenPage = $seenPage || $isPage;
+                $kept[]   = $child;
+
+                continue;
+            }
+
+            foreach ($this->inputElements($child, $unsupported) as $element) {
+                $unsupported[] = $element['identifier'];
+            }
+        }
+
+        return ['renderables' => $kept] + $definition;
     }
 
     /**

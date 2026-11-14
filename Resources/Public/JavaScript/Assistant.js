@@ -1579,6 +1579,14 @@ var FormFiller = class {
     if (first === void 0) {
       return void 0;
     }
+    if (isRadio(first)) {
+      for (const control of controls) {
+        if (isRadio(control) && control.checked) {
+          return control.value;
+        }
+      }
+      return void 0;
+    }
     if (isSelect(first)) {
       return first.value;
     }
@@ -1628,6 +1636,16 @@ var FormFiller = class {
     if (control === void 0) {
       return;
     }
+    if (isRadio(control)) {
+      for (const member of controls) {
+        if (isRadio(member) && member.value === value) {
+          member.checked = true;
+          notify(member);
+          break;
+        }
+      }
+      return;
+    }
     if (isSelect(control) && !Array.from(control.options).some((option) => option.value === value)) {
       return;
     }
@@ -1665,6 +1683,9 @@ function isControl(element) {
 }
 function isCheckbox(control) {
   return control instanceof HTMLInputElement && control.type === "checkbox";
+}
+function isRadio(control) {
+  return control instanceof HTMLInputElement && control.type === "radio";
 }
 function isSelect(control) {
   return control instanceof HTMLSelectElement;

@@ -31,6 +31,7 @@
             <trans-unit id="configuration.note"><source>The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</source><target>Das Modell erhält zusätzlich die Anweisung, in der Sprache der Frage zu antworten, sowie den Text des gewählten Seitenbereichs. Mehr wird ihm nicht übergeben.</target></trans-unit>
             <trans-unit id="formAssistant.title"><source>Fill this form by describing what you want</source><target>Beschreiben Sie, was Sie wollen — das Formular füllt sich</target></trans-unit>
             <trans-unit id="formAssistant.region"><source>Form assistant</source><target>Formularassistent</target></trans-unit>
+            <trans-unit id="formAssistant.unavailable"><source>The selected form is not available.</source><target>Das gewählte Formular ist nicht verfügbar.</target></trans-unit>
             <trans-unit id="field.request"><source>What do you want to know?</source><target>Was möchten Sie wissen?</target></trans-unit>
             <trans-unit id="action.derive"><source>Fill and run</source><target>Füllen und abfragen</target></trans-unit>
             <trans-unit id="formStatus.ready"><source>Describe what you want and the form will be filled with it.</source><target>Beschreiben Sie Ihr Anliegen, dann wird das Formular damit gefüllt.</target></trans-unit>

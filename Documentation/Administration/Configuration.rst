@@ -245,11 +245,48 @@ parameter-rich form and offers it as a tool the on-device model can fill and
 run. It needs ``typo3/cms-form``, which the extension requires, and it
 loads through the same site set or static template as the first plugin.
 
-The demonstration form ships with the extension as
+The plugin renders either a form an editor created in the TYPO3 form editor or
+the demonstration form that ships with the extension as
 :file:`Resources/Private/Forms/weatherQuery.form.yaml` and queries the open
-Open-Meteo service. Shipping it rather than expecting each installation to
-build one keeps the demonstration reproducible, and keeps one file as both what
-the visitor sees and what the model is told about.
+Open-Meteo service.
+
+.. _administration-form-assistant-storage:
+
+Using a form from the form editor
+---------------------------------
+
+Choose the form in the plugin's :guilabel:`Form from the form editor` field. The
+list shows the forms the signed-in backend user can reach through the configured
+form storages: the database on TYPO3 14, file mounts and extension paths before.
+Leave it on :guilabel:`Use the bundled form` to keep the demonstration form.
+
+The form is read through EXT:form's persistence manager, so it comes out of
+whichever storage the installation uses, with the same event listeners and
+TypoScript overrides as the core form plugin. The page's controls and the
+schema handed to the model come from that one loaded definition. If the chosen
+form cannot be loaded, for example because it was deleted, the plugin shows a
+short notice and no form. The plugin output is cached with the page, so a
+change to the form, or its deletion, shows once the page cache entry expires.
+
+The frontend loads the form the record names, as the core form plugin does. The
+selector only lists forms the editor may read, but it does not stop a backend
+user who can edit the plugin record from storing another form's identifier;
+restrict who may edit these plugin records where form access is separate from
+content editing.
+
+What an editor maintains where:
+
+* **Fields and options.** The form editor itself. Each element's
+  :guilabel:`Description` becomes the property description the model reads, so
+  an element without one is a parameter the model can only guess at.
+* **Tool description and data source.** The plugin record: the
+  :guilabel:`Tool description` and :guilabel:`Data source` fields. Both fall
+  back to ``renderingOptions.nrBrowserAi.toolDescription`` and
+  ``renderingOptions.nrBrowserAi.action`` in the form definition, which the form
+  editor has no field for, and finally to a sentence derived from the form's
+  label. A form without a data source stays a plain form and offers no tool.
+* **Multi-step forms.** EXT:form renders one page at a time, so only the first
+  page's elements become parameters.
 
 .. _administration-form-assistant-schema:
 
@@ -294,13 +331,36 @@ form with forty selectable variables affordable for an on-device model at all.
 Plugin settings
 ---------------
 
+.. confval:: persistenceIdentifier
+   :name: form-assistant-persistence-identifier
+   :type: string
+
+   A form created in the TYPO3 form editor, chosen from a list. When set it
+   replaces the bundled form. The value is the form's persistence identifier (a
+   database uid, a file mount path or an extension path) and is checked against
+   that shape before it is used.
+
 .. confval:: formIdentifier
    :name: form-assistant-form-identifier
    :type: string
    :default: weatherQuery
 
-   The shipped form this plugin renders and offers. An unknown value falls back
-   to the demonstration form.
+   The shipped form this plugin renders and offers when no stored form is
+   chosen. An unknown value falls back to the demonstration form.
+
+.. confval:: dataSource
+   :name: form-assistant-data-source
+   :type: string
+
+   What running the form does. ``openMeteo`` is built in. Empty means the data
+   source named by the form definition.
+
+.. confval:: toolDescription
+   :name: form-assistant-tool-description
+   :type: string
+
+   What the form does, for the model and for agents that call the tool. Empty
+   means the description in the form definition, or one derived from the label.
 
 .. confval:: title
    :name: form-assistant-title

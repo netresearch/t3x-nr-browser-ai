@@ -19,7 +19,8 @@ content or answer is sent to an application service.
 |-----------|----------|------|
 | AssistantController | `Classes/Controller/AssistantController.php` | Page assistant: validates settings, emits prompt/context config as data attributes |
 | FormAssistantController | `Classes/Controller/FormAssistantController.php` | Form assistant: renders form plus schema/tool metadata |
-| Form domain | `Classes/Domain/Form/` | `FormDefinitionLoader` reads the shipped definition; `FormSchemaFactory` derives the JSON schema (`FormSchema` value object); `FormAssistantFormFactory` renders the same definition via EXT:form |
+| Form domain | `Classes/Domain/Form/` | `FormDefinitionLoader` reads the shipped definition, `StorageFormLoader` one from the EXT:form storage (per-major arguments, `PersistenceManagerCall`); `FormSchemaFactory` derives the JSON schema (`FormSchema` value object) from the same array the core `ArrayFormFactory` renders; `FormCatalog` lists the stored forms |
+| Backend | `Classes/Backend/FormItemsProcessor.php` | Fills the plugin's form selector (`itemsProcFunc`) |
 | FallbackContentRenderer | `Classes/Service/FallbackContentRenderer.php` | Renders the configured fallback content element |
 | Model adapter | `Resources/Private/TypeScript/ai/` | `BrowserLanguageModelAdapter` + `LanguageModelSession` wrap `LanguageModel` |
 | Page context | `Resources/Private/TypeScript/context/` | `PageContextProvider` interface, `DomPageContextProvider` implementation |

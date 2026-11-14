@@ -23,7 +23,8 @@ use function preg_match;
 use function sprintf;
 
 /**
- * Reads a form definition this extension ships.
+ * Reads a form definition this extension ships. Forms an editor created in the
+ * form editor are read by StorageFormLoader instead.
  *
  * The definition is read from the file rather than through EXT:form's
  * persistence manager. Extension paths have to be added to
@@ -32,7 +33,7 @@ use function sprintf;
  * supported TYPO3 majors: TYPO3 14.2 deprecated the TypoScript route in favour
  * of a directory convention that 12.4 and 13.4 do not know. Reading the file
  * keeps one code path for all three, and the form is rendered from the same
- * array by FormAssistantFormFactory, so the schema and the rendered controls
+ * array by the core ArrayFormFactory, so the schema and the rendered controls
  * cannot describe different forms.
  */
 final readonly class FormDefinitionLoader

@@ -16,6 +16,7 @@ namespace Netresearch\NrBrowserAi\Controller;
 
 use Netresearch\NrBrowserAi\Domain\Form\FormDefinitionLoader;
 use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
+use Netresearch\NrBrowserAi\Domain\Form\StorageFormLoader;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
@@ -29,7 +30,9 @@ use function is_numeric;
 use function is_scalar;
 use function is_string;
 use function max;
+use function preg_replace;
 use function sprintf;
+use function substr;
 use function trim;
 
 /**
@@ -57,25 +60,34 @@ final class FormAssistantController extends ActionController
      */
     private const HEADING_LEVELS = ['h2', 'h3', 'h4'];
 
+    private const TOOL_NAME_LIMIT = 64;
+
     private static int $renderSequence = 0;
 
     public function __construct(
         private readonly FormDefinitionLoader $formDefinitionLoader,
+        private readonly StorageFormLoader $storageFormLoader,
         private readonly FormSchemaFactory $formSchemaFactory,
     ) {}
 
     public function showAction(): ResponseInterface
     {
-        $requested      = $this->stringSetting('formIdentifier');
-        $definition     = $requested === '' ? [] : $this->formDefinitionLoader->load($requested);
-        $formIdentifier = $definition === [] ? self::DEFAULT_FORM_IDENTIFIER : $requested;
-        if ($definition === []) {
-            $definition = $this->formDefinitionLoader->load(self::DEFAULT_FORM_IDENTIFIER);
-        }
+        $definition = $this->definition();
 
         $schema        = $this->formSchemaFactory->create($definition);
         $pluginOptions = $this->pluginOptions($definition);
-        $action        = is_string($pluginOptions['action'] ?? null) ? $pluginOptions['action'] : '';
+        $action        = $this->stringSetting('dataSource');
+        if ($action === '') {
+            $action = is_string($pluginOptions['action'] ?? null) ? $pluginOptions['action'] : '';
+        }
+
+        $formIdentifier = is_string($definition['identifier'] ?? null) ? $definition['identifier'] : '';
+        $action         = in_array($action, self::SUPPORTED_ACTIONS, true) ? $action : '';
+        // The built-in data source reads the element named "place"; without one
+        // every call would fail, so the form stays a plain form instead.
+        if ($action === 'openMeteo' && !in_array('place', $schema->propertyNames(), true)) {
+            $action = '';
+        }
 
         $currentContentObject = $this->request->getAttribute('currentContentObject');
         $currentContentUid    = $currentContentObject instanceof ContentObjectRenderer
@@ -89,10 +101,11 @@ final class FormAssistantController extends ActionController
                 ++self::$renderSequence,
             ),
             'formIdentifier'          => $formIdentifier,
+            'formDefinition'          => $definition,
             'formSchema'              => $schema->isEmpty() ? '' : $schema->toJson(),
-            'toolName'                => $schema->isEmpty() ? '' : 'nr_browser_ai_' . $formIdentifier,
-            'toolDescription'         => $this->text($pluginOptions['toolDescription'] ?? null),
-            'action'                  => in_array($action, self::SUPPORTED_ACTIONS, true) ? $action : '',
+            'toolName'                => $schema->isEmpty() ? '' : $this->toolName($formIdentifier),
+            'toolDescription'         => $this->toolDescription($definition, $pluginOptions),
+            'action'                  => $action,
             'title'                   => $this->stringSetting('title'),
             'headingLevel'            => $this->headingLevelSetting(),
             'introduction'            => $this->stringSetting('introduction'),
@@ -102,6 +115,67 @@ final class FormAssistantController extends ActionController
         ]);
 
         return $this->htmlResponse();
+    }
+
+    /**
+     * The form to render, as the one array both the controls and the schema are
+     * built from. An editor-chosen form from the EXT:form storage wins over the
+     * bundled one; when it cannot be loaded the plugin renders nothing rather
+     * than a different form than the one chosen.
+     *
+     * @return array<string, mixed>
+     */
+    private function definition(): array
+    {
+        $persistenceIdentifier = $this->stringSetting('persistenceIdentifier');
+        if ($persistenceIdentifier !== '') {
+            return $this->storageFormLoader->load($persistenceIdentifier, $this->request);
+        }
+
+        $requested  = $this->stringSetting('formIdentifier');
+        $definition = $requested === '' ? [] : $this->formDefinitionLoader->load($requested);
+        if ($definition === []) {
+            $definition = $this->formDefinitionLoader->load(self::DEFAULT_FORM_IDENTIFIER);
+        }
+
+        return $definition;
+    }
+
+    /**
+     * Identifiers an editor gets from the form editor contain hyphens ("text-1"),
+     * and a tool name is a token an agent has to be able to address.
+     */
+    private function toolName(string $formIdentifier): string
+    {
+        $safe = preg_replace('/\W/', '_', $formIdentifier) ?? '';
+
+        return substr('nr_browser_ai_' . $safe, 0, self::TOOL_NAME_LIMIT);
+    }
+
+    /**
+     * The plugin setting wins, then the definition, then a sentence derived from
+     * the form's own label so a form nobody described still has a usable tool.
+     *
+     * @param array<string, mixed> $definition
+     * @param array<string, mixed> $pluginOptions
+     */
+    private function toolDescription(array $definition, array $pluginOptions): string
+    {
+        $configured = $this->stringSetting('toolDescription');
+        if ($configured === '') {
+            $configured = $this->text($pluginOptions['toolDescription'] ?? null);
+        }
+
+        if ($configured !== '' || $definition === []) {
+            return $configured;
+        }
+
+        $label = $this->text($definition['label'] ?? null);
+
+        return sprintf(
+            'Fills in the form "%s" from the request and runs it. Set only the parameters the request names.',
+            $label === '' ? $this->text($definition['identifier'] ?? null) : $label,
+        );
     }
 
     /**

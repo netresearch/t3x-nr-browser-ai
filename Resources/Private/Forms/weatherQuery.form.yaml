@@ -6,9 +6,9 @@
 # It is shipped with the extension rather than created per installation so that
 # the demonstration is reproducible anywhere, and so that one file is both what
 # the visitor sees and what the model is told about. Classes/Domain/Form reads
-# this file twice: FormAssistantFormFactory hands it to EXT:form for rendering,
-# FormSchemaFactory turns it into the JSON Schema that constrains the model's
-# structured output.
+# this file once and uses the one array twice: the core ArrayFormFactory renders
+# it through EXT:form, FormSchemaFactory turns it into the JSON Schema that
+# constrains the model's structured output.
 #
 # Two conventions this file has to keep:
 #

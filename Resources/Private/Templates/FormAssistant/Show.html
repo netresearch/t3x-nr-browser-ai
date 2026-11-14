@@ -98,7 +98,17 @@ SPDX-FileCopyrightText: Netresearch DTT GmbH</f:comment>
     </f:comment>
     <details class="nr-browser-ai-form__form" data-nr-browser-ai-form-fields open>
         <summary class="nr-browser-ai-form__form-summary"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formDisclosure.summary" /></summary>
-        <formvh:render factoryClass="Netresearch\NrBrowserAi\Domain\Form\FormAssistantFormFactory" overrideConfiguration="{formIdentifier: formIdentifier}" />
+        <f:comment>
+            The controller loads the definition once and the same array feeds the
+            schema in the attributes above and the controls here. Handing it to the
+            core factory as the override configuration is what the view helper does
+            itself after loading a persistence identifier; loading it a second time
+            here could, through a TypoScript override, describe a different form.
+        </f:comment>
+        <f:if condition="{formDefinition}">
+            <f:then><formvh:render factoryClass="TYPO3\CMS\Form\Domain\Factory\ArrayFormFactory" overrideConfiguration="{formDefinition}" /></f:then>
+            <f:else><p class="nr-browser-ai-form__unavailable"><f:translate key="LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang.xlf:formAssistant.unavailable" /></p></f:else>
+        </f:if>
     </details>
 
     <div class="nr-browser-ai-form__result" data-nr-browser-ai-form-result hidden></div>

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+# A form nobody configured for the assistant: no renderingOptions.
+identifier: plain-form-1
+label: 'Plain form'
+prototypeName: standard
+type: Form
+renderables:
+  -
+    identifier: page-1
+    label: Page
+    type: Page
+    renderables:
+      -
+        identifier: text-1
+        label: Name
+        type: Text

@@ -12,6 +12,18 @@ Chrome and model setup
 The Prompt API shipped in Chrome 148. Model availability is controlled by the
 browser and device, not by TYPO3 or this extension.
 
+.. _browser-setup-runtime:
+
+The model runtime
+=================
+
+The extension runs its model through Chrome's built-in Prompt API and through
+nothing else. It does not use WebGPU or WebLLM, loads no model library of its
+own and downloads no model weights: Chrome fetches, stores and updates its
+built-in model. The GPU and storage figures below are Chrome's requirements for
+that built-in model, not a requirement of this extension. The reasoning is in
+:file:`docs/decisions/0005-forms-from-the-backend-and-the-model-runtime.md`.
+
 .. _browser-setup-requirements:
 
 Requirements

@@ -134,6 +134,65 @@ describe('FormFiller', () => {
         expect(missing).toEqual(['absent']);
     });
 
+    /**
+     * EXT:form renders a radio button element as one input per option, all
+     * sharing the element's name. Writing .value on the first would rename
+     * that option instead of choosing one.
+     */
+    describe('a radio group', () => {
+        const radioSchema: FormSchema = {
+            type: 'object',
+            properties: {transport: {type: 'string', enum: ['train', 'plane']}},
+        };
+
+        function radios(): {form: HTMLFormElement; filler: FormFiller} {
+            const root = document.createElement('form');
+            root.innerHTML = `
+                <input type="radio" name="tx_form_formframework[trip-1][transport]" value="train" checked>
+                <input type="radio" name="tx_form_formframework[trip-1][transport]" value="plane">
+            `;
+
+            return {form: root, filler: new FormFiller(root)};
+        }
+
+        it('checks the option carrying the value and unchecks its sibling', () => {
+            const {form: root, filler: radioFiller} = radios();
+
+            expect(radioFiller.fill(radioSchema, {transport: 'plane'})).toEqual([]);
+
+            const checked = Array.from(root.querySelectorAll<HTMLInputElement>('input:checked')).map(r => r.value);
+            expect(checked).toEqual(['plane']);
+            expect(radioFiller.read(radioSchema)).toEqual({transport: 'plane'});
+        });
+
+        it('never rewrites the value an option submits', () => {
+            const {form: root, filler: radioFiller} = radios();
+
+            radioFiller.fill(radioSchema, {transport: 'plane'});
+
+            const values = Array.from(root.querySelectorAll<HTMLInputElement>('input')).map(r => r.value);
+            expect(values).toEqual(['train', 'plane']);
+        });
+
+        it('leaves the group alone for a value that is not an option', () => {
+            const {filler: radioFiller} = radios();
+
+            radioFiller.fill(radioSchema, {transport: 'ship'});
+
+            expect(radioFiller.read(radioSchema)).toEqual({transport: 'train'});
+        });
+
+        it('reads nothing from a group with no option checked', () => {
+            const root = document.createElement('form');
+            root.innerHTML = `
+                <input type="radio" name="tx_form_formframework[trip-1][transport]" value="train">
+                <input type="radio" name="tx_form_formframework[trip-1][transport]" value="plane">
+            `;
+
+            expect(new FormFiller(root).read(radioSchema)).toEqual({});
+        });
+    });
+
     it('never writes into a hidden field', () => {
         filler.fill(schema, {place: 'Leipzig'});
 
