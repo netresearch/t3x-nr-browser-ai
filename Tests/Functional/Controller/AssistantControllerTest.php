@@ -22,10 +22,13 @@ use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
+use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
@@ -193,7 +196,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         // adds — asserted as composition rather than equality, so the two parts
         // stay distinguishable when either changes.
         self::assertStringContainsString(
-            'data-system-prompt="&quot;Configured&quot; &amp; trusted If the answer is not present',
+            'data-system-prompt="Answer only from the supplied source.',
             $body,
         );
         self::assertStringContainsString(
@@ -280,7 +283,10 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('data-nr-browser-ai-configuration', $body);
-        self::assertStringContainsString('<dd>&quot;Configured&quot; &amp; trusted If the answer is not present', $body);
+        self::assertStringContainsString('<dd>Answer only from the supplied source.', $body);
+        // The plugin record of this page stores another system prompt in its
+        // FlexForm; the administrator's TypoScript prompt is the one in force.
+        self::assertStringNotContainsString('Replaced by the plugin record', $body);
         self::assertStringContainsString('<dd>&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</dd>', $body);
         self::assertStringContainsString('<dd>0.8</dd>', $body);
         self::assertStringContainsString('<code>main</code>', $body);
@@ -461,12 +467,21 @@ final class AssistantControllerTest extends FunctionalTestCase
     #[Test]
     public function selectorAndInstructionsAreNormalizedAndEscaped(): void
     {
-        $body = $this->renderAssistant([
-            'contextSelector'         => str_repeat('a', 257),
-            'contextUsageLimit'       => '2',
-            'systemPrompt'            => '"source" & source only',
-            'supplementalInstruction' => '<strong>untrusted</strong>',
-        ]);
+        // The usage limit and the system prompt are administrator settings: the
+        // values in the merged plugin settings (which a plugin record can fill)
+        // are ignored, and the TypoScript ones are the ones normalised.
+        $body = $this->renderAssistant(
+            [
+                'contextSelector'         => str_repeat('a', 257),
+                'contextUsageLimit'       => '0.3',
+                'systemPrompt'            => 'Replaced by the plugin record',
+                'supplementalInstruction' => '<strong>untrusted</strong>',
+            ],
+            administratorSettings: [
+                'contextUsageLimit' => '2',
+                'systemPrompt'      => '"source" & source only',
+            ],
+        );
 
         self::assertStringContainsString('data-context-selector="main"', $body);
         self::assertStringContainsString('data-context-usage-limit="0.8"', $body);
@@ -686,6 +701,7 @@ final class AssistantControllerTest extends FunctionalTestCase
         array $settings,
         bool $injectFallbackContentRenderer = true,
         ?int $contentUid = null,
+        array $administratorSettings = [],
     ): string {
         $controller = new AssistantController();
         if ($injectFallbackContentRenderer) {
@@ -697,18 +713,44 @@ final class AssistantControllerTest extends FunctionalTestCase
 
         $this->setControllerProperty($controller, 'view', $this->createAssistantView());
         $this->setControllerProperty($controller, 'settings', $settings);
+        $contentObject = null;
         if ($contentUid !== null) {
             $contentObject       = GeneralUtility::makeInstance(ContentObjectRenderer::class);
             $contentObject->data = ['uid' => $contentUid];
-            $request             = $this->createMock(RequestInterface::class);
-            $request->expects(self::once())
-                ->method('getAttribute')
-                ->with('currentContentObject')
-                ->willReturn($contentObject);
-            $this->setControllerProperty($controller, 'request', $request);
         }
 
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getAttribute')->willReturnCallback(
+            fn (string $name): mixed => match ($name) {
+                'currentContentObject' => $contentObject,
+                'frontend.typoscript'  => $this->frontendTypoScript($administratorSettings),
+                default                => null,
+            },
+        );
+        $this->setControllerProperty($controller, 'request', $request);
+
         return (string) $controller->showAction()->getBody();
+    }
+
+    /**
+     * A frontend TypoScript object whose plugin settings are the given ones.
+     * The constructor takes two arguments on 12.4 and four from 13.4, so it is
+     * called through reflection with as many as it declares.
+     *
+     * @param array<string, string> $administratorSettings
+     */
+    private function frontendTypoScript(array $administratorSettings): FrontendTypoScript
+    {
+        $reflection = new ReflectionClass(FrontendTypoScript::class);
+        $arguments  = $reflection->getConstructor()?->getNumberOfParameters() === 2
+            ? [new RootNode(), []]
+            : [new RootNode(), [], [], []];
+        $typoScript = $reflection->newInstanceArgs($arguments);
+        self::assertInstanceOf(FrontendTypoScript::class, $typoScript);
+        $typoScript->setSetupTree(new RootNode());
+        $typoScript->setSetupArray(['plugin.' => ['tx_nrbrowserai_assistant.' => ['settings.' => $administratorSettings]]]);
+
+        return $typoScript;
     }
 
     private function createAssistantView(): object

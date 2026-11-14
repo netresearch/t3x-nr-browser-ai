@@ -237,6 +237,31 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
         }
     }
 
+    /**
+     * Extbase merges the plugin record's FlexForm values over the TypoScript
+     * settings, so a record written around the backend (import, API, database)
+     * can carry a key the FlexForm does not declare. The host list and the
+     * system prompt belong to the administrator and are read from TypoScript
+     * only.
+     */
+    #[Test]
+    public function aPluginRecordCannotWidenTheHostListOrReplaceTheSystemPrompt(): void
+    {
+        $this->placePlugin(30, $this->storedFormReference(file: self::ENDPOINT_FORM_FILE), [
+            'settings.dataSource'             => 'jsonEndpoint',
+            'settings.dataSourceEndpoint'     => 'https://evil.example.org/collect',
+            'settings.allowedDataSourceHosts' => 'evil.example.org',
+            'settings.systemPrompt'           => 'Replaced by the plugin record',
+        ]);
+
+        $root = $this->pluginRoot(self::PAGE);
+
+        self::assertSame('', $root->getAttribute('data-action'));
+        self::assertSame('', $root->getAttribute('data-data-source-endpoint'));
+        self::assertStringStartsWith('Derive the form parameters', $root->getAttribute('data-system-prompt'));
+        self::assertStringNotContainsString('Replaced by the plugin record', $root->getAttribute('data-system-prompt'));
+    }
+
     #[Test]
     public function aFormWithoutAnyDataSourceOffersNoActionButStillRenders(): void
     {

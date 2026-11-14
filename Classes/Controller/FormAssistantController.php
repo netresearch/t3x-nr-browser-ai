@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Controller;
 
+use Netresearch\NrBrowserAi\Configuration\AdministratorSettings;
 use Netresearch\NrBrowserAi\Domain\Form\DataSourceEndpoint;
 use Netresearch\NrBrowserAi\Domain\Form\FormDefinitionLoader;
 use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
@@ -97,7 +98,7 @@ final class FormAssistantController extends ActionController
             $configured = $this->stringSetting('dataSourceEndpoint');
             $endpoint   = DataSourceEndpoint::validate(
                 $configured !== '' ? $configured : ($pluginOptions['endpoint'] ?? null),
-                $this->stringSetting('allowedDataSourceHosts'),
+                $this->administratorSetting('allowedDataSourceHosts'),
             );
             $action = $endpoint === '' ? '' : $action;
         }
@@ -124,7 +125,7 @@ final class FormAssistantController extends ActionController
             'headingLevel'            => $this->headingLevelSetting(),
             'introduction'            => $this->stringSetting('introduction'),
             'supplementalInstruction' => $this->stringSetting('supplementalInstruction'),
-            'systemPrompt'            => $this->stringSetting('systemPrompt'),
+            'systemPrompt'            => $this->administratorSetting('systemPrompt'),
             'showConfiguration'       => $this->booleanSetting('showConfiguration'),
         ]);
 
@@ -220,6 +221,16 @@ final class FormAssistantController extends ActionController
         }
 
         return $pluginOptions;
+    }
+
+    /**
+     * Administrator-owned settings come from TypoScript alone: the merged
+     * settings carry whatever the plugin record holds, so an editor could
+     * otherwise replace the system prompt or widen the host allow-list.
+     */
+    private function administratorSetting(string $name): string
+    {
+        return AdministratorSettings::string($this->request, 'tx_nrbrowserai_formassistant', $name) ?? '';
     }
 
     private function contentUid(mixed $value): int

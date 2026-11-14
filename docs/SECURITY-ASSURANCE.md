@@ -67,6 +67,11 @@ dialogue lives in memory and the sessions are destroyed on reset and on
   bounds. This applies to the page's own model and to an external agent alike.
   One request runs at most four queries (`DEFAULT_MAXIMUM_QUERIES` in
   `Resources/Private/TypeScript/tools/LocalToolLoop.ts`).
+- **Administrator settings come from TypoScript only.** The system prompts, the
+  context usage limit and `allowedDataSourceHosts` are read by
+  `AdministratorSettings::string()` from the frontend TypoScript setup, not
+  from Extbase's merged settings, which a plugin record's FlexForm overrides.
+  Covered by `StorageFormAssistantControllerTest` and `AssistantControllerTest`.
 - **Server-side settings are validated and escaped.** `AssistantController`
   falls back to defaults for an empty or over-long context selector and for a
   usage limit outside (0, 1], accepts only `none` and `contentElement` as

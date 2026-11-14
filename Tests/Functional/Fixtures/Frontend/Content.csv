@@ -17,7 +17,7 @@
         <sheet index=""sDEF"">
             <language index=""lDEF"">
                 <field index=""settings.systemPrompt"">
-                    <value index=""vDEF"">&quot;Configured&quot; &amp; trusted</value>
+                    <value index=""vDEF"">Replaced by the plugin record</value>
                 </field>
                 <field index=""settings.supplementalInstruction"">
                     <value index=""vDEF"">&lt;strong&gt;untrusted &amp; &quot;quoted&quot;&lt;/strong&gt;</value>
