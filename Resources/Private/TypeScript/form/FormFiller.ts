@@ -77,6 +77,17 @@ export class FormFiller {
         if (first === undefined) {
             return undefined;
         }
+        if (isRadio(first)) {
+            // A radio group is read from the checked member; none checked is
+            // no value, and the form's own validation decides what that means.
+            for (const control of controls) {
+                if (isRadio(control) && control.checked) {
+                    return control.value;
+                }
+            }
+
+            return undefined;
+        }
         if (isSelect(first)) {
             return first.value;
         }
@@ -132,6 +143,21 @@ export class FormFiller {
         if (control === undefined) {
             return;
         }
+        if (isRadio(control)) {
+            // Every member of the group shares one name, and setting .value on
+            // the first would rewrite what that option submits. The member
+            // carrying the value is checked instead; an unknown value changes
+            // nothing, as it does for a select.
+            for (const member of controls) {
+                if (isRadio(member) && member.value === value) {
+                    member.checked = true;
+                    notify(member);
+                    break;
+                }
+            }
+
+            return;
+        }
         if (isSelect(control) && !Array.from(control.options).some(option => option.value === value)) {
             return;
         }
@@ -182,6 +208,10 @@ function isControl(element: Element): element is Control {
 
 function isCheckbox(control: Control): control is HTMLInputElement {
     return control instanceof HTMLInputElement && control.type === 'checkbox';
+}
+
+function isRadio(control: Control): control is HTMLInputElement {
+    return control instanceof HTMLInputElement && control.type === 'radio';
 }
 
 function isSelect(control: Control): control is HTMLSelectElement {

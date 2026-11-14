@@ -23,6 +23,49 @@
                             <default>weatherQuery</default>
                         </config>
                     </settings.formIdentifier>
+                    <settings.persistenceIdentifier>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.persistenceIdentifier</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.persistenceIdentifier.description</description>
+                        <config>
+                            <type>select</type>
+                            <renderType>selectSingle</renderType>
+                            <items>
+                                <numIndex index="0">
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.persistenceIdentifier.bundled</label>
+                                    <value></value>
+                                </numIndex>
+                            </items>
+                            <itemsProcFunc>Netresearch\NrBrowserAi\Backend\FormItemsProcessor->populate</itemsProcFunc>
+                            <softref>formPersistenceIdentifier</softref>
+                        </config>
+                    </settings.persistenceIdentifier>
+                    <settings.dataSource>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSource</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSource.description</description>
+                        <config>
+                            <type>select</type>
+                            <renderType>selectSingle</renderType>
+                            <items>
+                                <numIndex index="0">
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.dataSource.fromForm</label>
+                                    <value></value>
+                                </numIndex>
+                                <numIndex index="1">
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.dataSource.openMeteo</label>
+                                    <value>openMeteo</value>
+                                </numIndex>
+                            </items>
+                            <default></default>
+                        </config>
+                    </settings.dataSource>
+                    <settings.toolDescription>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.toolDescription</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.toolDescription.description</description>
+                        <config>
+                            <type>text</type>
+                            <rows>3</rows>
+                        </config>
+                    </settings.toolDescription>
                     <settings.title>
                         <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.title</label>
                         <config>

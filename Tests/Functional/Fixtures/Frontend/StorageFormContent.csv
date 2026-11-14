@@ -1,0 +1,7 @@
+"pages"
+,"uid","pid","title","slug","deleted","hidden"
+,1,0,"Browser AI storage form test",/,0,0
+,30,1,"Stored form",/storage-form,0,0
+"tt_content"
+,"uid","pid","CType","header","bodytext","colPos","sorting","deleted","hidden","sys_language_uid","pi_flexform"
+,30,30,"nrbrowserai_formassistant","Stored form","",0,256,0,0,0,""

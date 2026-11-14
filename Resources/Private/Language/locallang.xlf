@@ -31,6 +31,7 @@
             <trans-unit id="configuration.note"><source>The model additionally receives an instruction to answer in the language of the question, and the text of the selected page area. Nothing else is passed to it.</source></trans-unit>
             <trans-unit id="formAssistant.title"><source>Fill this form by describing what you want</source></trans-unit>
             <trans-unit id="formAssistant.region"><source>Form assistant</source></trans-unit>
+            <trans-unit id="formAssistant.unavailable"><source>The selected form is not available.</source></trans-unit>
             <trans-unit id="field.request"><source>What do you want to know?</source></trans-unit>
             <trans-unit id="action.derive"><source>Fill and run</source></trans-unit>
             <trans-unit id="formStatus.ready"><source>Describe what you want and the form will be filled with it.</source></trans-unit>

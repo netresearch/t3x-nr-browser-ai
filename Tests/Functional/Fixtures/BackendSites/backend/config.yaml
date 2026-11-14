@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+# FormEngine resolves the language of the edited record from its site, so the
+# backend tests need one that declares a language; the frontend tests use a
+# site without any.
+rootPageId: 1
+base: 'https://website.local/'
+languages:
+  -
+    title: English
+    enabled: true
+    languageId: 0
+    base: /
+    locale: en_US.UTF-8
+    navigationTitle: English
+    hreflang: en-US
+    direction: ltr
+    flag: us

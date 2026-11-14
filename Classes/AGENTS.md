@@ -7,15 +7,18 @@
 ## Overview
 
 PHP source of the extension, PSR-4 autoloaded as `Netresearch\NrBrowserAi\`
-from `Classes/`. Seven final classes: two Extbase controllers, a form domain
-layer, and one rendering service. Every file declares `strict_types=1`.
+from `Classes/`. Ten classes: two Extbase controllers, a form domain
+layer, a backend selector helper and one rendering service. Every file declares `strict_types=1`.
 
 | File | Purpose |
 |------|---------|
 | `Controller/AssistantController.php` | Page-assistant plugin: validates FlexForm settings, puts prompt config on the plugin root as data attributes |
 | `Controller/FormAssistantController.php` | Form-assistant plugin: renders the form plus schema/tool metadata as data attributes |
-| `Domain/Form/FormDefinitionLoader.php` | Reads the shipped form definition from file (bypasses EXT:form persistence allow-listing, which differs across majors) |
-| `Domain/Form/FormAssistantFormFactory.php` | EXT:form factory rendering the shipped form from the same array the schema is generated from |
+| `Domain/Form/FormDefinitionLoader.php` | Reads the bundled form definition from file |
+| `Domain/Form/StorageFormLoader.php` | Loads a form created in the form editor through EXT:form's persistence manager, per-major arguments, identifier shape check |
+| `Domain/Form/FormCatalog.php` | Lists the stored forms for the plugin's form selector, per-major |
+| `Domain/Form/PersistenceManagerCall.php` | Reflection call into the persistence manager whose signatures differ across 12.4, 13.4 and 14.3 |
+| `Backend/FormItemsProcessor.php` | `itemsProcFunc` of the plugin's form selector |
 | `Domain/Form/FormSchemaFactory.php` | Turns the EXT:form definition into the JSON Schema constraining the model's structured output |
 | `Domain/Form/FormSchema.php` | Value object: the schema plus the input elements it could not describe (unmapped types stay visible) |
 | `Service/FallbackContentRenderer.php` | Renders the configured fallback content element via `ContentObjectRenderer`, with recursion guard |
@@ -24,8 +27,8 @@ layer, and one rendering service. Every file declares `strict_types=1`.
 
 `composer install` resolves dev tooling into `.Build/` (bin-dir `.Build/bin`,
 vendor-dir `.Build/vendor`). DI is configured in `Configuration/Services.yaml`
-(autowire + autoconfigure; `FormAssistantFormFactory` is `public: true` because
-EXT:form resolves factories from the container by class name).
+(autowire + autoconfigure; `FormItemsProcessor` is `public: true` because FormEngine
+instantiates `itemsProcFunc` classes through `GeneralUtility::makeInstance`).
 
 ## Commands
 

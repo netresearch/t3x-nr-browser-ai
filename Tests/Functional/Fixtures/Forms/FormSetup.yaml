@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+# Allows the test form to be loaded by its extension path on TYPO3 12.4 and
+# 13.4. From 14.x the form lives in the database, as an editor would have
+# created it, and this file is not consulted.
+persistenceManager:
+  allowedExtensionPaths:
+    1700: EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/

@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+# A form as the TYPO3 form editor writes it: generated identifiers with hyphens,
+# a description on one element, a radio group and a second page.
+identifier: trip-planner-1
+label: 'Trip planner'
+prototypeName: standard
+type: Form
+renderingOptions:
+  nrBrowserAi:
+    action: openMeteo
+    toolDescription: 'Plans a trip from the definition.'
+renderables:
+  -
+    identifier: page-1
+    label: 'Where to'
+    type: Page
+    renderables:
+      -
+        identifier: text-1
+        label: Destination
+        type: Text
+        properties:
+          elementDescription: 'City or region the trip goes to.'
+        validators:
+          -
+            identifier: NotEmpty
+      -
+        identifier: radio-1
+        label: Transport
+        type: RadioButton
+        properties:
+          options:
+            train: Train
+            plane: Plane
+        defaultValue: train
+      -
+        identifier: checkbox-1
+        label: 'Include hotel'
+        type: Checkbox
+  -
+    identifier: page-2
+    label: 'Who travels'
+    type: Page
+    renderables:
+      -
+        identifier: text-2
+        label: Traveller
+        type: Text

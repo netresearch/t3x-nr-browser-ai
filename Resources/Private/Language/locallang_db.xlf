@@ -94,6 +94,33 @@
             <trans-unit id="flexform.field.showConfiguration.formAssistant.description" resname="flexform.field.showConfiguration.formAssistant.description">
                 <source>Renders a collapsed block naming the tool, its description, the system prompt, the input schema and the arguments of the last call. Visible whether or not the browser can run the model.</source>
             </trans-unit>
+            <trans-unit id="flexform.field.persistenceIdentifier" resname="flexform.field.persistenceIdentifier">
+                <source>Form from the form editor</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.persistenceIdentifier.description" resname="flexform.field.persistenceIdentifier.description">
+                <source>A form created in the TYPO3 form editor. When one is chosen it replaces the bundled form below. The input schema is derived from its definition, so the controls and the schema describe the same form; field descriptions come from each element's description in the form editor.</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.persistenceIdentifier.bundled" resname="flexform.item.persistenceIdentifier.bundled">
+                <source>Use the bundled form</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.dataSource" resname="flexform.field.dataSource">
+                <source>Data source</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.dataSource.description" resname="flexform.field.dataSource.description">
+                <source>What running the form does. Leave empty to use the data source the form definition names under renderingOptions.nrBrowserAi.action; a form without one stays a plain form and offers no tool.</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.dataSource.fromForm" resname="flexform.item.dataSource.fromForm">
+                <source>From the form definition</source>
+            </trans-unit>
+            <trans-unit id="flexform.item.dataSource.openMeteo" resname="flexform.item.dataSource.openMeteo">
+                <source>Open-Meteo weather forecast</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.toolDescription" resname="flexform.field.toolDescription">
+                <source>Tool description</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.toolDescription.description" resname="flexform.field.toolDescription.description">
+                <source>What the form does, in a sentence or two, for the model and for agents that call the tool. Leave empty to use the description in the form definition, or one derived from the form label.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

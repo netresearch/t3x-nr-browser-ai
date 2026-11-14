@@ -72,10 +72,15 @@ dialogue lives in memory and the sessions are destroyed on reset and on
   fallback modes, and accepts a content reference only as a positive integer.
   The templates output every setting through Fluid escaping
   (`f:format.htmlspecialchars` in the data attributes).
-- **Only shipped form definitions are loaded.** `FormDefinitionLoader::load()`
-  accepts identifiers matching `^[a-zA-Z][a-zA-Z0-9]{0,63}$` and reads only
+- **Only bundled files and EXT:form storage entries are loaded.**
+  `FormDefinitionLoader::load()` accepts identifiers matching
+  `^[a-zA-Z][a-zA-Z0-9]{0,63}$` and reads only
   `EXT:nr_browser_ai/Resources/Private/Forms/<identifier>.form.yaml`, so an
-  identifier cannot name another path.
+  identifier cannot name another path. `StorageFormLoader` accepts a database
+  uid, a `<storage>:/…/*.form.yaml` path or an `EXT:…/*.form.yaml` path without
+  `..` (`StorageFormLoader::isPersistenceIdentifier()`), and then hands it to
+  EXT:form's persistence manager, which applies the installation's storages and
+  access rules; the core form plugin loads a named form the same way.
 - **Fallback content respects TYPO3 access rules.** `FallbackContentRenderer`
   renders the selected record through the `RECORDS` content object, which
   applies the enable fields, and refuses self-references and cycles.
@@ -140,7 +145,7 @@ LLM entries refer to the OWASP Top 10 for LLM Applications 2025.
 | Prompt injection (OWASP LLM01) | Page text, question, editor instruction | Source data delimited and escaped in `LanguageModelSession.ts`; administrator prompt and editor instruction kept as separate layers (`combineInstructions()`); consequences limited by the two rows above and below |
 | Excessive agency (OWASP LLM06) | Tool calls from the model or an external agent | One tool, one fixed action; arguments validated against the schema generated from the form definition (`Classes/Domain/Form/FormSchemaFactory.php`, `ArgumentValidator.ts`); at most four queries per request; the tool is registered with `untrustedContentHint: true`. Covered by `Tests/JavaScript/form/ArgumentValidator.test.ts` and `Tests/JavaScript/tools/` |
 | Sensitive information disclosure (OWASP LLM02) | Dialogue data | No endpoint, storage or telemetry for questions, context or answers; sessions destroyed on reset and page exit (ADR-0002) |
-| Path traversal (CWE-22) | Form identifier | Identifier pattern and fixed directory in `FormDefinitionLoader.php` |
+| Path traversal (CWE-22) | Form identifier | Identifier pattern and fixed directory in `FormDefinitionLoader.php`; persistence-identifier shape check in `StorageFormLoader.php` |
 | Request to an unintended destination | Form action | Allow-list of actions on server and client; fixed URLs in `OpenMeteoQuery.ts`. Covered by `Tests/JavaScript/query/OpenMeteoQuery.test.ts` |
 | Uncontrolled recursion (CWE-674) | Fallback content referencing itself | Render stack in `FallbackContentRenderer.php`. Covered by `Tests/Unit/Service/FallbackContentRendererTest.php` |
 | Regular-expression denial of service (CWE-1333) | Parsing streamed model output on every chunk | Block syntax recognised with string operations, not patterns (`SafeResponseRenderer.ts`) |

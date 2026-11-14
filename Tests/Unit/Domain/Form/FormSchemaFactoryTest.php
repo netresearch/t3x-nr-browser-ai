@@ -202,6 +202,52 @@ final class FormSchemaFactoryTest extends TestCase
         self::assertSame(['inner'], $schema->propertyNames());
     }
 
+    /**
+     * EXT:form renders one page of a multi-step form at a time. Describing a
+     * later page's field would offer the model a parameter whose control is not
+     * in the document, so the tool would write into nothing.
+     */
+    #[Test]
+    public function onlyTheFirstPageOfAMultiStepFormIsDescribed(): void
+    {
+        $schema = (new FormSchemaFactory())->create([
+            'type'        => 'Form',
+            'identifier'  => 'test',
+            'renderables' => [
+                ['type' => 'Page', 'identifier' => 'page-1', 'renderables' => [
+                    ['type' => 'Text', 'identifier' => 'text-1'],
+                ]],
+                ['type' => 'Page', 'identifier' => 'page-2', 'renderables' => [
+                    ['type' => 'Fieldset', 'identifier' => 'group', 'renderables' => [
+                        ['type' => 'Text', 'identifier' => 'text-2'],
+                    ]],
+                    ['type' => 'StaticText', 'identifier' => 'note'],
+                ]],
+                ['type' => 'SummaryPage', 'identifier' => 'summary'],
+            ],
+        ]);
+
+        self::assertSame(['text-1'], $schema->propertyNames());
+        self::assertSame(['text-2'], $schema->unsupportedElements);
+    }
+
+    /**
+     * The form editor generates identifiers such as "text-1"; they are valid
+     * property names and have to survive into the schema untouched, because the
+     * client resolves controls by exactly that name.
+     */
+    #[Test]
+    public function editorGeneratedIdentifiersWithHyphensAreKept(): void
+    {
+        $schema = (new FormSchemaFactory())->create($this->form([
+            ['type' => 'Text', 'identifier' => 'text-1'],
+            ['type' => 'RadioButton', 'identifier' => 'radio-1', 'properties' => ['options' => ['a' => 'A', 'b' => 'B']]],
+        ]));
+
+        self::assertSame(['text-1', 'radio-1'], $schema->propertyNames());
+        self::assertSame(['a', 'b'], $schema->schema['properties']['radio-1']['enum'] ?? null);
+    }
+
     #[Test]
     public function elementsWithoutAValueAreNeitherDescribedNorReported(): void
     {
