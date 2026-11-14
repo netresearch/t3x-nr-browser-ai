@@ -141,7 +141,7 @@ final class FormAssistantController extends ActionController
      */
     private function toolName(string $formIdentifier): string
     {
-        $safe = preg_replace('/[^A-Za-z0-9_]/', '_', $formIdentifier) ?? '';
+        $safe = preg_replace('/\W/', '_', $formIdentifier) ?? '';
 
         return substr('nr_browser_ai_' . $safe, 0, self::TOOL_NAME_LIMIT);
     }

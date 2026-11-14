@@ -39,6 +39,10 @@ use function str_contains;
  */
 final class StorageFormAssistantControllerTest extends FunctionalTestCase
 {
+    private const PAGE = '/storage-form';
+
+    private const FORM_QUERY = '//form';
+
     private const FORM_FILE = 'EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/tripPlanner.form.yaml';
 
     private const PLAIN_FORM_FILE = 'EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/plainForm.form.yaml';
@@ -84,7 +88,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, $this->storedFormReference());
 
-        $root = $this->pluginRoot('/storage-form');
+        $root = $this->pluginRoot(self::PAGE);
 
         $schema = json_decode($root->getAttribute('data-form-schema'), true);
         self::assertIsArray($schema);
@@ -104,7 +108,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, $this->storedFormReference());
 
-        $xpath = new DOMXPath($this->render('/storage-form'));
+        $xpath = new DOMXPath($this->render(self::PAGE));
         $names = [];
         foreach ($xpath->query('//input | //select | //textarea') ?: [] as $control) {
             if ($control instanceof DOMElement) {
@@ -131,8 +135,8 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, $this->storedFormReference());
 
-        $document = $this->render('/storage-form');
-        $schema   = $this->pluginRoot('/storage-form')->getAttribute('data-form-schema');
+        $document = $this->render(self::PAGE);
+        $schema   = $this->pluginRoot(self::PAGE)->getAttribute('data-form-schema');
 
         self::assertStringNotContainsString('text-2', $schema);
         self::assertSame(
@@ -148,7 +152,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(
             'nr_browser_ai_trip_planner_1',
-            $this->pluginRoot('/storage-form')->getAttribute('data-tool-name'),
+            $this->pluginRoot(self::PAGE)->getAttribute('data-tool-name'),
         );
     }
 
@@ -157,7 +161,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, $this->storedFormReference());
 
-        $root = $this->pluginRoot('/storage-form');
+        $root = $this->pluginRoot(self::PAGE);
 
         self::assertSame('openMeteo', $root->getAttribute('data-action'));
         self::assertSame('Plans a trip from the definition.', $root->getAttribute('data-tool-description'));
@@ -171,7 +175,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
             'settings.dataSource'      => 'openMeteo',
         ]);
 
-        $root = $this->pluginRoot('/storage-form');
+        $root = $this->pluginRoot(self::PAGE);
 
         self::assertSame('Plugin wording.', $root->getAttribute('data-tool-description'));
     }
@@ -181,11 +185,11 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, $this->storedFormReference(withAction: false));
 
-        $document = $this->render('/storage-form');
-        $root     = $this->pluginRoot('/storage-form');
+        $document = $this->render(self::PAGE);
+        $root     = $this->pluginRoot(self::PAGE);
 
         self::assertSame('', $root->getAttribute('data-action'));
-        self::assertGreaterThan(0, (new DOMXPath($document))->query('//form')?->length ?? 0);
+        self::assertGreaterThan(0, (new DOMXPath($document))->query(self::FORM_QUERY)?->length ?? 0);
         self::assertStringContainsString(
             'Fills in the form "Plain form"',
             $root->getAttribute('data-tool-description'),
@@ -197,11 +201,11 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     {
         $this->placePlugin(30, '987654');
 
-        $document = $this->render('/storage-form');
+        $document = $this->render(self::PAGE);
 
-        self::assertSame(0, (new DOMXPath($document))->query('//form')?->length ?? 0);
-        self::assertSame('', $this->pluginRoot('/storage-form')->getAttribute('data-form-schema'));
-        self::assertSame('', $this->pluginRoot('/storage-form')->getAttribute('data-tool-name'));
+        self::assertSame(0, (new DOMXPath($document))->query(self::FORM_QUERY)?->length ?? 0);
+        self::assertSame('', $this->pluginRoot(self::PAGE)->getAttribute('data-form-schema'));
+        self::assertSame('', $this->pluginRoot(self::PAGE)->getAttribute('data-tool-name'));
     }
 
     #[Test]
@@ -210,9 +214,9 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
         foreach (['../../../etc/passwd', '1:/../secret.form.yaml', 'EXT:../x/y.form.yaml', '1:/a.txt'] as $reference) {
             $this->placePlugin(30, $reference);
 
-            $document = $this->render('/storage-form');
+            $document = $this->render(self::PAGE);
 
-            self::assertSame(0, (new DOMXPath($document))->query('//form')?->length ?? 0, $reference);
+            self::assertSame(0, (new DOMXPath($document))->query(self::FORM_QUERY)?->length ?? 0, $reference);
         }
     }
 
@@ -223,7 +227,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
 
         self::assertSame(
             'nr_browser_ai_weatherQuery',
-            $this->pluginRoot('/storage-form')->getAttribute('data-tool-name'),
+            $this->pluginRoot(self::PAGE)->getAttribute('data-tool-name'),
         );
     }
 

@@ -88,15 +88,7 @@ final readonly class StorageFormLoader
             return [];
         }
 
-        if (!is_array($definition) || ($definition['invalid'] ?? false) === true) {
-            return [];
-        }
-
-        if (!is_string($definition['identifier'] ?? null) || ($definition['type'] ?? null) !== 'Form') {
-            return [];
-        }
-
-        if (!is_array($definition['renderables'] ?? null)) {
+        if (!is_array($definition) || !$this->isUsable($definition)) {
             return [];
         }
 
@@ -112,6 +104,20 @@ final readonly class StorageFormLoader
         $normalised['persistenceIdentifier'] = $persistenceIdentifier;
 
         return $normalised;
+    }
+
+    /**
+     * The manager answers a failed load with an array marked invalid rather than
+     * an exception, and a stored definition can lack what rendering needs.
+     *
+     * @param array<mixed> $definition
+     */
+    private function isUsable(array $definition): bool
+    {
+        return ($definition['invalid'] ?? false) !== true
+            && is_string($definition['identifier'] ?? null)
+            && ($definition['type'] ?? null) === 'Form'
+            && is_array($definition['renderables'] ?? null);
     }
 
     /**

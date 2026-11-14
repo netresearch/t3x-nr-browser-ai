@@ -25,8 +25,8 @@ use TYPO3\CMS\Form\Domain\DTO\SearchCriteria;
 use TYPO3\CMS\Form\Mvc\Configuration\ConfigurationManagerInterface as ExtFormConfigurationManagerInterface;
 use TYPO3\CMS\Form\Mvc\Persistence\FormPersistenceManagerInterface;
 
+use function get_object_vars;
 use function is_array;
-use function is_bool;
 use function is_object;
 use function is_string;
 use function trim;
@@ -114,23 +114,15 @@ final readonly class FormCatalog
      */
     private function entry(mixed $form): ?array
     {
-        if (is_object($form)) {
-            $identifier = $form->persistenceIdentifier ?? null;
-            $name       = $form->name ?? null;
-            $invalid    = $form->invalid ?? false;
-        } elseif (is_array($form)) {
-            $identifier = $form['persistenceIdentifier'] ?? null;
-            $name       = $form['name'] ?? null;
-            $invalid    = $form['invalid'] ?? false;
-        } else {
+        $source = is_object($form) ? get_object_vars($form) : (is_array($form) ? $form : null);
+        if ($source === null) {
             return null;
         }
 
-        if (!is_string($identifier) || !StorageFormLoader::isPersistenceIdentifier($identifier)) {
-            return null;
-        }
-
-        if (is_bool($invalid) && $invalid) {
+        $identifier = $source['persistenceIdentifier'] ?? null;
+        $name       = $source['name'] ?? null;
+        $invalid    = ($source['invalid'] ?? false) === true;
+        if ($invalid || !is_string($identifier) || !StorageFormLoader::isPersistenceIdentifier($identifier)) {
             return null;
         }
 
