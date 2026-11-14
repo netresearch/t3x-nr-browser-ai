@@ -66,5 +66,6 @@ plugin.tx_nrbrowserai_formassistant {
 
     settings {
         systemPrompt = {$plugin.tx_nrbrowserai_formassistant.settings.systemPrompt}
+        allowedDataSourceHosts = {$plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts}
     }
 }

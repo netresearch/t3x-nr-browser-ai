@@ -12,7 +12,7 @@ Frontend sources and their committed build outputs.
   subsystems: `ai/` (LanguageModel adapter + session), `context/`
   (PageContextProvider + DOM implementation), `form/` (schema source,
   argument validation, form filling, group roles), `tools/` (local tool loop,
-  form tool, model-context binding), `query/` (FormAction, OpenMeteoQuery),
+  form tool, model-context binding), `query/` (FormAction, OpenMeteoQuery, JsonEndpointQuery),
   `rendering/` (SafeResponseRenderer), `result/`, `ui/` (chat and
   form-assistant controllers, NotFoundGate).
 - `Private/Styles/Assistant.css` -- source stylesheet, copied verbatim to Public.

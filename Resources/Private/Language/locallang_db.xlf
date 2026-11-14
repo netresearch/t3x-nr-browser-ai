@@ -121,6 +121,15 @@
             <trans-unit id="flexform.field.toolDescription.description" resname="flexform.field.toolDescription.description">
                 <source>What the form does, in a sentence or two, for the model and for agents that call the tool. Leave empty to use the description in the form definition, or one derived from the form label.</source>
             </trans-unit>
+            <trans-unit id="flexform.item.dataSource.jsonEndpoint" resname="flexform.item.dataSource.jsonEndpoint">
+                <source>JSON endpoint (HTTPS GET)</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.dataSourceEndpoint" resname="flexform.field.dataSourceEndpoint">
+                <source>Endpoint URL</source>
+            </trans-unit>
+            <trans-unit id="flexform.field.dataSourceEndpoint.description" resname="flexform.field.dataSourceEndpoint.description">
+                <source>HTTPS URL without query string or credentials. The form's parameters are appended as query parameters named after the form elements, and the visitor's browser requests the URL directly. The host must be listed under allowedDataSourceHosts in the site settings, otherwise the form stays a plain form.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

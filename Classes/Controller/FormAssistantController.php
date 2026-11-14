@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Controller;
 
+use Netresearch\NrBrowserAi\Domain\Form\DataSourceEndpoint;
 use Netresearch\NrBrowserAi\Domain\Form\FormDefinitionLoader;
 use Netresearch\NrBrowserAi\Domain\Form\FormSchemaFactory;
 use Netresearch\NrBrowserAi\Domain\Form\StorageFormLoader;
@@ -52,7 +53,7 @@ final class FormAssistantController extends ActionController
      * Actions a client bundle knows how to carry out. An unknown value leaves
      * the plugin as a plain form rather than registering a tool that cannot act.
      */
-    private const SUPPORTED_ACTIONS = ['openMeteo'];
+    private const SUPPORTED_ACTIONS = ['openMeteo', 'jsonEndpoint'];
 
     /**
      * Allowed heading levels for the plugin's own title, first entry being the
@@ -88,6 +89,17 @@ final class FormAssistantController extends ActionController
         if ($action === 'openMeteo' && !in_array('place', $schema->propertyNames(), true)) {
             $action = '';
         }
+        $endpoint = '';
+        if ($action === 'jsonEndpoint') {
+            // A data source that cannot be validated leaves a plain form: no
+            // tool is registered for a destination nobody approved.
+            $configured = $this->stringSetting('dataSourceEndpoint');
+            $endpoint   = DataSourceEndpoint::validate(
+                $configured !== '' ? $configured : ($pluginOptions['endpoint'] ?? null),
+                $this->stringSetting('allowedDataSourceHosts'),
+            );
+            $action = $endpoint === '' ? '' : $action;
+        }
 
         $currentContentObject = $this->request->getAttribute('currentContentObject');
         $currentContentUid    = $currentContentObject instanceof ContentObjectRenderer
@@ -106,6 +118,7 @@ final class FormAssistantController extends ActionController
             'toolName'                => $schema->isEmpty() ? '' : $this->toolName($formIdentifier),
             'toolDescription'         => $this->toolDescription($definition, $pluginOptions),
             'action'                  => $action,
+            'dataSourceEndpoint'      => $endpoint,
             'title'                   => $this->stringSetting('title'),
             'headingLevel'            => $this->headingLevelSetting(),
             'introduction'            => $this->stringSetting('introduction'),

@@ -2,3 +2,4 @@
 # SPDX-FileCopyrightText: Netresearch DTT GmbH
 
 plugin.tx_form.settings.yamlConfigurations.1700 = EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/FormSetup.yaml
+plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts = api.example.com, air.example.com
