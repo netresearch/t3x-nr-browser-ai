@@ -248,6 +248,23 @@ final class FormSchemaFactoryTest extends TestCase
         self::assertSame(['a', 'b'], $schema->schema['properties']['radio-1']['enum'] ?? null);
     }
 
+    /**
+     * A secret is never something the model should supply, and a data source
+     * would send it on as a query parameter.
+     */
+    #[Test]
+    public function passwordElementsAreNeitherDescribedNorReported(): void
+    {
+        $schema = (new FormSchemaFactory())->create($this->form([
+            ['type' => 'Password', 'identifier' => 'secret'],
+            ['type' => 'AdvancedPassword', 'identifier' => 'secret-2'],
+            ['type' => 'Text', 'identifier' => 'field'],
+        ]));
+
+        self::assertSame(['field'], $schema->propertyNames());
+        self::assertSame([], $schema->unsupportedElements);
+    }
+
     #[Test]
     public function elementsWithoutAValueAreNeitherDescribedNorReported(): void
     {

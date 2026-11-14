@@ -423,7 +423,8 @@ Plugin settings
 
    Site setting, administrator-owned: comma-separated host names a ``jsonEndpoint``
    data source may point to. Exact host names only, so ``api.example.com`` does
-   not admit ``x.api.example.com``. Empty by default, which disables the data
+   not admit ``x.api.example.com``. Listing a host trusts every path on it, because
+   an editor chooses the path. Empty by default, which disables the data
    source. Set it under :guilabel:`Site Management > Sites > Settings` as
    ``plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts``, or in
    the TypoScript constants of the root template.
