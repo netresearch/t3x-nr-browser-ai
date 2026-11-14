@@ -5,6 +5,7 @@ import {FormFiller} from '../form/FormFiller';
 import {correctCheckboxGroupRoles} from '../form/GroupRoles';
 import type {FormSchema, FormValues} from '../form/FormSchema';
 import type {ActionOutcome, FormAction} from '../query/FormAction';
+import {JsonEndpointQuery} from '../query/JsonEndpointQuery';
 import {OpenMeteoQuery} from '../query/OpenMeteoQuery';
 import {SafeResponseRenderer} from '../rendering/SafeResponseRenderer';
 import {ResultRenderer} from '../result/ResultRenderer';
@@ -48,11 +49,20 @@ const LABEL_KEYS: Record<Status, string> = {
     unavailable: 'labelUnavailable',
 };
 
-export type ActionFactory = (action: string, language: string) => FormAction | undefined;
+export type ActionFactory = (action: string, language: string, endpoint: string) => FormAction | undefined;
 
-const defaultActionFactory: ActionFactory = (action, language) => (
-    action === 'openMeteo' ? new OpenMeteoQuery(language) : undefined
-);
+const defaultActionFactory: ActionFactory = (action, language, endpoint) => {
+    if (action === 'openMeteo') {
+        return new OpenMeteoQuery(language);
+    }
+    if (action === 'jsonEndpoint') {
+        const query = new JsonEndpointQuery(endpoint);
+
+        return query.isUsable() ? query : undefined;
+    }
+
+    return undefined;
+};
 
 /**
  * Wires one form assistant plugin.
@@ -115,7 +125,11 @@ export class FormAssistantController implements ToolObserver {
     ): FormAssistantController | undefined {
         const form = root.querySelector('form');
         const schema = readFormSchema(root.dataset['formSchema'] ?? '');
-        const action = actionFactory(root.dataset['action'] ?? '', pageLanguage());
+        const action = actionFactory(
+            root.dataset['action'] ?? '',
+            pageLanguage(),
+            root.dataset['dataSourceEndpoint'] ?? '',
+        );
         if (form === null || schema === undefined || action === undefined) {
             return undefined;
         }

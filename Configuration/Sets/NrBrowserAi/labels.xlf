@@ -29,6 +29,12 @@
             <trans-unit id="settings.description.plugin.tx_nrbrowserai_assistant.settings.systemPrompt">
                 <source>Instruction sent to the model ahead of the page text. It confines answers to the supplied source and treats that source as untrusted data rather than as instructions.</source>
             </trans-unit>
+            <trans-unit id="settings.plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts">
+                <source>Allowed data source hosts</source>
+            </trans-unit>
+            <trans-unit id="settings.description.plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts">
+                <source>Comma-separated host names a form assistant plugin may send its query to when its data source is a JSON endpoint. Empty by default, which disables that data source. Exact host names only; the visitor's browser contacts them directly.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -40,6 +40,10 @@ above. Deriving the parameters stays on the device; running the form does not.
 The query goes from the visitor's browser directly to the configured data
 source, which therefore sees the visitor's IP address, the parameters of the
 query and — for the shipped demonstration form — the place name being resolved.
+With the ``jsonEndpoint`` data source the recipient is the host an editor
+entered, which the administrator has to list under ``allowedDataSourceHosts``
+before it works; the list is empty by default. The request is a plain HTTPS GET
+without cookies, credentials or referrer.
 
 It goes there directly and not through the site, so the site never sees it
 either. Nothing is stored anywhere: the result exists in browser memory and is
@@ -104,7 +108,8 @@ The form assistant is the exception: its query goes from the browser to
 ``https://geocoding-api.open-meteo.com`` and ``https://api.open-meteo.com``
 (see :ref:`security-form-assistant-flow`). On a page that carries the form
 assistant, ``connect-src`` has to permit these two origins, or the form cannot
-run.
+run. A form assistant plugin with a ``jsonEndpoint`` data source needs
+``connect-src`` to permit that endpoint's origin instead.
 
 The exact policy belongs to the integrating site. Verify that TYPO3's emitted
 module and stylesheet are permitted; do not add ``unsafe-inline`` or broad

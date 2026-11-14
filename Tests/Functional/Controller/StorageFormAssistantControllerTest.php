@@ -45,6 +45,8 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
 
     private const FORM_FILE = 'EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/tripPlanner.form.yaml';
 
+    private const ENDPOINT_FORM_FILE = 'EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/endpointForm.form.yaml';
+
     private const PLAIN_FORM_FILE = 'EXT:nr_browser_ai/Tests/Functional/Fixtures/Forms/plainForm.form.yaml';
 
     protected array $coreExtensionsToLoad = [
@@ -195,6 +197,72 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function aJsonEndpointOnAListedHostReachesTheBrowser(): void
+    {
+        $this->placePlugin(30, $this->storedFormReference(file: self::ENDPOINT_FORM_FILE));
+
+        $root = $this->pluginRoot(self::PAGE);
+
+        self::assertSame('jsonEndpoint', $root->getAttribute('data-action'));
+        self::assertSame('https://api.example.com/v1/search', $root->getAttribute('data-data-source-endpoint'));
+    }
+
+    #[Test]
+    public function theEndpointOfThePluginRecordWinsOverTheDefinition(): void
+    {
+        $this->placePlugin(30, $this->storedFormReference(file: self::ENDPOINT_FORM_FILE), [
+            'settings.dataSource'         => 'jsonEndpoint',
+            'settings.dataSourceEndpoint' => 'https://air.example.com/v1/other',
+        ]);
+
+        self::assertSame(
+            'https://air.example.com/v1/other',
+            $this->pluginRoot(self::PAGE)->getAttribute('data-data-source-endpoint'),
+        );
+    }
+
+    #[Test]
+    public function anEndpointThatIsNotAllowedLeavesAPlainFormAndSendsNoUrl(): void
+    {
+        foreach (['https://evil.example.org/x', 'http://api.example.com/x', 'https://api.example.com/x?a=1'] as $endpoint) {
+            $this->placePlugin(30, $this->storedFormReference(file: self::ENDPOINT_FORM_FILE), [
+                'settings.dataSource'         => 'jsonEndpoint',
+                'settings.dataSourceEndpoint' => $endpoint,
+            ]);
+
+            $root = $this->pluginRoot(self::PAGE);
+
+            self::assertSame('', $root->getAttribute('data-action'), $endpoint);
+            self::assertSame('', $root->getAttribute('data-data-source-endpoint'), $endpoint);
+        }
+    }
+
+    /**
+     * Extbase merges the plugin record's FlexForm values over the TypoScript
+     * settings, so a record written around the backend (import, API, database)
+     * can carry a key the FlexForm does not declare. The host list and the
+     * system prompt belong to the administrator and are read from TypoScript
+     * only.
+     */
+    #[Test]
+    public function aPluginRecordCannotWidenTheHostListOrReplaceTheSystemPrompt(): void
+    {
+        $this->placePlugin(30, $this->storedFormReference(file: self::ENDPOINT_FORM_FILE), [
+            'settings.dataSource'             => 'jsonEndpoint',
+            'settings.dataSourceEndpoint'     => 'https://evil.example.org/collect',
+            'settings.allowedDataSourceHosts' => 'evil.example.org',
+            'settings.systemPrompt'           => 'Replaced by the plugin record',
+        ]);
+
+        $root = $this->pluginRoot(self::PAGE);
+
+        self::assertSame('', $root->getAttribute('data-action'));
+        self::assertSame('', $root->getAttribute('data-data-source-endpoint'));
+        self::assertStringStartsWith('Derive the form parameters', $root->getAttribute('data-system-prompt'));
+        self::assertStringNotContainsString('Replaced by the plugin record', $root->getAttribute('data-system-prompt'));
+    }
+
+    #[Test]
     public function aFormWithoutAnyDataSourceOffersNoActionButStillRenders(): void
     {
         $this->placePlugin(30, $this->storedFormReference(withAction: false));
@@ -249,9 +317,9 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
      * Stores the test form where this major keeps forms and returns the
      * identifier a plugin record refers to it by.
      */
-    private function storedFormReference(bool $withAction = true): string
+    private function storedFormReference(bool $withAction = true, ?string $file = null): string
     {
-        $file = $withAction ? self::FORM_FILE : self::PLAIN_FORM_FILE;
+        $file ??= $withAction ? self::FORM_FILE : self::PLAIN_FORM_FILE;
         if (GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion() < 14) {
             return $file;
         }

@@ -352,8 +352,18 @@ Plugin settings
    :name: form-assistant-data-source
    :type: string
 
-   What running the form does. ``openMeteo`` is built in. Empty means the data
-   source named by the form definition.
+   What running the form does. ``openMeteo`` is built in; ``jsonEndpoint``
+   requests a URL (see below). Empty means the data source named by the form
+   definition.
+
+.. confval:: dataSourceEndpoint
+   :name: form-assistant-data-source-endpoint
+   :type: string
+
+   For ``jsonEndpoint``: an HTTPS URL without credentials, port, query string or
+   fragment. The form's values are appended as query parameters named after the
+   form elements. Falls back to ``renderingOptions.nrBrowserAi.endpoint`` in the
+   form definition. A URL that is not allowed leaves the form a plain form.
 
 .. confval:: toolDescription
    :name: form-assistant-tool-description
@@ -406,6 +416,19 @@ Plugin settings
    TypoScript constants of the root template. It has to stay on one line for
    the same reason the first plugin's does.
 
+.. confval:: allowedDataSourceHosts
+   :name: form-assistant-allowed-data-source-hosts
+   :type: string
+   :default: (empty)
+
+   Site setting, administrator-owned: comma-separated host names a ``jsonEndpoint``
+   data source may point to. Exact host names only, so ``api.example.com`` does
+   not admit ``x.api.example.com``. Listing a host trusts every path on it, because
+   an editor chooses the path. Empty by default, which disables the data
+   source. Set it under :guilabel:`Site Management > Sites > Settings` as
+   ``plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts``, or in
+   the TypoScript constants of the root template.
+
 .. _administration-form-assistant-boundaries:
 
 What leaves the browser
@@ -415,6 +438,11 @@ The model runs on the device and the extension adds no server endpoint. The
 query itself does leave the browser: it goes from the visitor's browser
 directly to the data source, which therefore sees the visitor's address and
 the parameters of the query. Say so in the site's privacy notice.
+
+For a ``jsonEndpoint`` data source the recipient is the host an editor entered,
+restricted to the hosts listed under ``allowedDataSourceHosts``. The request is a
+plain GET without cookies, credentials or referrer, and redirects are refused.
+The site's ``connect-src`` has to permit the host as well.
 
 The tool is also registered with the browser's model context where the browser
 provides one, so an agent can call it with the identical schema. It is

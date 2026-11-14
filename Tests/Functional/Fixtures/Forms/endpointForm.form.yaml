@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+# A form whose definition names a JSON endpoint as its data source.
+identifier: endpoint-form-1
+label: 'Endpoint form'
+prototypeName: standard
+type: Form
+renderingOptions:
+  nrBrowserAi:
+    action: jsonEndpoint
+    endpoint: 'https://api.example.com/v1/search'
+renderables:
+  -
+    identifier: page-1
+    label: Page
+    type: Page
+    renderables:
+      -
+        identifier: query-1
+        label: Query
+        type: Text

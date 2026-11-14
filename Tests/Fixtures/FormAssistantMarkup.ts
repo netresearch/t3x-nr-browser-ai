@@ -42,6 +42,7 @@ export const CONFIGURATION_ATTRIBUTES = [
     'data-tool-name',
     'data-tool-description',
     'data-action',
+    'data-data-source-endpoint',
     'data-system-prompt',
     'data-supplemental-instruction',
 ] as const;
@@ -113,6 +114,7 @@ export interface FormAssistantMarkupOptions {
     schema?: unknown;
     toolName?: string;
     action?: string;
+    endpoint?: string;
 }
 
 const FIELD_PREFIX = 'tx_form_formframework[weatherQuery]';
@@ -139,6 +141,7 @@ export function formAssistantSection(options: FormAssistantMarkupOptions = {}): 
  data-tool-name="${escapeAttribute(options.toolName ?? 'nr_browser_ai_weatherQuery')}"
  data-tool-description="Query a weather forecast for a place."
  data-action="${escapeAttribute(options.action ?? 'openMeteo')}"
+ data-data-source-endpoint="${escapeAttribute(options.endpoint ?? '')}"
  data-system-prompt="Derive the form parameters from the request."
  data-supplemental-instruction=""${labels}>
  <div class="nr-browser-ai-form__assistant" data-nr-browser-ai-form-assistant hidden>

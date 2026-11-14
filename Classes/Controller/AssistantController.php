@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Controller;
 
+use Netresearch\NrBrowserAi\Configuration\AdministratorSettings;
 use Netresearch\NrBrowserAi\Service\FallbackContentRenderer;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -121,7 +122,7 @@ final class AssistantController extends ActionController
             $contextSelector = self::DEFAULT_CONTEXT_SELECTOR;
         }
 
-        $rawContextUsageLimit = $this->settings['contextUsageLimit'] ?? null;
+        $rawContextUsageLimit = $this->administratorSetting('contextUsageLimit');
         $contextUsageLimit    = is_numeric($rawContextUsageLimit)
             ? (float) $rawContextUsageLimit
             : self::DEFAULT_CONTEXT_USAGE_LIMIT;
@@ -135,7 +136,7 @@ final class AssistantController extends ActionController
         return [
             'contextSelector'         => $contextSelector,
             'contextUsageLimit'       => $contextUsageLimit,
-            'systemPrompt'            => $this->stringSetting('systemPrompt'),
+            'systemPrompt'            => $this->administratorSetting('systemPrompt') ?? '',
             'supplementalInstruction' => $this->stringSetting('supplementalInstruction'),
             'fallbackMode'            => $fallbackMode,
             'fallbackContent'         => '',
@@ -146,6 +147,16 @@ final class AssistantController extends ActionController
             'introduction'            => $this->stringSetting('introduction'),
             'showConfiguration'       => $this->booleanSetting('showConfiguration'),
         ];
+    }
+
+    /**
+     * The system prompt and the usage limit are administrator decisions. They
+     * are read from TypoScript alone; the merged settings carry whatever the
+     * plugin record holds.
+     */
+    private function administratorSetting(string $name): ?string
+    {
+        return AdministratorSettings::string($this->request ?? null, 'tx_nrbrowserai_assistant', $name);
     }
 
     /**

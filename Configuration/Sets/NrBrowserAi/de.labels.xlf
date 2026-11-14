@@ -37,6 +37,14 @@
                 <source>Instruction sent to the model ahead of the page text. It confines answers to the supplied source and treats that source as untrusted data rather than as instructions.</source>
                 <target>Anweisung, die dem Modell vor dem Seitentext übergeben wird. Sie begrenzt Antworten auf die übergebene Quelle und behandelt diese Quelle als nicht vertrauenswürdige Daten statt als Anweisungen.</target>
             </trans-unit>
+            <trans-unit id="settings.plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts">
+                <source>Allowed data source hosts</source>
+                <target>Erlaubte Datenquellen-Hosts</target>
+            </trans-unit>
+            <trans-unit id="settings.description.plugin.tx_nrbrowserai_formassistant.settings.allowedDataSourceHosts">
+                <source>Comma-separated host names a form assistant plugin may send its query to when its data source is a JSON endpoint. Empty by default, which disables that data source. Exact host names only; the visitor's browser contacts them directly.</source>
+                <target>Kommagetrennte Hostnamen, an die ein Formularassistent-Plugin seine Abfrage senden darf, wenn die Datenquelle ein JSON-Endpunkt ist. Standardmäßig leer, dadurch ist diese Datenquelle abgeschaltet. Nur exakte Hostnamen; der Browser des Besuchers kontaktiert sie direkt.</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

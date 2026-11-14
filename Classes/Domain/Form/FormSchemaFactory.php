@@ -62,6 +62,8 @@ final class FormSchemaFactory
         'Html',
         'Hidden',
         'Honeypot',
+        'Password',
+        'AdvancedPassword',
         'ImageUpload',
         'FileUpload',
     ];
@@ -281,11 +283,11 @@ final class FormSchemaFactory
         }
 
         return match ($type) {
-            'Text', 'Textarea', 'Email', 'Telephone', 'Url', 'Password' => ['type' => 'string'],
-            'Number'                                                    => ['type' => 'number'],
-            'Checkbox'                                                  => ['type' => 'boolean'],
-            'Date', 'DatePicker'                                        => ['type' => 'string', 'format' => 'date'],
-            default                                                     => null,
+            'Text', 'Textarea', 'Email', 'Telephone', 'Url' => ['type' => 'string'],
+            'Number'                                        => ['type' => 'number'],
+            'Checkbox'                                      => ['type' => 'boolean'],
+            'Date', 'DatePicker'                            => ['type' => 'string', 'format' => 'date'],
+            default                                         => null,
         };
     }
 

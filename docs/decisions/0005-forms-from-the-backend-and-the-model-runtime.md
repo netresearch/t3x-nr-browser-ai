@@ -123,6 +123,15 @@ that prompted this lives outside them and has to be corrected at its source.
 The `jsonEndpoint` data source and the `allowedDataSourceHosts` setting are
 delivered by the change that follows this one.
 
+Administrator-owned settings (the system prompts, the context usage limit and
+the host list) are read from the frontend TypoScript setup only
+(`Classes/Configuration/AdministratorSettings.php`), never from
+`$this->settings`: Extbase merges a plugin record's FlexForm over TypoScript,
+so a record written around the backend could otherwise carry such a key and
+replace the prompt or widen the host list. The FlexForm declares none of them,
+and a functional test stores them in a record anyway and checks they are
+ignored.
+
 ## Non-goals
 
 No submission of the form, no server-side form execution, no persistence of

@@ -24,7 +24,7 @@ function attributesIn(source: string, pattern: RegExp): string[] {
 
 const HOOK_PATTERN = /data-nr-browser-ai-form-[a-z-]+/gu;
 const LABEL_PATTERN = /data-label-[a-z-]+/gu;
-const CONFIGURATION_PATTERN = /data-(?:form-identifier|form-schema|tool-name|tool-description|action|system-prompt|supplemental-instruction)(?![a-z-])/gu;
+const CONFIGURATION_PATTERN = /data-(?:form-identifier|form-schema|tool-name|tool-description|action|data-source-endpoint|system-prompt|supplemental-instruction)(?![a-z-])/gu;
 
 /**
  * The fixture is what the unit and end-to-end suites drive the bundle against.

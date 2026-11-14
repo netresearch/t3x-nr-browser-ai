@@ -41,6 +41,7 @@
                     </settings.persistenceIdentifier>
                     <settings.dataSource>
                         <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSource</label>
+                        <onChange>reload</onChange>
                         <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSource.description</description>
                         <config>
                             <type>select</type>
@@ -54,10 +55,25 @@
                                     <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.dataSource.openMeteo</label>
                                     <value>openMeteo</value>
                                 </numIndex>
+                                <numIndex index="2">
+                                    <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.item.dataSource.jsonEndpoint</label>
+                                    <value>jsonEndpoint</value>
+                                </numIndex>
                             </items>
                             <default></default>
                         </config>
                     </settings.dataSource>
+                    <settings.dataSourceEndpoint>
+                        <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSourceEndpoint</label>
+                        <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.dataSourceEndpoint.description</description>
+                        <displayCond>FIELD:settings.dataSource:=:jsonEndpoint</displayCond>
+                        <config>
+                            <type>input</type>
+                            <size>60</size>
+                            <max>500</max>
+                            <placeholder>https://api.example.com/v1/search</placeholder>
+                        </config>
+                    </settings.dataSourceEndpoint>
                     <settings.toolDescription>
                         <label>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.toolDescription</label>
                         <description>LLL:EXT:nr_browser_ai/Resources/Private/Language/locallang_db.xlf:flexform.field.toolDescription.description</description>

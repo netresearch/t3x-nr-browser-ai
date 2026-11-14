@@ -31,13 +31,14 @@ connection.
 | 1 | TYPO3 (server) | Visitor's browser | Plugin settings (context selector, usage limit, administrator system prompt, editor instruction, form schema, tool name and description, action name) as data attributes on the plugin root; the chosen fallback content element as normal rendered content | `Classes/Controller/AssistantController.php`, `Classes/Controller/FormAssistantController.php`, `Resources/Private/Templates/*/Show.html`, `Classes/Service/FallbackContentRenderer.php` |
 | 2 | Page DOM | On-device model | Text of the configured page area, the page title and `<html lang>`, the visitor's question, the system prompt and the editor instruction | `Resources/Private/TypeScript/context/DomPageContextProvider.ts`, `Resources/Private/TypeScript/ai/LanguageModelSession.ts` |
 | 3 | Visitor's browser | Open-Meteo (`geocoding-api.open-meteo.com`, `api.open-meteo.com`) | Form assistant only: the place name and page language for geocoding, then latitude, longitude and the selected form values for the forecast. The visitor's IP address is visible to the service | `Resources/Private/TypeScript/query/OpenMeteoQuery.ts` |
+| 3b | Visitor's browser | A host the administrator allow-listed (`allowedDataSourceHosts`, empty by default) | Form assistant with the `jsonEndpoint` data source only: the form's parameter values as query parameters of a plain HTTPS GET, without cookies, credentials or referrer. The visitor's IP address is visible to that host | `Resources/Private/TypeScript/query/JsonEndpointQuery.ts`, `Classes/Domain/Form/DataSourceEndpoint.php` |
 | 4 | An agent in the browser | Form tool | Tool arguments, where the browser offers a model context (`document.modelContext` or `navigator.modelContext`) | `Resources/Private/TypeScript/tools/ModelContextBinding.ts`, `Resources/Private/TypeScript/tools/FormTool.ts` |
 | 5 | Chrome | Google | Model download and updates, managed by the browser, not by the extension | none |
 
 No question, page text or answer is sent to TYPO3 or to any other service. The
-only request the extension's code sends is flow 3; its two URLs are constants
-in `OpenMeteoQuery.ts`, and the form's `action` setting selects it only when it
-is `openMeteo` (`FormAssistantController::SUPPORTED_ACTIONS` on the server,
+only requests the extension's code sends are flows 3 and 3b; flow 3's two URLs are constants
+in `OpenMeteoQuery.ts`, and flow 3b's URL is validated on the server and again in the browser; the form's `action` setting selects them only when it
+is `openMeteo` or `jsonEndpoint` (`FormAssistantController::SUPPORTED_ACTIONS` on the server,
 `defaultActionFactory` in `Resources/Private/TypeScript/ui/FormAssistantController.ts`
 in the browser). Nothing is written to cookies, Web Storage or IndexedDB; the
 dialogue lives in memory and the sessions are destroyed on reset and on
@@ -66,6 +67,11 @@ dialogue lives in memory and the sessions are destroyed on reset and on
   bounds. This applies to the page's own model and to an external agent alike.
   One request runs at most four queries (`DEFAULT_MAXIMUM_QUERIES` in
   `Resources/Private/TypeScript/tools/LocalToolLoop.ts`).
+- **Administrator settings come from TypoScript only.** The system prompts, the
+  context usage limit and `allowedDataSourceHosts` are read by
+  `AdministratorSettings::string()` from the frontend TypoScript setup, not
+  from Extbase's merged settings, which a plugin record's FlexForm overrides.
+  Covered by `StorageFormAssistantControllerTest` and `AssistantControllerTest`.
 - **Server-side settings are validated and escaped.** `AssistantController`
   falls back to defaults for an empty or over-long context selector and for a
   usage limit outside (0, 1], accepts only `none` and `contentElement` as
@@ -137,6 +143,10 @@ Trust boundaries:
    `ArgumentValidator` for tool arguments.
 4. **Browser to data source.** `OpenMeteoQuery` builds both URLs from constants
    and sets parameters through `URLSearchParams`, which encodes them.
+   `JsonEndpointQuery` requests only an HTTPS URL without credentials, port,
+   query or fragment that `DataSourceEndpoint::validate()` accepted for an
+   administrator-listed host, refuses redirects, sends no credentials or
+   referrer, and reads at most 512 KiB.
 5. **Data source to page.** Results are rendered as text nodes and table cells
    by `ResultRenderer`.
 
@@ -152,7 +162,7 @@ LLM entries refer to the OWASP Top 10 for LLM Applications 2025.
 | Excessive agency (OWASP LLM06) | Tool calls from the model or an external agent | One tool, one fixed action; arguments validated against the schema generated from the form definition (`Classes/Domain/Form/FormSchemaFactory.php`, `ArgumentValidator.ts`); at most four queries per request; the tool is registered with `untrustedContentHint: true`. Covered by `Tests/JavaScript/form/ArgumentValidator.test.ts` and `Tests/JavaScript/tools/` |
 | Sensitive information disclosure (OWASP LLM02) | Dialogue data | No endpoint, storage or telemetry for questions, context or answers; sessions destroyed on reset and page exit (ADR-0002) |
 | Path traversal (CWE-22) | Form identifier | Identifier pattern and fixed directory in `FormDefinitionLoader.php`; persistence-identifier shape check in `StorageFormLoader.php` |
-| Request to an unintended destination | Form action | Allow-list of actions on server and client; fixed URLs in `OpenMeteoQuery.ts`. Covered by `Tests/JavaScript/query/OpenMeteoQuery.test.ts` |
+| Request to an unintended destination | Form action, editor-entered endpoint | Allow-list of actions on server and client; fixed URLs in `OpenMeteoQuery.ts`; for `jsonEndpoint` an administrator-owned host list (empty by default) checked by `DataSourceEndpoint.php` and a shape check in `JsonEndpointQuery.ts`. Covered by `Tests/Unit/Domain/Form/DataSourceEndpointTest.php`, `Tests/JavaScript/query/OpenMeteoQuery.test.ts` and `JsonEndpointQuery.test.ts` |
 | Uncontrolled recursion (CWE-674) | Fallback content referencing itself | Render stack in `FallbackContentRenderer.php`. Covered by `Tests/Unit/Service/FallbackContentRendererTest.php` |
 | Regular-expression denial of service (CWE-1333) | Parsing streamed model output on every chunk | Block syntax recognised with string operations, not patterns (`SafeResponseRenderer.ts`) |
 | Model download without consent | Opening a page | `LanguageModel.create()` is reached only from the event handler of a click, a form submission or the Enter key in the request field (`ChatController.ts`, `FormAssistantController.ts`); `demo/capability-check.js` only calls `availability()` |

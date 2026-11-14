@@ -24,7 +24,7 @@ content or answer is sent to an application service.
 | FallbackContentRenderer | `Classes/Service/FallbackContentRenderer.php` | Renders the configured fallback content element |
 | Model adapter | `Resources/Private/TypeScript/ai/` | `BrowserLanguageModelAdapter` + `LanguageModelSession` wrap `LanguageModel` |
 | Page context | `Resources/Private/TypeScript/context/` | `PageContextProvider` interface, `DomPageContextProvider` implementation |
-| Form/tool layer | `Resources/Private/TypeScript/form/`, `tools/`, `query/` | Schema source, `ArgumentValidator`, `FormFiller`; `LocalToolLoop`, `FormTool`, `ModelContextBinding`; `FormAction`, `OpenMeteoQuery` |
+| Form/tool layer | `Resources/Private/TypeScript/form/`, `tools/`, `query/` | Schema source, `ArgumentValidator`, `FormFiller`; `LocalToolLoop`, `FormTool`, `ModelContextBinding`; `FormAction`, `OpenMeteoQuery`, `JsonEndpointQuery` (allow-listed through `Classes/Domain/Form/DataSourceEndpoint.php`) |
 | Rendering | `Resources/Private/TypeScript/rendering/SafeResponseRenderer.ts`, `result/` | Safe DOM output, validated HTTP(S) links |
 | UI | `Resources/Private/TypeScript/ui/` | `ChatController`, `FormAssistantController`, `NotFoundGate` |
 | TYPO3 integration | `Configuration/` | Services.yaml (DI), TCA overrides, TypoScript static include importing the site set `Configuration/Sets/NrBrowserAi/` |
