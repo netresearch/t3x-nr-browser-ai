@@ -16,13 +16,14 @@ namespace Netresearch\NrBrowserAi\Domain\Form;
 
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 use Throwable;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface as ExtbaseConfigurationManagerInterface;
-use TYPO3\CMS\Form\Domain\DTO\SearchCriteria;
 use TYPO3\CMS\Form\Mvc\Configuration\ConfigurationManagerInterface as ExtFormConfigurationManagerInterface;
 use TYPO3\CMS\Form\Mvc\Persistence\FormPersistenceManagerInterface;
 
@@ -45,8 +46,6 @@ use function trim;
  */
 final readonly class FormCatalog
 {
-    private const SEARCH_CRITERIA = SearchCriteria::class;
-
     public function __construct(
         private FormPersistenceManagerInterface $persistenceManager,
         private Typo3Version $typo3Version,
@@ -109,9 +108,18 @@ final readonly class FormCatalog
             return [$formSettings];
         }
 
-        // The class exists from 14.x only; naming it as a string keeps static
-        // analysis against 12.4 and 13.4 from looking for it.
-        $searchCriteria = (new ReflectionClass(self::SEARCH_CRITERIA))->newInstance();
+        // The criteria class exists from 14.x only. Its name is read from the
+        // parameter the manager declares, so no analysis against 12.4 or 13.4
+        // looks for a class those majors do not have.
+        $parameter = (new ReflectionMethod($this->persistenceManager, 'listForms'))->getParameters()[1] ?? null;
+        $type      = $parameter?->getType();
+        if (!$type instanceof ReflectionNamedType) {
+            return [$formSettings];
+        }
+
+        /** @var class-string $criteriaClass */
+        $criteriaClass  = $type->getName();
+        $searchCriteria = (new ReflectionClass($criteriaClass))->newInstance();
 
         return [$formSettings, $searchCriteria];
     }
