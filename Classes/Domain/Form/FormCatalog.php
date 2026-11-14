@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Netresearch\NrBrowserAi\Domain\Form;
 
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionClass;
 use Throwable;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -110,7 +111,7 @@ final readonly class FormCatalog
 
         // The class exists from 14.x only; naming it as a string keeps static
         // analysis against 12.4 and 13.4 from looking for it.
-        $searchCriteria = new (self::SEARCH_CRITERIA)();
+        $searchCriteria = (new ReflectionClass(self::SEARCH_CRITERIA))->newInstance();
 
         return [$formSettings, $searchCriteria];
     }
