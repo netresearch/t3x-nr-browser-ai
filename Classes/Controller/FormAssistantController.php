@@ -82,6 +82,12 @@ final class FormAssistantController extends ActionController
         }
 
         $formIdentifier = is_string($definition['identifier'] ?? null) ? $definition['identifier'] : '';
+        $action         = in_array($action, self::SUPPORTED_ACTIONS, true) ? $action : '';
+        // The built-in data source reads the element named "place"; without one
+        // every call would fail, so the form stays a plain form instead.
+        if ($action === 'openMeteo' && !in_array('place', $schema->propertyNames(), true)) {
+            $action = '';
+        }
 
         $currentContentObject = $this->request->getAttribute('currentContentObject');
         $currentContentUid    = $currentContentObject instanceof ContentObjectRenderer
@@ -99,7 +105,7 @@ final class FormAssistantController extends ActionController
             'formSchema'              => $schema->isEmpty() ? '' : $schema->toJson(),
             'toolName'                => $schema->isEmpty() ? '' : $this->toolName($formIdentifier),
             'toolDescription'         => $this->toolDescription($definition, $pluginOptions),
-            'action'                  => in_array($action, self::SUPPORTED_ACTIONS, true) ? $action : '',
+            'action'                  => $action,
             'title'                   => $this->stringSetting('title'),
             'headingLevel'            => $this->headingLevelSetting(),
             'introduction'            => $this->stringSetting('introduction'),

@@ -18,6 +18,10 @@ renderables:
     type: Page
     renderables:
       -
+        identifier: place
+        label: Place
+        type: Text
+      -
         identifier: text-1
         label: Destination
         type: Text

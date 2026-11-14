@@ -36,6 +36,8 @@ final class StorageFormLoaderTest extends TestCase
         yield 'database uid' => ['12'];
         yield 'file mount' => ['1:/form_definitions/contact-1.form.yaml'];
         yield 'file mount subfolder' => ['2:/forms/de/contact.form.yaml'];
+        yield 'file mount with a space' => ['1:/Contact Forms/contact.form.yaml'];
+        yield 'file mount with non-ASCII letters' => ['1:/Formulare/Kontaktformular für Kunden.form.yaml'];
         yield 'extension path' => ['EXT:site_package/Resources/Private/Forms/contact.form.yaml'];
     }
 
@@ -62,6 +64,8 @@ final class StorageFormLoaderTest extends TestCase
         yield 'negative uid' => ['-1'];
         yield 'uid with suffix' => ['12abc'];
         yield 'trailing newline' => ["12\n"];
+        yield 'backslash' => ['1:/forms\\..\\x.form.yaml'];
+        yield 'control character' => ["1:/forms/a\tb.form.yaml"];
         yield 'url' => ['https://example.com/x.form.yaml'];
         yield 'null byte' => ["1:/forms/a.form.yaml\0.txt"];
     }

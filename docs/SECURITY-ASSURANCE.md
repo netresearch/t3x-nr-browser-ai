@@ -79,8 +79,14 @@ dialogue lives in memory and the sessions are destroyed on reset and on
   identifier cannot name another path. `StorageFormLoader` accepts a database
   uid, a `<storage>:/…/*.form.yaml` path or an `EXT:…/*.form.yaml` path without
   `..` (`StorageFormLoader::isPersistenceIdentifier()`), and then hands it to
-  EXT:form's persistence manager, which applies the installation's storages and
-  access rules; the core form plugin loads a named form the same way.
+  EXT:form's persistence manager, which resolves the storage and, for extension
+  paths, applies `allowedExtensionPaths`. The check is a shape check, not an
+  access check: the selector lists only forms the editor may read, but the
+  frontend loads whatever well-formed identifier the plugin record holds, as
+  the core form plugin does, so a backend user who can edit the plugin record
+  can name a form that is absent from the selector. Where form access has to
+  stay separate from content editing, restrict who may edit these plugin
+  records.
 - **Fallback content respects TYPO3 access rules.** `FallbackContentRenderer`
   renders the selected record through the `RECORDS` content object, which
   applies the enable fields, and refuses self-references and cycles.

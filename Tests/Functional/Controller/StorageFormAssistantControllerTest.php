@@ -94,7 +94,7 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
         self::assertIsArray($schema);
         $properties = $schema['properties'] ?? null;
         self::assertIsArray($properties);
-        self::assertSame(['text-1', 'radio-1', 'checkbox-1'], array_keys($properties));
+        self::assertSame(['place', 'text-1', 'radio-1', 'checkbox-1'], array_keys($properties));
         self::assertSame(['text-1'], $schema['required'] ?? null);
         self::assertSame(
             'City or region the trip goes to.',
@@ -178,6 +178,20 @@ final class StorageFormAssistantControllerTest extends FunctionalTestCase
         $root = $this->pluginRoot(self::PAGE);
 
         self::assertSame('Plugin wording.', $root->getAttribute('data-tool-description'));
+    }
+
+    /**
+     * The built-in data source reads the element named "place". A form without
+     * one would fail on every call, so it must not be offered as a tool.
+     */
+    #[Test]
+    public function theOpenMeteoDataSourceIsOnlyOfferedForAFormWithAPlaceElement(): void
+    {
+        $this->placePlugin(30, $this->storedFormReference(withAction: false), [
+            'settings.dataSource' => 'openMeteo',
+        ]);
+
+        self::assertSame('', $this->pluginRoot(self::PAGE)->getAttribute('data-action'));
     }
 
     #[Test]
