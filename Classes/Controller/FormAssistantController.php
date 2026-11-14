@@ -89,6 +89,7 @@ final class FormAssistantController extends ActionController
         if ($action === 'openMeteo' && !in_array('place', $schema->propertyNames(), true)) {
             $action = '';
         }
+
         $endpoint = '';
         if ($action === 'jsonEndpoint') {
             // A data source that cannot be validated leaves a plain form: no
