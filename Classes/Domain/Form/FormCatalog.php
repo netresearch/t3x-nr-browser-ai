@@ -44,6 +44,8 @@ use function trim;
  */
 final readonly class FormCatalog
 {
+    private const SEARCH_CRITERIA = SearchCriteria::class;
+
     public function __construct(
         private FormPersistenceManagerInterface $persistenceManager,
         private Typo3Version $typo3Version,
@@ -102,7 +104,15 @@ final readonly class FormCatalog
         $formSettings = GeneralUtility::makeInstance(ExtFormConfigurationManagerInterface::class)
             ->getYamlConfiguration($typoScriptSettings, false);
 
-        return $major >= 14 ? [$formSettings, new SearchCriteria()] : [$formSettings];
+        if ($major < 14) {
+            return [$formSettings];
+        }
+
+        // The class exists from 14.x only; naming it as a string keeps static
+        // analysis against 12.4 and 13.4 from looking for it.
+        $searchCriteria = new (self::SEARCH_CRITERIA)();
+
+        return [$formSettings, $searchCriteria];
     }
 
     /**
