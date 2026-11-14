@@ -59,9 +59,15 @@ all three majors; each puts the test form where that major keeps forms
 
 A persistence identifier is checked against a fixed shape before it reaches
 the manager: a database uid, a file mount path ending in `.form.yaml` or an
-extension path ending in `.form.yaml`, and no `..`. The core form plugin loads
-whatever identifier its record names; the plugin does the same, after this
-check. A form that cannot be loaded renders nothing but a short notice, never a
+extension path ending in `.form.yaml`, and no `..`. This is a shape check, not
+an access check. The core form plugin loads whatever identifier its record
+names, and so does this plugin: the selector lists only forms the editor may
+read, but a backend user who can edit the plugin record can store any
+well-formed identifier, and the frontend renders that form (finishers do not
+run, the plugin handles no submission). An installation that separates form
+access from content editing should restrict who may edit these plugin records.
+Plugin output is cached with the page, so a deleted or changed form shows until
+the page cache entry expires. A form that cannot be loaded renders nothing but a short notice, never a
 different form than the one chosen.
 
 ### Multi-step forms
@@ -113,6 +119,9 @@ guide are Chrome's requirements for its built-in model.
 The repository, its metadata, the published demo page and the demo database
 seed contain no WebGPU or WebLLM claim (searched 2026-11-14); the statement
 that prompted this lives outside them and has to be corrected at its source.
+
+The `jsonEndpoint` data source and the `allowedDataSourceHosts` setting are
+delivered by the change that follows this one.
 
 ## Non-goals
 

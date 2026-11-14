@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Domain\Form;
 
-use Exception;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Information\Typo3Version;
@@ -56,7 +56,7 @@ final readonly class FormCatalog
     {
         try {
             $listed = PersistenceManagerCall::invoke($this->persistenceManager, 'listForms', $this->arguments());
-        } catch (Exception) {
+        } catch (Throwable) {
             return [];
         }
 

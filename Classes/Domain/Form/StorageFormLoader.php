@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Netresearch\NrBrowserAi\Domain\Form;
 
-use Exception;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface as ExtbaseConfigurationManagerInterface;
@@ -50,7 +50,10 @@ final readonly class StorageFormLoader
      * What a persistence identifier may look like: a database uid (14.x), a
      * file mount path ("1:/form_definitions/contact.form.yaml") or an extension
      * path. The shape is checked here before the value reaches the manager, so
-     * that an edited record cannot steer the lookup anywhere else.
+     * that a record cannot name a parent directory or another kind of path.
+     * It is not an access check: like the core form plugin, the frontend loads
+     * any form the identifier names, whatever the editor who saved it may read
+     * in the backend.
      */
     private const IDENTIFIER_PATTERN = '/^(?:\d{1,10}|\d{1,6}:\/[A-Za-z0-9_\-.\/]{1,200}\.form\.yaml|EXT:[a-z0-9_]{1,64}\/[A-Za-z0-9_\-.\/]{1,200}\.form\.yaml)$/D';
 
@@ -81,7 +84,7 @@ final readonly class StorageFormLoader
                 'load',
                 $this->arguments($persistenceIdentifier, $request),
             );
-        } catch (Exception) {
+        } catch (Throwable) {
             return [];
         }
 

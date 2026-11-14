@@ -265,7 +265,14 @@ whichever storage the installation uses, with the same event listeners and
 TypoScript overrides as the core form plugin. The page's controls and the
 schema handed to the model come from that one loaded definition. If the chosen
 form cannot be loaded, for example because it was deleted, the plugin shows a
-short notice and no form.
+short notice and no form. The plugin output is cached with the page, so a
+change to the form, or its deletion, shows once the page cache entry expires.
+
+The frontend loads the form the record names, as the core form plugin does. The
+selector only lists forms the editor may read, but it does not stop a backend
+user who can edit the plugin record from storing another form's identifier;
+restrict who may edit these plugin records where form access is separate from
+content editing.
 
 What an editor maintains where:
 
