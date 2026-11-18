@@ -123,9 +123,9 @@
       "Die konfigurierte Formularaktion ruft Open-Meteo ab. Die Demo zeigt die Ergebnisse als Tabelle und kann sie mit dem Browsermodell zusammenfassen."
     ],
     "privacy": "Die Interpretation der Frage und die Textzusammenfassung laufen lokal. Für Ortsauflösung und Wetterdaten stellt der Browser jedoch direkte Anfragen an Open-Meteo. Der Dienst erhält die benötigten Orts- und Abfrageparameter sowie die IP-Adresse. Diese Demo benötigt deshalb externe Datenabfragen.",
-    "fallback": "Ohne verfügbares Browsermodell bleibt das Formular manuell bedienbar. Die Wetterabfrage selbst benötigt JavaScript. Die verlinkte Demo und ihre Dokumentation sind auf Englisch.",
-    "href": "https://typo3-demo.netresearch.de/extensions/browser-ai-form-assistant",
-    "label": "Formularassistent-Demo öffnen (Englisch)",
+    "fallback": "Ohne verfügbares Browsermodell bleibt das Formular manuell bedienbar. Die Wetterabfrage selbst benötigt JavaScript. Die Demo ist auf Deutsch verfügbar. Die verlinkte Dokumentation ist auf Englisch.",
+    "href": "https://typo3-demo.netresearch.de/de/erweiterungen/browser-ki-formularassistent",
+    "label": "Formularassistent-Demo öffnen",
     "docsHref": "https://github.com/netresearch/t3x-nr-browser-ai/blob/main/Documentation/User/FormAssistant.rst",
     "docsLabel": "Formular-Konfiguration lesen (Englisch)"
   },
