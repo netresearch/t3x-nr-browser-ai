@@ -105,7 +105,7 @@ Manual sections
 Requirements
 ============
 
-The extension supports TYPO3 12.4, 13.4 and 14.3 with PHP 8.2 through 8.5.
+The extension supports TYPO3 12.4, 13.4 and 14.3 with PHP 8.2 through 8.6.
 TYPO3 12.4 support is compatibility-only and requires a maintained,
 security-patched distribution for production use.
 

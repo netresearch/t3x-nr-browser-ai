@@ -21,7 +21,7 @@ $EM_CONF['nr_browser_ai'] = [
     'version' => '0.9.0',
     'constraints' => [
         'depends' => [
-            'php' => '8.2.0-8.5.99',
+            'php' => '8.2.0-8.6.99',
             'typo3' => '12.4.0-14.3.99',
         ],
         'conflicts' => [],

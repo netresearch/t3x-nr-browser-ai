@@ -42,7 +42,7 @@ or whole-site context providers, but those scopes are not implemented.
 
 ## Requirements
 
-- TYPO3 12.4, 13.4 and 14.3 with PHP 8.2 through 8.5. TYPO3 12.4 is
+- TYPO3 12.4, 13.4 and 14.3 with PHP 8.2 through 8.6. TYPO3 12.4 is
   compatibility-only and requires a maintained security-patched distribution.
 - Chrome 148 or newer on Windows 10/11, macOS 13+, Linux, or Chromebook Plus
   with ChromeOS platform 16389+.
