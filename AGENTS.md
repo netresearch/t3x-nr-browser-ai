@@ -56,8 +56,9 @@ strict TypeScript, signed commits, DCO sign-off and Conventional Commits.
 
 ## Changelog
 
-- Changes are recorded in [`CHANGELOG.md`](CHANGELOG.md), [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/): `## [X.Y.Z] - YYYY-MM-DD` with `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Supported versions` as needed, newest first. There is no `## [Unreleased]` section.
-- The release PR (branch `release/X.Y.Z`) writes the version's section; feature, fix and dependency PRs leave the file alone.
+- Changes are recorded in [`CHANGELOG.md`](CHANGELOG.md), [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/): `## [X.Y.Z] - YYYY-MM-DD` with `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Supported versions` as needed, newest first, below `## [Unreleased]`.
+- Feature, fix and dependency PRs leave the file alone; a PR that records its change writes it as a fragment `changelog.d/<branch-slug>.<section>.md` ([format](changelog.d/README.md)), checked by `composer ci:test:changelog`.
+- The release PR (branch `release/X.Y.Z`) runs `composer changelog:collect`, which moves the fragments into `## [Unreleased]`, and then writes the version's section.
 
 ## Index of scoped AGENTS.md
 
